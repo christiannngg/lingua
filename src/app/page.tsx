@@ -73,6 +73,7 @@ export default async function Home() {
   return (
     <main className="max-w-md h-screen flex items-center justify-center flex-col mx-auto p-6 space-y-4 text-white">
       <h1 className="text-2xl font-bold">Dashboard</h1>
+      <p className="text-lg mb-4">Hello {session.user.name}!</p>
       <p className="text-lg mb-4">{session.user.id}</p>
       <form action={signOutAction}>
         <button type="submit">Logout</button>

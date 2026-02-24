@@ -20,7 +20,7 @@ export async function signUpAction(formData: FormData) {
         }
     });
 
-    redirect("/");
+    redirect("/onboarding" as never);
 }
 
 export async function signInAction(formData: FormData) {
@@ -34,7 +34,7 @@ export async function signInAction(formData: FormData) {
         }
     });
 
-    redirect("/");
+    redirect("/onboarding" as never);
 }
 
 export async function signOutAction() {

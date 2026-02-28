@@ -1,30 +1,18 @@
-// "use client";
-
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import Link from "next/link";
-// import { useRouter } from "next/navigation";
-import { signOutAction } from "./actions/auth";
+import { getUserLanguages } from "@/app/actions/languages";
 
 export default async function Home() {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
-  // const router = useRouter();
-
   if (!session) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center gap-8 p-8">
         <div className="flex flex-col items-center gap-4 text-center">
-          <div className="flex gap-4">
-            <button className="bg-white text-black font-medium px-6 py-2 rounded-md hover:bg-gray-200">
-              <Link href={{ pathname: "/sign-up" }}>Sign Up</Link>
-            </button>
-            <button className="border border-white text-white font-medium px-6 py-2 rounded-md hover:bg-neutral-800">
-              <Link href={{ pathname: "/sign-in" }}>Sign In</Link>
-            </button>
-          </div>
           <div className="text-6xl font-bold tracking-tight">
             <span style={{ color: "var(--color-brand-500)" }}>Lingua</span>
           </div>
@@ -32,23 +20,14 @@ export default async function Home() {
             An AI language partner that actually remembers you — conversational AI, semantic memory,
             and spaced repetition in one place.
           </p>
-        </div>
-
-        <div className="flex gap-4">
-          <Link
-            href="/"
-            className="rounded-lg px-6 py-3 font-semibold text-white transition-opacity hover:opacity-90"
-            style={{ backgroundColor: "var(--color-brand-500)" }}
-          >
-            Get Started
-          </Link>
-          <Link
-            href="#features"
-            className="rounded-lg px-6 py-3 font-semibold transition-colors hover:underline"
-            style={{ color: "var(--color-brand-500)" }}
-          >
-            Learn More
-          </Link>
+          <div className="flex gap-4">
+            <button className="bg-white text-black font-medium px-6 py-2 rounded-md hover:bg-gray-200">
+              <Link href="/sign-up">Sign Up</Link>
+            </button>
+            <button className="border border-white text-white font-medium px-6 py-2 rounded-md hover:bg-neutral-800">
+              <Link href="/sign-in">Sign In</Link>
+            </button>
+          </div>
         </div>
 
         <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-3">
@@ -70,16 +49,19 @@ export default async function Home() {
     );
   }
 
-  return (
-    <main className="max-w-md h-screen flex items-center justify-center flex-col mx-auto p-6 space-y-4 text-white">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
-      <p className="text-lg mb-4">Hello {session.user.name}!</p>
-      <p className="text-lg mb-4">{session.user.id}</p>
-      <form action={signOutAction}>
-        <button type="submit">Logout</button>
-      </form>
-    </main>
-  );
+  // Authenticated routing logic
+  const userLanguages = await getUserLanguages();
+
+  if (userLanguages.length === 0) {
+    redirect("/onboarding");
+  }
+
+  const incomplete = userLanguages.find((ul) => !ul.assessmentCompleted);
+  if (incomplete) {
+    redirect(`/assessment/${incomplete.language}`);
+  }
+
+  redirect("/dashboard");
 }
 
 const FEATURES = [

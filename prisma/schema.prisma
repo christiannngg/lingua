@@ -83,12 +83,26 @@ model UserLanguage {
   userId     String
   language   String   // "es" | "it"
   isActive   Boolean  @default(true)
+  cefrLevel String   @default("A1")
+  assessmentCompleted Boolean @default(false)  // ← ADD THIS
+  assessmentStartedAt DateTime?                // ← ADD THIS (for analytics later)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assessmentHistory AssessmentHistory[]
 
   @@unique([userId, language])  // prevents duplicate language entries per user
   @@index([userId])
   @@map("user_languages")
 }
 
+model AssessmentHistory {
+  id             String   @id @default(cuid())
+  userLanguageId String
+  cefrLevel      String
+  takenAt        DateTime @default(now())
+
+  userLanguage UserLanguage @relation(fields: [userLanguageId], references: [id], onDelete: Cascade)
+
+  @@map("assessment_history")
+}

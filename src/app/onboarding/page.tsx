@@ -18,8 +18,8 @@ export default async function OnboardingPage() {
         <form
           action={async () => {
             "use server";
-            await addUserLanguage("es");
-            redirect("/dashboard" as never);
+            const lang = await addUserLanguage("es");
+            redirect(`/assessment/${lang}` as never);
           }}
         >
           <button type="submit">Spanish</button>
@@ -27,8 +27,8 @@ export default async function OnboardingPage() {
         <form
           action={async () => {
             "use server";
-            await addUserLanguage("it");
-            redirect("/dashboard" as never);
+            const lang = await addUserLanguage("it");
+            redirect(`/assessment/${lang}` as never);
           }}
         >
           <button type="submit">Italian</button>

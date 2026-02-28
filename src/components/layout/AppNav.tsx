@@ -8,11 +8,12 @@ const LANGUAGE_LABELS: Record<string, string> = {
   it: "🇮🇹 Italian",
 };
 
-const NAV_ITEMS: { href: "/dashboard" | "/learn" | "/review" | "/vocabulary"; label: string; icon: string }[] = [
+const NAV_ITEMS: { href: "/dashboard" | "/learn" | "/review" | "/vocabulary" | "/settings"; label: string; icon: string }[] = [
   { href: "/dashboard", label: "Dashboard", icon: "⊞" },
   { href: "/learn", label: "Learn", icon: "💬" },
   { href: "/review", label: "Review", icon: "🔁" },
   { href: "/vocabulary", label: "Vocabulary", icon: "📖" },
+  { href: "/settings", label: "Settings", icon: "⚙️" },
 ];
 
 interface AppNavProps {

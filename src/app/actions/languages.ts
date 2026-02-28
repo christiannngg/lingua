@@ -24,6 +24,8 @@ export async function addUserLanguage(language: string) {
     update: { isActive: true },
     create: { userId: session.user.id, language },
   });
+
+  return language; 
 }
 
 export async function getUserLanguages() {
@@ -34,4 +36,35 @@ export async function getUserLanguages() {
     where: { userId: session.user.id, isActive: true },
     orderBy: { createdAt: "asc" },
   });
+}
+
+export async function resetAssessment(language: string) {
+  if (!isSupportedLanguage(language)) {
+    throw new Error(`Unsupported language: ${language}`);
+  }
+
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Unauthenticated");
+
+  const userLanguage = await prisma.userLanguage.findUnique({
+    where: { userId_language: { userId: session.user.id, language } },
+  });
+
+  if (!userLanguage) throw new Error("Language not found");
+
+  // Log current level to history before overwriting
+  await prisma.assessmentHistory.create({
+    data: {
+      userLanguageId: userLanguage.id,
+      cefrLevel: userLanguage.cefrLevel,
+    },
+  });
+
+  // Reset assessment state
+  await prisma.userLanguage.update({
+    where: { id: userLanguage.id },
+    data: { assessmentCompleted: false },
+  });
+
+  return language;
 }

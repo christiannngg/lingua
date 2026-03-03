@@ -35,7 +35,7 @@ async function extractCefrResult(
   while (attempts < 2) {
     try {
       const response = await client.messages.create({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-haiku-4-5-20251001",
         max_tokens: 1024,
         system: `You are a ${languageName} proficiency evaluator. Given a conversation transcript from a language assessment, determine the user's CEFR level.
 
@@ -97,14 +97,13 @@ export async function POST(req: NextRequest) {
 
   const { language, userLanguageId, messages } = parsed.data;
 
-  /// With this:
   const messagesForApi =
     messages.length === 0
       ? [{ role: "user" as const, content: "Hello, I'm ready to begin." }]
       : messages;
 
   const response = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-haiku-4-5-20251001",
     max_tokens: 1024,
     system: buildAssessmentSystemPrompt(language),
     messages: messagesForApi,

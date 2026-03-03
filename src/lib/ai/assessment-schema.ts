@@ -2,6 +2,8 @@ import z from "zod/v4";
 
 export const CefrLevel = z.enum(["A1", "A2", "B1", "B2", "C1", "C2"]);
 export type CefrLevel = z.infer<typeof CefrLevel>;
+export const SupportedLanguage = z.enum(["es", "it"]);
+export type SupportedLanguage = z.infer<typeof SupportedLanguage>;
 
 export const AssessmentResultSchema = z.object({
   cefrLevel: CefrLevel,

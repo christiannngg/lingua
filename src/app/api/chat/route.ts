@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/db/prisma";
 import { buildConversationSystemPrompt } from "@/lib/ai/conversation-prompt";
+import { extractAndSaveVocabulary } from "@/lib/ai/extract-vocabulary";
 
 const anthropic = createAnthropic();
 
@@ -83,10 +84,12 @@ export async function POST(req: NextRequest) {
     system: systemPrompt,
     messages: modelMessages,
     onFinish: async ({ text }) => {
+      // 1. Persist assistant message
       await prisma.message.create({
         data: { conversationId: convId, role: "assistant", content: text },
       });
 
+      // 2. Set conversation title on first message
       await prisma.conversation.updateMany({
         where: { id: convId, title: null },
         data: {
@@ -94,11 +97,23 @@ export async function POST(req: NextRequest) {
           updatedAt: new Date(),
         },
       });
+
+      // 3. Fire-and-forget vocabulary extraction — never awaited, never blocks the response
+      if (userText && text) {
+        void extractAndSaveVocabulary({
+          userMessage: userText,
+          aiMessage: text,
+          language,
+          userLanguageId,
+          conversationId: convId,
+        }).catch((err) => {
+          console.error("[chat/route] vocabulary extraction failed:", err);
+        });
+      }
     },
   });
-  console.log("[chat/route] streaming result created, returning response");
+
   const response = result.toUIMessageStreamResponse();
-  console.log("[chat/route] response headers:", Object.fromEntries(response.headers.entries()));
   response.headers.set("X-Conversation-Id", convId);
   return response;
 }

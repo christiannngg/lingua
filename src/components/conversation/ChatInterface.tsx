@@ -75,12 +75,6 @@ export function ChatInterface({
     }),
   });
 
-  useEffect(() => {
-    console.log(
-      "[ChatInterface] messages updated:",
-      messages.map((m) => ({ role: m.role, parts: m.parts })),
-    );
-  }, [messages]);
   const isLoading = status === "submitted" || status === "streaming";
 
   useEffect(() => {

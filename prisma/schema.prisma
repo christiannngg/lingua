@@ -92,6 +92,8 @@ model UserLanguage {
   assessmentHistory AssessmentHistory[]
   conversations     Conversation[]
 
+  vocabularyItems   VocabularyItem[]
+
   @@unique([userId, language])  // prevents duplicate language entries per user
   @@index([userId])
   @@map("user_languages")
@@ -117,6 +119,7 @@ model Conversation {
 
   userLanguage   UserLanguage @relation(fields: [userLanguageId], references: [id], onDelete: Cascade)
   messages       Message[]
+  vocabularyItems   VocabularyItem[]
 
   @@index([userLanguageId])
   @@map("conversations")
@@ -133,4 +136,23 @@ model Message {
 
   @@index([conversationId])
   @@map("messages")
+}
+
+model VocabularyItem {
+  id                   String    @id @default(cuid())
+  userLanguageId       String
+  word                 String
+  translation          String
+  partOfSpeech         String?
+  exampleSentence      String?   @db.Text
+  sourceConversationId String?
+
+  createdAt DateTime @default(now())
+
+  userLanguage       UserLanguage @relation(fields: [userLanguageId], references: [id], onDelete: Cascade)
+  sourceConversation Conversation? @relation(fields: [sourceConversationId], references: [id], onDelete: SetNull)
+
+  @@unique([userLanguageId, word])
+  @@index([userLanguageId])
+  @@map("vocabulary_items")
 }

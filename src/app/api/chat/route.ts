@@ -8,6 +8,7 @@ import { prisma } from "@/lib/db/prisma";
 import { buildConversationSystemPrompt } from "@/lib/ai/conversation-prompt";
 import { extractAndSaveVocabulary } from "@/lib/ai/extract-vocabulary";
 import { extractAndSaveGrammar } from "@/lib/ai/extract-grammer";
+import { embedConversation } from "@/lib/embeddings";
 
 const anthropic = createAnthropic();
 
@@ -59,6 +60,25 @@ export async function POST(req: NextRequest) {
       data: { userLanguageId },
     });
     convId = conversation.id;
+
+    // Fire embedding for the most recent previous conversation (non-blocking)
+    const previousConv = await prisma.conversation.findFirst({
+      where: {
+        userLanguageId,
+        id: { not: convId },
+      },
+      orderBy: { updatedAt: "desc" },
+      select: {
+        id: true,
+        _count: { select: { messages: true } },
+      },
+    });
+
+    if (previousConv && previousConv._count.messages >= 2) {
+      void embedConversation(previousConv.id).catch((err) => {
+        console.error("[chat/route] embedding failed:", err);
+      });
+    }
   }
 
   // The last message in the array is the one just sent by the user

@@ -26,7 +26,6 @@ export async function embedConversation(conversationId: string): Promise<void> {
 
   // 2. Guard: not worth embedding very short conversations
   if (messages.length < 2) {
-    console.log(`[embeddings] skipping ${conversationId} — only ${messages.length} message(s)`);
     return;
   }
 
@@ -54,6 +53,4 @@ export async function embedConversation(conversationId: string): Promise<void> {
       "embedding" = EXCLUDED."embedding",
       "updatedAt" = NOW()
   `;
-
-  console.log(`[embeddings] embedded conversation ${conversationId}`);
 }

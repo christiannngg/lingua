@@ -144,8 +144,4 @@ Respond ONLY with valid JSON — no markdown, no code fences, no explanation:
       console.error(`[extractGrammar] failed to persist concept "${error.concept}":`, err);
     }
   }
-
-  console.log(
-    `[extractGrammar] processed ${errors.length} error(s) for userLanguageId=${userLanguageId}`,
-  );
 }

@@ -10,7 +10,10 @@
 const VOYAGE_API_URL = "https://api.voyageai.com/v1/embeddings";
 const VOYAGE_MODEL = "voyage-3-lite";
 
-export async function embedText(text: string): Promise<number[]> {
+export async function embedText(
+  text: string,
+  inputType: "document" | "query" = "document",
+): Promise<number[]> {
   const apiKey = process.env.VOYAGE_API_KEY;
   if (!apiKey) throw new Error("VOYAGE_API_KEY is not set");
 
@@ -23,7 +26,7 @@ export async function embedText(text: string): Promise<number[]> {
     body: JSON.stringify({
       model: VOYAGE_MODEL,
       input: [text],
-      input_type: "document",
+      input_type: inputType,
     }),
   });
 

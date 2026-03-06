@@ -9,6 +9,7 @@ import { buildConversationSystemPrompt } from "@/lib/ai/conversation-prompt";
 import { extractAndSaveVocabulary } from "@/lib/ai/extract-vocabulary";
 import { extractAndSaveGrammar } from "@/lib/ai/extract-grammer";
 import { embedConversation } from "@/lib/embeddings";
+import { retrieveRelevantMemory } from "@/lib/ai/retrieve-memory";
 
 const anthropic = createAnthropic();
 
@@ -51,15 +52,32 @@ export async function POST(req: NextRequest) {
 
   const cefrLevel = (userLanguage.cefrLevel ?? "A1") as "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
 
-  const systemPrompt = buildConversationSystemPrompt({ language, cefrLevel });
-
-  // Get or create conversation
+  // Get or create conversation + handle memory retrieval for new sessions
   let convId = conversationId;
+  let memorySnippets: string | null = null;
+
   if (!convId) {
     const conversation = await prisma.conversation.create({
       data: { userLanguageId },
     });
     convId = conversation.id;
+
+    // Retrieve relevant memory from past conversations (non-blocking on failure)
+    const firstUserMessage = messages.at(-1);
+    const firstUserText = firstUserMessage
+      ? extractText(firstUserMessage.parts as MessagePart[])
+      : null;
+
+    if (firstUserText) {
+      memorySnippets = await retrieveRelevantMemory(
+        firstUserText,
+        userLanguageId,
+        convId,
+      ).catch((err) => {
+        console.error("[chat/route] memory retrieval failed:", err);
+        return null;
+      });
+    }
 
     // Fire embedding for the most recent previous conversation (non-blocking)
     const previousConv = await prisma.conversation.findFirst({
@@ -80,6 +98,8 @@ export async function POST(req: NextRequest) {
       });
     }
   }
+
+  const systemPrompt = buildConversationSystemPrompt({ language, cefrLevel, memorySnippets });
 
   // The last message in the array is the one just sent by the user
   const lastUserMessage = messages.at(-1);
@@ -119,7 +139,7 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // 3 & 4. Fire-and-forget background jobs — never awaited, never block the response
+      // 3 & 4. Fire-and-forget background jobs
       if (userText && text) {
         void extractAndSaveVocabulary({
           userMessage: userText,
@@ -144,9 +164,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  console.log("[chat/route] streaming result created, returning response");
   const response = result.toUIMessageStreamResponse();
-  console.log("[chat/route] response headers:", Object.fromEntries(response.headers.entries()));
   response.headers.set("X-Conversation-Id", convId);
   return response;
 }

@@ -7,6 +7,7 @@ import { headers } from "next/headers";
 import { prisma } from "@/lib/db/prisma";
 import { buildConversationSystemPrompt } from "@/lib/ai/conversation-prompt";
 import { extractAndSaveVocabulary } from "@/lib/ai/extract-vocabulary";
+import { extractAndSaveGrammar } from "@/lib/ai/extract-grammer";
 
 const anthropic = createAnthropic();
 
@@ -98,7 +99,7 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // 3. Fire-and-forget vocabulary extraction — never awaited, never blocks the response
+      // 3 & 4. Fire-and-forget background jobs — never awaited, never block the response
       if (userText && text) {
         void extractAndSaveVocabulary({
           userMessage: userText,
@@ -109,11 +110,23 @@ export async function POST(req: NextRequest) {
         }).catch((err) => {
           console.error("[chat/route] vocabulary extraction failed:", err);
         });
+
+        void extractAndSaveGrammar({
+          userMessage: userText,
+          aiMessage: text,
+          language,
+          userLanguageId,
+          conversationId: convId,
+        }).catch((err) => {
+          console.error("[chat/route] grammar extraction failed:", err);
+        });
       }
     },
   });
 
+  console.log("[chat/route] streaming result created, returning response");
   const response = result.toUIMessageStreamResponse();
+  console.log("[chat/route] response headers:", Object.fromEntries(response.headers.entries()));
   response.headers.set("X-Conversation-Id", convId);
   return response;
 }

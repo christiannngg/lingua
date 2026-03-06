@@ -94,6 +94,9 @@ model UserLanguage {
 
   vocabularyItems   VocabularyItem[]
 
+  grammarMasteries  UserGrammarMastery[]
+  grammarErrors     GrammarError[]
+
   @@unique([userId, language])  // prevents duplicate language entries per user
   @@index([userId])
   @@map("user_languages")
@@ -120,6 +123,8 @@ model Conversation {
   userLanguage   UserLanguage @relation(fields: [userLanguageId], references: [id], onDelete: Cascade)
   messages       Message[]
   vocabularyItems   VocabularyItem[]
+
+  grammarErrors     GrammarError[]
 
   @@index([userLanguageId])
   @@map("conversations")
@@ -155,4 +160,52 @@ model VocabularyItem {
   @@unique([userLanguageId, word])
   @@index([userLanguageId])
   @@map("vocabulary_items")
+}
+
+model GrammarConcept {
+  id          String   @id @default(cuid())
+  language    String   // "es" | "it"
+  name        String   // matches GRAMMAR_CONCEPTS keys exactly
+  description String
+
+  masteries   UserGrammarMastery[]
+  errors      GrammarError[]
+
+  @@unique([language, name], name: "language_name")
+  @@index([language])
+  @@map("grammar_concepts")
+}
+
+model UserGrammarMastery {
+  id               String   @id @default(cuid())
+  userLanguageId   String
+  grammarConceptId String
+  errorCount       Int      @default(0)
+  lastSeenAt       DateTime
+
+  userLanguage   UserLanguage   @relation(fields: [userLanguageId], references: [id], onDelete: Cascade)
+  grammarConcept GrammarConcept @relation(fields: [grammarConceptId], references: [id], onDelete: Cascade)
+
+  @@unique([userLanguageId, grammarConceptId])
+  @@index([userLanguageId])
+  @@map("user_grammar_mastery")
+}
+
+model GrammarError {
+  id               String   @id @default(cuid())
+  userLanguageId   String
+  grammarConceptId String
+  conversationId   String
+  userSentence     String   @db.Text
+  correction       String   @db.Text
+  explanation      String   @db.Text
+  createdAt        DateTime @default(now())
+
+  userLanguage   UserLanguage   @relation(fields: [userLanguageId], references: [id], onDelete: Cascade)
+  grammarConcept GrammarConcept @relation(fields: [grammarConceptId], references: [id], onDelete: Cascade)
+  conversation   Conversation   @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([userLanguageId])
+  @@index([conversationId])
+  @@map("grammar_errors")
 }

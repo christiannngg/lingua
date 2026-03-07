@@ -154,6 +154,16 @@ model VocabularyItem {
   exampleSentence      String?   @db.Text
   sourceConversationId String?
 
+  // ── FSRS scheduling fields ──────────────────────────────────────────────
+  // state mirrors CardState enum values: "NEW" | "LEARNING" | "REVIEW" | "RELEARNING"
+  state       String    @default("NEW")
+  stability   Float     @default(0)
+  difficulty  Float     @default(0)
+  reps        Int       @default(0)
+  lapses      Int       @default(0)
+  lastReview  DateTime?
+  nextReview  DateTime?
+
   createdAt DateTime @default(now())
 
   userLanguage       UserLanguage @relation(fields: [userLanguageId], references: [id], onDelete: Cascade)
@@ -161,6 +171,7 @@ model VocabularyItem {
 
   @@unique([userLanguageId, word])
   @@index([userLanguageId])
+  @@index([nextReview])   // daily review queue queries filter by this
   @@map("vocabulary_items")
 }
 

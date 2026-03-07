@@ -1,3 +1,4 @@
+// src/app/dashboard/layout.tsx
 import { AppNav } from "@/components/layout/AppNav";
 import { getUserLanguages } from "@/app/actions/languages";
 

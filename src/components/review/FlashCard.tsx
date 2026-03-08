@@ -10,6 +10,8 @@ interface FlashCardProps {
   submitting: boolean;
   cardNumber: number;
   totalCards: number;
+  aiSentence: string | null;      // AI-generated sentence — replaces stored one when available
+  isGenerating: boolean;          // true while the AI call is in flight
 }
 
 const PART_OF_SPEECH_ABBR: Record<string, string> = {
@@ -30,7 +32,12 @@ export function FlashCard({
   submitting,
   cardNumber,
   totalCards,
+  aiSentence,
+  isGenerating,
 }: FlashCardProps) {
+  // Prefer AI-generated sentence when available, fall back to stored sentence
+  const displaySentence = aiSentence ?? card.exampleSentence;
+
   return (
     <div className="flex w-full max-w-xl flex-col gap-4">
 
@@ -77,18 +84,28 @@ export function FlashCard({
             )}
           </div>
 
-          {/* Example sentence — always visible */}
-          {card.exampleSentence && (
+          {/* Example sentence — shimmer while generating, sentence when ready */}
+          {isGenerating ? (
+            <div
+              className="mt-3 h-4 w-64 rounded"
+              style={{
+                background: "linear-gradient(90deg, var(--border) 25%, var(--muted-foreground) 50%, var(--border) 75%)",
+                backgroundSize: "200% 100%",
+                animation: "shimmer 1.5s infinite",
+                opacity: 0.3,
+              }}
+            />
+          ) : displaySentence ? (
             <p
-              className="mt-3 max-w-sm border-l-2 pl-3 text-left text-sm italic"
+              className="mt-3 max-w-sm border-l-2 pl-3 text-left text-sm italic transition-opacity duration-300"
               style={{
                 borderColor: "var(--color-brand-500)",
                 color: "var(--muted-foreground)",
               }}
             >
-              {card.exampleSentence}
+              {displaySentence}
             </p>
-          )}
+          ) : null}
         </div>
 
         {/* Divider + translation reveal */}
@@ -144,6 +161,14 @@ export function FlashCard({
           <RatingButtons onRate={onRate} disabled={submitting} />
         </div>
       )}
+
+      {/* Shimmer keyframe — injected inline so no global CSS dependency */}
+      <style>{`
+        @keyframes shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+      `}</style>
     </div>
   );
 }

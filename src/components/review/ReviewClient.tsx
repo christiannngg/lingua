@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { ReviewQueue, ReviewCard } from "@/app/actions/review";
 import { submitReview } from "@/app/actions/review";
@@ -53,8 +53,49 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
   // Earliest nextReview across all cards — used on completion screen
   const [earliestNextReview, setEarliestNextReview] = useState<Date | null>(null);
 
+  // ── AI sentence state ─────────────────────────────────────────────────────
+  // Keyed by card id so each card gets its own generated sentence
+  const [aiSentences, setAiSentences] = useState<Record<string, string>>({});
+  const [isGenerating, setIsGenerating] = useState(false);
+  // Track which card ids have already had generation attempted (avoid re-fetching)
+  const generatedRef = useRef<Set<string>>(new Set());
+
   // ── Empty queue ──────────────────────────────────────────────────────────
   const isEmpty = cards.length === 0;
+
+  // ── Current card ─────────────────────────────────────────────────────────
+  const currentCard = cards[currentIndex];
+
+  // ── Generate sentence on card mount ──────────────────────────────────────
+  // Fires once per card when it becomes the active card.
+  // Uses a ref to prevent duplicate calls under React StrictMode.
+  useEffect(() => {
+    if (!currentCard || done || isEmpty) return;
+    if (generatedRef.current.has(currentCard.id)) return;
+
+    generatedRef.current.add(currentCard.id);
+    setIsGenerating(true);
+
+    fetch("/api/vocabulary/generate-sentence", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ vocabularyItemId: currentCard.id }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json() as Promise<{ sentence: string }>;
+      })
+      .then(({ sentence }) => {
+        setAiSentences((prev) => ({ ...prev, [currentCard.id]: sentence }));
+      })
+      .catch((err) => {
+        // Silent failure — FlashCard falls back to stored exampleSentence
+        console.error("[ReviewClient] sentence generation failed:", err);
+      })
+      .finally(() => {
+        setIsGenerating(false);
+      });
+  }, [currentCard, done, isEmpty]);
 
   // ── Handlers ────────────────────────────────────────────────────────────
 
@@ -111,10 +152,9 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
     setRevealed(false);
     setRatingSummary(emptyRatingSummary());
     setEarliestNextReview(null);
+    setAiSentences({});
+    generatedRef.current.clear();
   }, [router]);
-
-  // ── Current card ─────────────────────────────────────────────────────────
-  const currentCard = cards[currentIndex];
 
   // ─────────────────────────────────────────────────────────────────────────
 
@@ -203,6 +243,8 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
             submitting={submitting}
             cardNumber={currentIndex + 1}
             totalCards={cards.length}
+            aiSentence={aiSentences[currentCard.id] ?? null}
+            isGenerating={isGenerating}
           />
         )}
       </div>

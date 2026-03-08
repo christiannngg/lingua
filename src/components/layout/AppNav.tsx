@@ -9,7 +9,7 @@ const LANGUAGE_LABELS: Record<string, string> = {
 };
 
 const NAV_ITEMS: {
-  href: "/dashboard" | "/learn" | "/dashboard/review" | "/dashboard/vocabulary" | "/settings";
+  href: "/dashboard" | "/learn" | "/dashboard/review" | "/dashboard/vocabulary" | "/settings" | "/chat/es";
   label: string;
   icon: string;
 }[] = [
@@ -18,6 +18,7 @@ const NAV_ITEMS: {
   { href: "/dashboard/review", label: "Review", icon: "🔁" },
   { href: "/dashboard/vocabulary", label: "Vocabulary", icon: "📖" },
   { href: "/settings", label: "Settings", icon: "⚙️" },
+  { href: "/chat/es", label: "Chat", icon: "💬" }
 ];
 
 interface AppNavProps {

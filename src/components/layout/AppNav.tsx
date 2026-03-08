@@ -9,13 +9,13 @@ const LANGUAGE_LABELS: Record<string, string> = {
 };
 
 const NAV_ITEMS: {
-  href: "/dashboard" | "/learn" | "/review" | "/dashboard/vocabulary" | "/settings";
+  href: "/dashboard" | "/learn" | "/dashboard/review" | "/dashboard/vocabulary" | "/settings";
   label: string;
   icon: string;
 }[] = [
   { href: "/dashboard", label: "Dashboard", icon: "⊞" },
   { href: "/learn", label: "Learn", icon: "💬" },
-  { href: "/review", label: "Review", icon: "🔁" },
+  { href: "/dashboard/review", label: "Review", icon: "🔁" },
   { href: "/dashboard/vocabulary", label: "Vocabulary", icon: "📖" },
   { href: "/settings", label: "Settings", icon: "⚙️" },
 ];

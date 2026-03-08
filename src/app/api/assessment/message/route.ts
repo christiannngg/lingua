@@ -123,13 +123,21 @@ export async function POST(req: NextRequest) {
 
     const { cefrLevel, description } = await extractCefrResult(allMessages, language);
 
-    await prisma.userLanguage.update({
-      where: { id: userLanguageId },
-      data: {
-        cefrLevel,
-        assessmentCompleted: true,
-      },
-    });
+    await prisma.$transaction([
+      prisma.userLanguage.update({
+        where: { id: userLanguageId },
+        data: {
+          cefrLevel,
+          assessmentCompleted: true,
+        },
+      }),
+      prisma.assessmentHistory.create({
+        data: {
+          userLanguageId,
+          cefrLevel,
+        },
+      }),
+    ]);
 
     return NextResponse.json({
       reply: cleanReply,

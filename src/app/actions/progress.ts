@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/db/prisma";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { generateWeeklySummary } from "@/lib/ai/weekly-summary";
 
 const CEFR_TO_NUMERIC: Record<string, number> = {
   A1: 1,
@@ -42,6 +43,11 @@ export type GrammarConceptRow = {
   lastSeenAt: string;
   isMastered: boolean;
   recentErrors: GrammarErrorDetail[];
+};
+
+export type WeeklySummaryResult = {
+  content: string;
+  generatedAt: string;
 };
 
 // Mirrors the MASTERED_REPS_THRESHOLD in vocabulary.ts
@@ -238,4 +244,83 @@ export async function getGrammarHeatmap(language: string): Promise<GrammarConcep
   const mastered = rows.filter((r) => r.isMastered).sort((a, b) => b.errorCount - a.errorCount);
 
   return [...active, ...mastered];
+}
+
+export async function getWeeklySummary(language: string): Promise<WeeklySummaryResult | null> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Unauthenticated");
+
+  const userLanguage = await prisma.userLanguage.findUnique({
+    where: {
+      userId_language: { userId: session.user.id, language },
+    },
+    select: { id: true, cefrLevel: true },
+  });
+
+  if (!userLanguage) return null;
+
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+  // Return cached summary if it exists and is less than 7 days old
+  const cached = await prisma.weeklySummary.findUnique({
+    where: { userLanguageId: userLanguage.id },
+  });
+
+  if (cached && cached.generatedAt > sevenDaysAgo) {
+    return {
+      content: cached.content,
+      generatedAt: cached.generatedAt.toISOString().slice(0, 10),
+    };
+  }
+
+  // Gather this week's stats
+  const [wordsLearned, conversationsHad, grammarErrors, levelChange] = await Promise.all([
+    prisma.vocabularyItem.count({
+      where: {
+        userLanguageId: userLanguage.id,
+        createdAt: { gte: sevenDaysAgo },
+      },
+    }),
+    prisma.conversation.count({
+      where: {
+        userLanguageId: userLanguage.id,
+        createdAt: { gte: sevenDaysAgo },
+      },
+    }),
+    prisma.grammarError.count({
+      where: {
+        userLanguageId: userLanguage.id,
+        createdAt: { gte: sevenDaysAgo },
+      },
+    }),
+    prisma.assessmentHistory.findFirst({
+      where: {
+        userLanguageId: userLanguage.id,
+        takenAt: { gte: sevenDaysAgo },
+      },
+      orderBy: { takenAt: "desc" },
+      select: { cefrLevel: true },
+    }),
+  ]);
+
+  const content = await generateWeeklySummary({
+    language,
+    cefrLevel: userLanguage.cefrLevel,
+    wordsLearned,
+    conversationsHad,
+    grammarErrorsThisWeek: grammarErrors,
+    levelChangedTo: levelChange?.cefrLevel ?? null,
+  });
+
+  // Upsert cache — replace any existing summary for this user language
+  await prisma.weeklySummary.upsert({
+    where: { userLanguageId: userLanguage.id },
+    create: { userLanguageId: userLanguage.id, content },
+    update: { content, generatedAt: new Date() },
+  });
+
+  return {
+    content,
+    generatedAt: new Date().toISOString().slice(0, 10),
+  };
 }

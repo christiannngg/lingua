@@ -97,6 +97,8 @@ model UserLanguage {
   grammarMasteries  UserGrammarMastery[]
   grammarErrors     GrammarError[]
 
+  weeklySummary WeeklySummary?
+
   @@unique([userId, language])  // prevents duplicate language entries per user
   @@index([userId])
   @@map("user_languages")
@@ -234,4 +236,16 @@ model ConversationEmbedding {
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@map("conversation_embeddings")
+}
+
+model WeeklySummary {
+  id             String   @id @default(cuid())
+  userLanguageId String
+  content        String   @db.Text
+  generatedAt    DateTime @default(now())
+
+  userLanguage UserLanguage @relation(fields: [userLanguageId], references: [id], onDelete: Cascade)
+
+  @@unique([userLanguageId])
+  @@map("weekly_summaries")
 }

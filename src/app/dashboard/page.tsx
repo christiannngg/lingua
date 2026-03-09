@@ -1,11 +1,17 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/db/prisma";
-import { getCefrHistory, getVocabularyGrowth, getGrammarHeatmap } from "@/app/actions/progress";
+import {
+  getCefrHistory,
+  getVocabularyGrowth,
+  getGrammarHeatmap,
+  getWeeklySummary,
+} from "@/app/actions/progress";
 import { CefrHistoryChart } from "@/components/progress/CefrHistoryChart";
 import { VocabularyGrowthChart } from "@/components/progress/VocabularyGrowthChart";
 import { GrammarHeatmap } from "@/components/progress/GrammarHeatmap";
 import { redirect } from "next/navigation";
+import { WeeklySummary } from "@/components/progress/WeeklySummary";
 
 const LANGUAGE_NAMES: Record<string, string> = {
   es: "Spanish",
@@ -36,10 +42,11 @@ export default async function DashboardPage() {
     );
   }
 
-  const [cefrHistory, vocabGrowth, grammarData] = await Promise.all([
+  const [cefrHistory, vocabGrowth, grammarData, weeklySummary] = await Promise.all([
     getCefrHistory(activeLanguage.language),
     getVocabularyGrowth(activeLanguage.language),
     getGrammarHeatmap(activeLanguage.language),
+    getWeeklySummary(activeLanguage.language),
   ]);
 
   const languageName = LANGUAGE_NAMES[activeLanguage.language] ?? activeLanguage.language;
@@ -52,6 +59,15 @@ export default async function DashboardPage() {
           {languageName} · {activeLanguage.cefrLevel}
         </p>
       </div>
+
+      <section>
+        <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">
+          This Week
+        </h2>
+        <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+          <WeeklySummary initial={weeklySummary} language={activeLanguage.language} />
+        </div>
+      </section>
 
       <section>
         <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">

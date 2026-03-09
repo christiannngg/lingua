@@ -3,17 +3,14 @@
 import { prisma } from "@/lib/db/prisma";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import {
+  isSupportedLanguage,
+  getAllLanguages,
+} from "@/lib/languages.config";
 
 export type LanguageActionResult =
   | { success: true; language: string }
   | { success: false; error: string };
-
-const SUPPORTED_LANGUAGES = ["es", "it"] as const;
-type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
-
-function isSupportedLanguage(lang: string): lang is SupportedLanguage {
-  return SUPPORTED_LANGUAGES.includes(lang as SupportedLanguage);
-}
 
 // ── Read actions (called from Server Components — throwing is fine) ──────────
 
@@ -25,6 +22,14 @@ export async function getUserLanguages() {
     where: { userId: session.user.id, isActive: true },
     orderBy: { createdAt: "asc" },
   });
+}
+
+/**
+ * Returns the full list of languages available for selection in the UI.
+ * Reads directly from the config — no DB call needed.
+ */
+export async function getAvailableLanguages() {
+  return getAllLanguages();
 }
 
 // ── Mutating actions (called from client interactions — return result) ────────

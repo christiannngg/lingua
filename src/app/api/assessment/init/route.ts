@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db/prisma";
 import { headers } from "next/headers";
+import { isSupportedLanguage } from "@/lib/languages.config";
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,7 +12,7 @@ export async function GET(req: NextRequest) {
     }
 
     const language = req.nextUrl.searchParams.get("language");
-    if (language !== "es" && language !== "it") {
+    if (!language || !isSupportedLanguage(language)) {
       return NextResponse.json({ error: "Invalid language" }, { status: 400 });
     }
 
@@ -22,7 +23,12 @@ export async function GET(req: NextRequest) {
     });
 
     if (!userLanguage) {
-      return NextResponse.json({ error: "Language not found" }, { status: 404 });
+      // The user navigated directly to /assessment/[language] without first
+      // adding the language via onboarding — tell the client to redirect.
+      return NextResponse.json(
+        { error: "Language not added", code: "LANGUAGE_NOT_ADDED" },
+        { status: 404 },
+      );
     }
 
     return NextResponse.json({

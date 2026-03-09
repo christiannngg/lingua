@@ -10,6 +10,7 @@ import { extractAndSaveVocabulary } from "@/lib/ai/extract-vocabulary";
 import { extractAndSaveGrammar } from "@/lib/ai/extract-grammer";
 import { embedConversation } from "@/lib/embeddings";
 import { retrieveRelevantMemory } from "@/lib/ai/retrieve-memory";
+import { isSupportedLanguage, type SupportedLanguage } from "@/lib/languages.config";
 
 const anthropic = createAnthropic();
 
@@ -22,7 +23,7 @@ const RequestSchema = z.object({
       parts: z.array(z.object({ type: z.string(), text: z.string().optional() })),
     }),
   ),
-  language: z.enum(["es", "it"]),
+  language: z.string(),
   userLanguageId: z.string(),
   conversationId: z.string().nullable(),
 });
@@ -43,7 +44,13 @@ export async function POST(req: NextRequest) {
     const parsed = RequestSchema.safeParse(body);
     if (!parsed.success) return new Response("Invalid request", { status: 400 });
 
-    const { messages, language, userLanguageId, conversationId } = parsed.data;
+    const { messages, language: rawLanguage, userLanguageId, conversationId } = parsed.data;
+
+    // Guard — validate language against config after parsing
+    if (!isSupportedLanguage(rawLanguage)) {
+      return new Response("Invalid language", { status: 400 });
+    }
+    const language: SupportedLanguage = rawLanguage;
 
     const userLanguage = await prisma.userLanguage.findUnique({
       where: { id: userLanguageId },
@@ -63,7 +70,6 @@ export async function POST(req: NextRequest) {
       });
       convId = conversation.id;
 
-      // Retrieve relevant memory from past conversations (non-blocking on failure)
       const firstUserMessage = messages.at(-1);
       const firstUserText = firstUserMessage
         ? extractText(firstUserMessage.parts as MessagePart[])
@@ -78,7 +84,6 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Fire embedding for the most recent previous conversation (non-blocking)
       const previousConv = await prisma.conversation.findFirst({
         where: {
           userLanguageId,
@@ -103,7 +108,6 @@ export async function POST(req: NextRequest) {
     const lastUserMessage = messages.at(-1);
     const userText = lastUserMessage ? extractText(lastUserMessage.parts as MessagePart[]) : "";
 
-    // Persist the user message
     if (userText) {
       await prisma.message.create({
         data: { conversationId: convId, role: "user", content: userText },
@@ -123,7 +127,6 @@ export async function POST(req: NextRequest) {
       system: systemPrompt,
       messages: modelMessages,
       onFinish: async ({ text }) => {
-        // 1. Persist assistant message
         try {
           await prisma.message.create({
             data: { conversationId: convId, role: "assistant", content: text },
@@ -132,7 +135,6 @@ export async function POST(req: NextRequest) {
           console.error("[chat/route] failed to persist assistant message:", err);
         }
 
-        // 2. Set conversation title on first message
         try {
           await prisma.conversation.updateMany({
             where: { id: convId, title: null },
@@ -145,7 +147,6 @@ export async function POST(req: NextRequest) {
           console.error("[chat/route] failed to update conversation title:", err);
         }
 
-        // 3 & 4. Fire-and-forget background jobs
         if (userText && text) {
           void extractAndSaveVocabulary({
             userMessage: userText,

@@ -12,11 +12,7 @@ import { VocabularyGrowthChart } from "@/components/progress/VocabularyGrowthCha
 import { GrammarHeatmap } from "@/components/progress/GrammarHeatmap";
 import { redirect } from "next/navigation";
 import { WeeklySummary } from "@/components/progress/WeeklySummary";
-
-const LANGUAGE_NAMES: Record<string, string> = {
-  es: "Spanish",
-  it: "Italian",
-};
+import { getLanguageDisplayName } from "@/lib/languages.config";
 
 export default async function DashboardPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -49,14 +45,12 @@ export default async function DashboardPage() {
     getWeeklySummary(activeLanguage.language),
   ]);
 
-  const languageName = LANGUAGE_NAMES[activeLanguage.language] ?? activeLanguage.language;
-
   return (
     <main className="max-w-2xl mx-auto p-6 space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-white">Progress</h1>
         <p className="text-slate-400 text-sm mt-1">
-          {languageName} · {activeLanguage.cefrLevel}
+          {getLanguageDisplayName(activeLanguage.language)} · {activeLanguage.cefrLevel}
         </p>
       </div>
 

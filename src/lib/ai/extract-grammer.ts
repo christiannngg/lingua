@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/db/prisma";
 import { GrammarExtractionSchema } from "@/lib/ai/grammar-schema";
 import { GRAMMAR_CONCEPTS } from "@/lib/ai/grammar-concepts";
+import { getLanguageDisplayName, type SupportedLanguage } from "@/lib/languages.config";
 
 const client = new Anthropic();
 
@@ -76,11 +77,11 @@ export async function extractAndSaveGrammar({
 }: {
   userMessage: string;
   aiMessage: string;
-  language: "es" | "it";
+  language: SupportedLanguage;
   userLanguageId: string;
   conversationId: string;
 }): Promise<void> {
-  const languageName = language === "es" ? "Spanish" : "Italian";
+  const languageName = getLanguageDisplayName(language);
   const conceptNames = GRAMMAR_CONCEPTS[language].map((c) => c.name);
   const conceptList = conceptNames.map((n) => `"${n}"`).join(" | ");
 

@@ -1,4 +1,6 @@
 import { Rating } from "@/lib/fsrs/types";
+import { LanguageFlag } from "@/components/ui/LanguageFlag";
+import { getLanguageDisplayName } from "@/lib/languages.config";
 
 interface RatingSummary {
   [Rating.Again]: number;
@@ -14,11 +16,6 @@ interface CompletionScreenProps {
   onReviewAgain: () => void;
   language: string;
 }
-
-const LANGUAGE_LABELS: Record<string, string> = {
-  es: "🇪🇸 Spanish",
-  it: "🇮🇹 Italian",
-};
 
 function formatNextReview(date: Date | null): string {
   if (!date) return "No upcoming reviews";
@@ -65,8 +62,10 @@ export function CompletionScreen({
         <h2 className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>
           Session complete!
         </h2>
-        <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
-          You reviewed {totalReviewed} {totalReviewed === 1 ? "word" : "words"} in {LANGUAGE_LABELS[language] ?? language}
+        <p className="flex items-center justify-center gap-2 text-sm" style={{ color: "var(--muted-foreground)" }}>
+          You reviewed {totalReviewed} {totalReviewed === 1 ? "word" : "words"} in
+          <LanguageFlag language={language} className="w-4 h-auto rounded-sm" />
+          {getLanguageDisplayName(language)}
         </p>
       </div>
 

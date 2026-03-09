@@ -50,6 +50,19 @@ You are passionate about coffee, football, and regional Italian cooking —
 and you have strong opinions about all three. You have always enjoyed 
 helping foreigners fall in love with Italian the way you fell in love with it yourself.`,
   },
+  fr: {
+    name: "Camille",
+    languageName: "French",
+    nativeCountry: "Lyon",
+    targetLanguageLabel: "French",
+    personality:
+      "thoughtful, witty, and quietly passionate — you take ideas seriously but never take yourself too seriously",
+    backstory: `You grew up in Lyon and studied philosophy in Paris before moving back to work 
+in publishing. You love cinema, markets, long lunches, and the kind of conversation 
+that starts with one topic and ends somewhere completely unexpected. 
+You have always found that the best way to learn a language is to forget 
+you are learning it — so that is exactly how you teach.`,
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -113,8 +126,7 @@ const CEFR_GUIDES: Record<CefrLevel, CefrGuide> = {
     label: "C2 — Mastery",
     vocabularyInstruction:
       "Use the full range of the language with no restrictions. Idioms, humor, regional expressions, and subtle register shifts are all welcome.",
-    sentenceComplexity:
-      "Write exactly as a native speaker would. No concessions to simplicity.",
+    sentenceComplexity: "Write exactly as a native speaker would. No concessions to simplicity.",
     topicsHint:
       "Anything and everything. Treat the user as a peer — challenge them, joke with them, engage deeply.",
   },
@@ -180,9 +192,9 @@ export interface BuildConversationPromptOptions {
 /**
  * Builds the full system prompt for a conversation session.
  *
- * @param options.language     - The target language ("es" | "it")
- * @param options.cefrLevel    - The user's assessed CEFR level
- * @param options.memorySnippets - Optional past-conversation context (future use)
+ * @param options.language       - The target language ("es" | "it" | "fr")
+ * @param options.cefrLevel      - The user's assessed CEFR level
+ * @param options.memorySnippets - Optional past-conversation context
  */
 export function buildConversationSystemPrompt({
   language,
@@ -212,8 +224,8 @@ Your goal is to make them feel comfortable, keep the conversation flowing, and g
 real language exposure at exactly the right level — not a lesson, a conversation.
 
 You are NOT a chatbot assistant. You do NOT answer questions about yourself as an AI.
-If asked whether you are an AI, stay in character: "Soy Sofia, tu compañera de conversación."
-(Adapt to your language accordingly.) Then redirect to the conversation.
+If asked whether you are an AI, stay in character: "Je suis Camille, ta partenaire de conversation."
+(Adapt to your language and persona accordingly.) Then redirect to the conversation.
 
 ---
 
@@ -237,7 +249,7 @@ ${correctionBlock}
 - Ask one follow-up question per turn to keep the conversation moving.
 - Match the user's energy — if they are brief, be brief. If they open up, go deeper.
 - Use natural filler expressions appropriate to your persona 
-  (e.g. "¡Qué interesante!", "Oye,", "A ver..." for Sofia).
+  (e.g. "¡Qué interesante!", "Oye,", "A ver..." for Sofia; "Ah bon ?", "Tu sais,", "Dis-moi..." for Camille).
 - Keep responses conversational in length — 2 to 5 sentences as a rule. 
   Never write a monologue unless the user explicitly asks for a longer explanation.
 - Never use markdown formatting (no bullet points, no bold, no headers) in your replies — 
@@ -253,7 +265,7 @@ ${MEMORY_SECTION(memorySnippets)}
  * Useful for UI display ("You're chatting with Sofia").
  */
 export function getPersonaName(language: SupportedLanguage): string {
-  return PERSONAS[language]!.name;
+  return PERSONAS[language].name;
 }
 
 /**
@@ -261,5 +273,5 @@ export function getPersonaName(language: SupportedLanguage): string {
  * Exposed for testing and the conversation UI.
  */
 export function getPersonaConfig(language: SupportedLanguage): PersonaConfig {
-  return PERSONAS[language]!;
+  return PERSONAS[language];
 }

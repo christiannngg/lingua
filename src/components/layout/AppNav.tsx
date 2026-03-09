@@ -2,11 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-const LANGUAGE_LABELS: Record<string, string> = {
-  es: "🇪🇸 Spanish",
-  it: "🇮🇹 Italian",
-};
+import { LanguageFlag } from "@/components/ui/LanguageFlag";
+import { getLanguageDisplayName } from "@/lib/languages.config";
 
 const NAV_ITEMS: {
   href: "/dashboard" | "/learn" | "/dashboard/review" | "/dashboard/vocabulary" | "/settings" | "/chat/es";
@@ -18,7 +15,7 @@ const NAV_ITEMS: {
   { href: "/dashboard/review", label: "Review", icon: "🔁" },
   { href: "/dashboard/vocabulary", label: "Vocabulary", icon: "📖" },
   { href: "/settings", label: "Settings", icon: "⚙️" },
-  { href: "/chat/es", label: "Chat", icon: "💬" }
+  { href: "/chat/es", label: "Chat", icon: "💬" },
 ];
 
 interface AppNavProps {
@@ -68,11 +65,14 @@ export function AppNav({ languages }: AppNavProps) {
           className="mt-auto rounded-lg border p-3 text-sm"
           style={{ borderColor: "var(--border)" }}
         >
-          <p className="mb-1 font-medium">Learning</p>
+          <p className="mb-2 font-medium">Learning</p>
           {languages.map((lang) => (
-            <p key={lang} className="text-xs" style={{ color: "var(--muted-foreground)" }}>
-              {LANGUAGE_LABELS[lang] ?? lang}
-            </p>
+            <div key={lang} className="flex items-center gap-2 py-0.5">
+              <LanguageFlag language={lang} className="w-5 h-auto rounded-sm" />
+              <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>
+                {getLanguageDisplayName(lang)}
+              </span>
+            </div>
           ))}
         </div>
       )}

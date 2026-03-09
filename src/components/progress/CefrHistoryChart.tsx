@@ -11,6 +11,7 @@ import {
   type DotProps,
 } from "recharts";
 import type { CefrDataPoint } from "@/app/actions/progress";
+import { getLanguageDisplayName } from "@/lib/languages.config";
 
 const NUMERIC_TO_CEFR: Record<number, string> = {
   1: "A1",
@@ -85,13 +86,8 @@ type Props = {
   language: string;
 };
 
-const LANGUAGE_NAMES: Record<string, string> = {
-  es: "Spanish",
-  it: "Italian",
-};
-
 export function CefrHistoryChart({ data, language }: Props) {
-  const languageName = LANGUAGE_NAMES[language] ?? language;
+  const languageName = getLanguageDisplayName(language);
 
   if (data.length < 2) {
     return (
@@ -105,7 +101,6 @@ export function CefrHistoryChart({ data, language }: Props) {
     );
   }
 
-  // Draw a subtle reference line at each CEFR boundary
   const levelBoundaries = [1, 2, 3, 4, 5, 6];
 
   return (
@@ -149,7 +144,6 @@ export function CefrHistoryChart({ data, language }: Props) {
         </LineChart>
       </ResponsiveContainer>
 
-      {/* Legend row */}
       <div className="flex items-center gap-4 justify-center mt-2 flex-wrap">
         {Object.entries(CEFR_COLORS).map(([level, color]) => (
           <span key={level} className="flex items-center gap-1.5 text-xs text-slate-400">

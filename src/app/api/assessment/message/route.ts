@@ -6,12 +6,13 @@ import { AssessmentResultSchema, CEFR_DESCRIPTIONS } from "@/lib/ai/assessment-s
 import { prisma } from "@/lib/db/prisma";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { isSupportedLanguage, getLanguageDisplayName, type SupportedLanguage } from "@/lib/languages.config";
 
 const client = new Anthropic();
 
-// Schema for incoming request body
+// Schema for incoming request body — language validated as string, guard below
 const RequestSchema = z.object({
-  language: z.enum(["es", "it"]),
+  language: z.string(),
   userLanguageId: z.string(),
   messages: z.array(
     z.object({
@@ -24,9 +25,9 @@ const RequestSchema = z.object({
 // Secondary AI call to extract structured CEFR result from the conversation
 async function extractCefrResult(
   conversation: Array<{ role: "user" | "assistant"; content: string }>,
-  language: "es" | "it",
+  language: SupportedLanguage,
 ): Promise<{ cefrLevel: string; description: string }> {
-  const languageName = language === "es" ? "Spanish" : "Italian";
+  const languageName = getLanguageDisplayName(language);
   const transcript = conversation.map((m) => `${m.role.toUpperCase()}: ${m.content}`).join("\n");
 
   let attempts = 0;
@@ -34,7 +35,7 @@ async function extractCefrResult(
   while (attempts < 2) {
     try {
       const response = await client.messages.create({
-        model: "claude-haiku-4-5-20251001", // TODO: Switch back to sonnet
+        model: "claude-haiku-4-5-20251001",
         max_tokens: 1024,
         system: `You are a ${languageName} proficiency evaluator. Given a conversation transcript from a language assessment, determine the user's CEFR level.
 
@@ -94,7 +95,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
-    const { language, userLanguageId, messages } = parsed.data;
+    const { language: rawLanguage, userLanguageId, messages } = parsed.data;
+
+    // Guard — validate language against config after parsing
+    if (!isSupportedLanguage(rawLanguage)) {
+      return NextResponse.json({ error: "Invalid language" }, { status: 400 });
+    }
+    const language = rawLanguage;
 
     const messagesForApi =
       messages.length === 0

@@ -1,31 +1,34 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { getUserLanguages, resetAssessment } from "@/app/actions/languages";
+import { getUserLanguages, resetAssessment, addUserLanguage, getAvailableLanguages } from "@/app/actions/languages";
 import { getMemories } from "../actions/memory";
 import { MemoryDeleteButton } from "@/components/settings/MemoryDeleteButton";
-
-const LANGUAGE_LABELS: Record<string, string> = {
-  es: "🇪🇸 Spanish",
-  it: "🇮🇹 Italian",
-};
+import { getLanguageDisplayName } from "@/lib/languages.config";
 
 export default async function SettingsPage() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) redirect("/sign-in" as never);
 
-  const userLanguages = await getUserLanguages();
-  const memories = await getMemories();
+  const [userLanguages, memories, availableLanguages] = await Promise.all([
+    getUserLanguages(),
+    getMemories(),
+    getAvailableLanguages(),
+  ]);
+
+  const addedCodes = new Set(userLanguages.map((ul) => ul.language));
+  const unadded = availableLanguages.filter((lang) => !addedCodes.has(lang.code));
 
   return (
     <main className="max-w-lg mx-auto p-8 text-white">
       <h1 className="text-2xl font-bold mb-2">Settings</h1>
       <p className="mb-8" style={{ color: "var(--muted-foreground)" }}>
-        Manage your language assessments.
+        Manage your languages and memory.
       </p>
 
+      {/* ── Active languages ── */}
       <section>
-        <h2 className="text-lg font-semibold mb-4">Language Assessments</h2>
+        <h2 className="text-lg font-semibold mb-4">Your Languages</h2>
         <div className="flex flex-col gap-4">
           {userLanguages.map((ul) => (
             <div
@@ -34,16 +37,19 @@ export default async function SettingsPage() {
               style={{ borderColor: "var(--border)" }}
             >
               <div>
-                <p className="font-medium">{LANGUAGE_LABELS[ul.language] ?? ul.language}</p>
+                <p className="font-medium">{getLanguageDisplayName(ul.language)}</p>
                 <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
-                  Current level: <span className="font-semibold text-white">{ul.cefrLevel}</span>
+                  Current level:{" "}
+                  <span className="font-semibold text-white">{ul.cefrLevel ?? "Not assessed"}</span>
                 </p>
               </div>
               <form
                 action={async () => {
                   "use server";
-                  const lang = await resetAssessment(ul.language);
-                  redirect(`/assessment/${lang}` as never);
+                  const result = await resetAssessment(ul.language);
+                  if (result.success) {
+                    redirect(`/assessment/${result.language}` as never);
+                  }
                 }}
               >
                 <button
@@ -58,11 +64,45 @@ export default async function SettingsPage() {
           ))}
         </div>
       </section>
+
+      {/* ── Add a language ── */}
+      {unadded.length > 0 && (
+        <section className="mt-8">
+          <h2 className="text-lg font-semibold mb-1">Add a Language</h2>
+          <p className="text-sm mb-4" style={{ color: "var(--muted-foreground)" }}>
+            Start learning a new language. You&apos;ll take a short assessment to find your level.
+          </p>
+          <div className="flex flex-col gap-3">
+            {unadded.map((lang) => (
+              <form
+                key={lang.code}
+                action={async () => {
+                  "use server";
+                  const result = await addUserLanguage(lang.code);
+                  if (result.success) {
+                    redirect(`/assessment/${result.language}` as never);
+                  }
+                }}
+              >
+                <button
+                  type="submit"
+                  className="w-full rounded-xl border px-4 py-3 text-left text-sm font-medium transition-colors hover:bg-white hover:text-black"
+                  style={{ borderColor: "var(--border)" }}
+                >
+                  + Start learning {lang.displayName}
+                </button>
+              </form>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── Memory ── */}
       <section className="mt-10">
         <h2 className="text-lg font-semibold mb-1">Conversation Memory</h2>
         <p className="text-sm mb-4" style={{ color: "var(--muted-foreground)" }}>
           These are summaries Sofia and Marco use to remember past conversations. Removing a memory
-          means it won't influence future sessions — your conversation history is preserved.
+          means it won&apos;t influence future sessions — your conversation history is preserved.
         </p>
 
         {memories.length === 0 ? (
@@ -84,7 +124,7 @@ export default async function SettingsPage() {
                       className="text-xs font-medium mb-1"
                       style={{ color: "var(--muted-foreground)" }}
                     >
-                      {memory.language === "es" ? "🇪🇸 Spanish" : "🇮🇹 Italian"}
+                      {getLanguageDisplayName(memory.language)}
                       {" · "}
                       {memory.conversationTitle ?? "Untitled conversation"}
                       {" · "}

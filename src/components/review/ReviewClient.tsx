@@ -7,13 +7,10 @@ import { submitReview } from "@/app/actions/review";
 import { Rating } from "@/lib/fsrs/types";
 import { FlashCard } from "./FlashCard";
 import { CompletionScreen } from "./CompletionScreen";
+import { LanguageFlag } from "@/components/ui/LanguageFlag";
+import { getLanguageDisplayName } from "@/lib/languages.config";
 
 // ─────────────────────────────────────────────────────────────────────────────
-
-const LANGUAGE_LABELS: Record<string, string> = {
-  es: "🇪🇸 Spanish",
-  it: "🇮🇹 Italian",
-};
 
 interface RatingSummary {
   [Rating.Again]: number;
@@ -50,25 +47,18 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
   const [ratingSummary, setRatingSummary] = useState<RatingSummary>(emptyRatingSummary);
   const [done, setDone] = useState(false);
 
-  // Earliest nextReview across all cards — used on completion screen
   const [earliestNextReview, setEarliestNextReview] = useState<Date | null>(null);
 
   // ── AI sentence state ─────────────────────────────────────────────────────
-  // Keyed by card id so each card gets its own generated sentence
   const [aiSentences, setAiSentences] = useState<Record<string, string>>({});
   const [isGenerating, setIsGenerating] = useState(false);
-  // Track which card ids have already had generation attempted (avoid re-fetching)
   const generatedRef = useRef<Set<string>>(new Set());
 
   // ── Empty queue ──────────────────────────────────────────────────────────
   const isEmpty = cards.length === 0;
-
-  // ── Current card ─────────────────────────────────────────────────────────
   const currentCard = cards[currentIndex];
 
   // ── Generate sentence on card mount ──────────────────────────────────────
-  // Fires once per card when it becomes the active card.
-  // Uses a ref to prevent duplicate calls under React StrictMode.
   useEffect(() => {
     if (!currentCard || done || isEmpty) return;
     if (generatedRef.current.has(currentCard.id)) return;
@@ -89,7 +79,6 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
         setAiSentences((prev) => ({ ...prev, [currentCard.id]: sentence }));
       })
       .catch((err) => {
-        // Silent failure — FlashCard falls back to stored exampleSentence
         console.error("[ReviewClient] sentence generation failed:", err);
       })
       .finally(() => {
@@ -110,7 +99,6 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
 
       setSubmitting(true);
 
-      // Advance UI immediately — don't wait for the DB write
       setRatingSummary((prev) => ({
         ...prev,
         [rating]: prev[rating] + 1,
@@ -125,7 +113,6 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
         setRevealed(false);
       }
 
-      // DB write happens after UI has already moved on
       try {
         const result = await submitReview(card.id, rating);
         if (result.success && result.updatedCard.nextReview) {
@@ -135,7 +122,6 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
           );
         }
       } catch (err) {
-        // Silent failure — the user has already moved on
         console.error("[ReviewClient] submitReview failed:", err);
       } finally {
         setSubmitting(false);
@@ -145,7 +131,6 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
   );
 
   const handleReviewAgain = useCallback(() => {
-    // Reload the page to get a fresh queue from the server
     router.refresh();
     setDone(false);
     setCurrentIndex(0);
@@ -170,8 +155,9 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
           <h1 className="text-xl font-bold" style={{ color: "var(--foreground)" }}>
             Review
           </h1>
-          <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
-            {LANGUAGE_LABELS[currentLang] ?? currentLang} · CEFR {queue.cefrLevel}
+          <p className="flex items-center gap-2 text-sm" style={{ color: "var(--muted-foreground)" }}>
+            <LanguageFlag language={currentLang} className="w-4 h-auto rounded-sm" />
+            {getLanguageDisplayName(currentLang)} · CEFR {queue.cefrLevel}
           </p>
         </div>
 
@@ -182,14 +168,15 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
               <button
                 key={lang}
                 onClick={() => router.push(`/dashboard/review?lang=${lang}` as never)}
-                className="rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors"
+                className="flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors"
                 style={{
                   borderColor: lang === currentLang ? "var(--color-brand-500)" : "var(--border)",
                   backgroundColor: lang === currentLang ? "var(--color-brand-100)" : "transparent",
                   color: lang === currentLang ? "var(--color-brand-700)" : "var(--muted-foreground)",
                 }}
               >
-                {LANGUAGE_LABELS[lang] ?? lang}
+                <LanguageFlag language={lang} className="w-4 h-auto rounded-sm" />
+                {getLanguageDisplayName(lang)}
               </button>
             ))}
           </div>

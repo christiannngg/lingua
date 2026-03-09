@@ -2,28 +2,31 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
+import {
+  getLanguageDisplayName,
+  getPersonaNameForLanguage,
+  isSupportedLanguage,
+} from "@/lib/languages.config";
 
 type Message = {
   role: "user" | "assistant";
   content: string;
 };
 
-type Language = "es" | "it";
-
-const LANGUAGE_NAMES: Record<Language, string> = {
-  es: "Spanish",
-  it: "Italian",
-};
-
-const PERSONA_NAMES: Record<Language, string> = {
-  es: "Sofia",
-  it: "Marco",
-};
-
 export default function AssessmentPage() {
   const router = useRouter();
   const params = useParams();
-  const language = params.language as Language;
+  const rawLanguage = params.language as string;
+
+  // Guard — redirect to dashboard if the language param is not supported
+  if (!isSupportedLanguage(rawLanguage)) {
+    router.replace("/dashboard");
+    return null;
+  }
+
+  const language = rawLanguage;
+  const languageName = getLanguageDisplayName(language);
+  const personaName = getPersonaNameForLanguage(language);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState("");
@@ -36,17 +39,23 @@ export default function AssessmentPage() {
   const [userLanguageId, setUserLanguageId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-  // const hasInitialized = useRef(false);
 
   // Fetch the userLanguageId on mount, then kick off the opening question
   useEffect(() => {
-    //  if (hasInitialized.current) return;
-      // hasInitialized.current = true;
     async function init() {
       try {
         const res = await fetch(`/api/assessment/init?language=${language}`);
-        if (!res.ok) throw new Error("Failed to initialize assessment");
         const data = await res.json();
+
+        if (!res.ok) {
+          // User navigated here directly without adding the language first —
+          // send them to onboarding so they can add it properly.
+          if (data?.code === "LANGUAGE_NOT_ADDED") {
+            router.replace("/onboarding");
+            return;
+          }
+          throw new Error(data?.error ?? "Failed to initialize assessment");
+        }
 
         // If already assessed, skip straight to dashboard
         if (data.assessmentCompleted) {
@@ -132,15 +141,12 @@ export default function AssessmentPage() {
     }
   }
 
-  const persona = PERSONA_NAMES[language] ?? "Your tutor";
-  const languageName = LANGUAGE_NAMES[language] ?? language;
-
   // ── Result screen ──────────────────────────────────────────────────────────
   if (result) {
     return (
       <main style={{ maxWidth: 600, margin: "0 auto", padding: "2rem" }}>
         <h1>Assessment Complete</h1>
-        <p>Here's where you're starting with {languageName}:</p>
+        <p>Here&apos;s where you&apos;re starting with {languageName}:</p>
 
         <div
           style={{
@@ -172,11 +178,11 @@ export default function AssessmentPage() {
     <main style={{ maxWidth: 600, margin: "0 auto", padding: "2rem" }}>
       <h1>Level Assessment</h1>
       <p>
-        {persona} will ask you a few questions in {languageName} to find the
+        {personaName} will ask you a few questions in {languageName} to find the
         right starting point for you.
       </p>
       <p style={{ color: "#666", fontSize: "0.875rem" }}>
-        Turn {turnCount} of 5-8
+        Turn {turnCount} of 5–8
       </p>
 
       {/* Message thread */}
@@ -218,7 +224,7 @@ export default function AssessmentPage() {
               fontStyle: "italic",
             }}
           >
-            {persona} is typing…
+            {personaName} is typing…
           </div>
         )}
 

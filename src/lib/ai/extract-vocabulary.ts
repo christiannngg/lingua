@@ -1,12 +1,12 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/db/prisma";
 import { VocabularyExtractionSchema } from "@/lib/ai/vocabulary-schema";
+import { getLanguageDisplayName, type SupportedLanguage } from "@/lib/languages.config";
 
 const client = new Anthropic();
 
-const EXTRACTION_SYSTEM_PROMPT = (
-  languageName: string,
-) => `You are a vocabulary extraction tool for ${languageName} language learning.
+const EXTRACTION_SYSTEM_PROMPT = (languageName: string) =>
+  `You are a vocabulary extraction tool for ${languageName} language learning.
 
 Given a short conversation exchange, extract ${languageName} vocabulary words that a learner should study.
 
@@ -77,11 +77,11 @@ export async function extractAndSaveVocabulary({
 }: {
   userMessage: string;
   aiMessage: string;
-  language: "es" | "it";
+  language: SupportedLanguage;
   userLanguageId: string;
   conversationId: string;
 }): Promise<void> {
-  const languageName = language === "es" ? "Spanish" : "Italian";
+  const languageName = getLanguageDisplayName(language);
 
   let words: Array<{
     word: string;

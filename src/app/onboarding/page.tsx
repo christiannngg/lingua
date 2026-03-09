@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { getUserLanguages, addUserLanguage } from "@/app/actions/languages";
+import { getUserLanguages, addUserLanguage, getAvailableLanguages } from "@/app/actions/languages";
 
 export default async function OnboardingPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -10,29 +10,27 @@ export default async function OnboardingPage() {
   const existing = await getUserLanguages();
   if (existing.length > 0) redirect("/dashboard" as never);
 
+  const availableLanguages = await getAvailableLanguages();
+
   return (
     <main>
       <h1>Choose a language to learn</h1>
       <p>You can add more languages later.</p>
       <div>
-        <form
-          action={async () => {
-            "use server";
-            const lang = await addUserLanguage("es");
-            redirect(`/assessment/${lang}` as never);
-          }}
-        >
-          <button type="submit">Spanish</button>
-        </form>
-        <form
-          action={async () => {
-            "use server";
-            const lang = await addUserLanguage("it");
-            redirect(`/assessment/${lang}` as never);
-          }}
-        >
-          <button type="submit">Italian</button>
-        </form>
+        {availableLanguages.map((lang) => (
+          <form
+            key={lang.code}
+            action={async () => {
+              "use server";
+              const result = await addUserLanguage(lang.code);
+              if (result.success) {
+                redirect(`/assessment/${result.language}` as never);
+              }
+            }}
+          >
+            <button type="submit">{lang.displayName}</button>
+          </form>
+        ))}
       </div>
     </main>
   );

@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { getLanguageDisplayName } from "@/lib/languages.config";
 
 const client = new Anthropic();
 
@@ -11,13 +12,8 @@ export type WeeklySummaryStats = {
   levelChangedTo: string | null;
 };
 
-const LANGUAGE_NAMES: Record<string, string> = {
-  es: "Spanish",
-  it: "Italian",
-};
-
 export async function generateWeeklySummary(stats: WeeklySummaryStats): Promise<string> {
-  const languageName = LANGUAGE_NAMES[stats.language] ?? stats.language;
+  const languageName = getLanguageDisplayName(stats.language);
 
   const levelChange = stats.levelChangedTo
     ? `The user was assessed and their level changed to ${stats.levelChangedTo} this week.`

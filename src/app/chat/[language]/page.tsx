@@ -1,13 +1,11 @@
-// src/app/chat/[language]/page.tsx
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/db/prisma";
 import { ChatInterface } from "@/components/conversation/ChatInterface";
-import { getConversations } from "@/app/actions/conversations";
-import type { SupportedLanguage } from "@/lib/ai/assessment-schema";
-import { getConversationMessages } from "@/app/actions/conversations";
+import { getConversations, getConversationMessages } from "@/app/actions/conversations";
 import { ConversationSidebar } from "@/components/conversation/ConversationSidebar";
+import { isSupportedLanguage, type SupportedLanguage } from "@/lib/languages.config";
 
 interface ChatPageProps {
   params: Promise<{ language: string }>;
@@ -20,7 +18,7 @@ export default async function ChatPage({ params, searchParams }: ChatPageProps) 
   const { language } = await params;
   const { conv } = await searchParams;
 
-  if (language !== "es" && language !== "it") redirect("/dashboard");
+  if (!isSupportedLanguage(language)) redirect("/dashboard");
 
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) redirect("/sign-in");
@@ -32,11 +30,9 @@ export default async function ChatPage({ params, searchParams }: ChatPageProps) 
 
   if (!userLanguage?.assessmentCompleted) redirect(`/assessment/${language}`);
 
-  // After the redirect above, userLanguage is guaranteed non-null
   const lang = userLanguage!;
   const conversations = await getConversations(lang.id);
 
-  // Load messages for the selected conversation
   let initialMessages: {
     id: string;
     role: "user" | "assistant";

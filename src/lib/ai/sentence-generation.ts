@@ -3,10 +3,7 @@
 // Pure function — no imports, no side effects, fully testable.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const LANGUAGE_NAMES: Record<string, string> = {
-  es: "Spanish",
-  it: "Italian",
-};
+import { getLanguageDisplayName } from "@/lib/languages.config";
 
 const CEFR_GUIDANCE: Record<string, string> = {
   A1: "Use only the most basic vocabulary and simple present tense. Very short sentences (5-8 words).",
@@ -21,10 +18,10 @@ interface SentenceGenerationPromptParams {
   word: string;
   translation: string;
   partOfSpeech: string | null;
-  language: string;                   // "es" | "it"
-  cefrLevel: string;                  // "A1" | "A2" | etc.
-  conversationTopics: string[];       // recent conversation titles
-  previousSentence: string | null;    // stored example sentence to avoid repeating
+  language: string;
+  cefrLevel: string;
+  conversationTopics: string[];
+  previousSentence: string | null;
 }
 
 export function buildSentenceGenerationPrompt(
@@ -40,23 +37,19 @@ export function buildSentenceGenerationPrompt(
     previousSentence,
   } = params;
 
-  const languageName = LANGUAGE_NAMES[language] ?? language;
+  const languageName = getLanguageDisplayName(language);
   const levelGuidance = CEFR_GUIDANCE[cefrLevel] ?? CEFR_GUIDANCE["A1"];
 
-  // Build the topics line — only include if we have topics
-  const topicsLine = conversationTopics.length > 0
-    ? `The user has recently talked about: ${conversationTopics.join(", ")}. If one of these topics fits naturally with the word, use it as context for the sentence — but do not force it.`
-    : "No recent conversation topics available. Use a natural, everyday context.";
+  const topicsLine =
+    conversationTopics.length > 0
+      ? `The user has recently talked about: ${conversationTopics.join(", ")}. If one of these topics fits naturally with the word, use it as context for the sentence — but do not force it.`
+      : "No recent conversation topics available. Use a natural, everyday context.";
 
-  // Build the avoidance line — only include if there's a previous sentence
   const avoidanceLine = previousSentence
     ? `Do NOT use this sentence or anything similar to it: "${previousSentence}"`
     : "";
 
-  // Build the part of speech line — only include if available
-  const posLine = partOfSpeech
-    ? `Part of speech: ${partOfSpeech}`
-    : "";
+  const posLine = partOfSpeech ? `Part of speech: ${partOfSpeech}` : "";
 
   return `Generate one example sentence in ${languageName} using the word "${word}" (${translation}).${posLine ? `\n${posLine}` : ""}
 

@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { MessageBubble } from "./MessageBubble";
 import { ChatInput } from "./ChatInput";
 import { getPersonaName } from "@/lib/ai/conversation-prompt";
-import type { SupportedLanguage } from "@/lib/ai/assessment-schema";
+import { getLanguageDisplayName, type SupportedLanguage } from "@/lib/languages.config";
 import type { UIMessage } from "ai";
 import { useRouter } from "next/navigation";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
@@ -38,6 +38,7 @@ export function ChatInterface({
   initialMessages = [],
 }: ChatInterfaceProps) {
   const personaName = getPersonaName(language);
+  const languageDisplayName = getLanguageDisplayName(language);
   const bottomRef = useRef<HTMLDivElement>(null);
   const conversationIdRef = useRef<string | null>(initialConversationId);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -55,10 +56,7 @@ export function ChatInterface({
     parts: [
       {
         type: "text",
-        text:
-          language === "es"
-            ? `¡Hola! Soy Sofia. ¿De qué quieres hablar hoy?`
-            : `Ciao! Sono Marco. Di cosa vuoi parlare oggi?`,
+        text: `${language === "es" ? "¡Hola" : "Ciao"}! ${language === "es" ? "Soy Sofia. ¿De qué quieres hablar hoy?" : "Sono Marco. Di cosa vuoi parlare oggi?"}`,
       },
     ],
     metadata: undefined,
@@ -185,7 +183,7 @@ export function ChatInterface({
             {personaName}
           </p>
           <p style={{ margin: 0, fontSize: "0.75rem", color: "#6366f1" }}>
-            {language === "es" ? "Spanish" : "Italian"} · {cefrLevel}
+            {languageDisplayName} · {cefrLevel}
           </p>
         </div>
         {isLoading && (

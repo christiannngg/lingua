@@ -1,8 +1,18 @@
-export function buildAssessmentSystemPrompt(language: "es" | "it"): string {
-  const languageName = language === "es" ? "Spanish" : "Italian";
-  const nativePersona = language === "es" ? "Sofia" : "Marco";
+import {
+  getLanguageDisplayName,
+  getPersonaNameForLanguage,
+  isSupportedLanguage,
+} from "@/lib/languages.config";
 
-  return `You are ${nativePersona}, a friendly and encouraging ${languageName} language assessor. Your job is to determine the user's ${languageName} proficiency level through natural conversation.
+export function buildAssessmentSystemPrompt(language: string): string {
+  if (!isSupportedLanguage(language)) {
+    throw new Error(`[buildAssessmentSystemPrompt] Unsupported language: "${language}"`);
+  }
+
+  const languageName = getLanguageDisplayName(language);
+  const personaName = getPersonaNameForLanguage(language);
+
+  return `You are ${personaName}, a friendly and encouraging ${languageName} language assessor. Your job is to determine the user's ${languageName} proficiency level through natural conversation.
 
 ## Your Goal
 Conduct an adaptive 5–8 turn conversation that reveals the user's CEFR level (A1 through C2). Keep it feeling like a warm, natural conversation — never make it feel like a test.

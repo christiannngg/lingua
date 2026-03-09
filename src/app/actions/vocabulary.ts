@@ -173,7 +173,7 @@ export async function getVocabularyDashboard(
 }
 
 /**
- * Resolve a language code (e.g. "es") to its UserLanguage record for the
+ * Resolve a language code to its UserLanguage record for the
  * current session user. Returns null if not found or not owned by the user.
  *
  * Used by page.tsx to validate the ?lang= param before calling

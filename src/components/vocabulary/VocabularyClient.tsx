@@ -8,17 +8,14 @@ import type {
   VocabularyItemWithMastery,
 } from "@/app/actions/vocabulary";
 import { WordCard } from "./WordCard";
+import { LanguageFlag } from "@/components/ui/LanguageFlag";
+import { getLanguageDisplayName } from "@/lib/languages.config";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type TabValue = "All" | MasteryLabel;
 
 const TABS: TabValue[] = ["All", "New", "Learning", "Review", "Relearning", "Mastered"];
-
-const LANGUAGE_LABELS: Record<string, string> = {
-  es: "🇪🇸 Spanish",
-  it: "🇮🇹 Italian",
-};
 
 // ─── Stat card ───────────────────────────────────────────────────────────────
 
@@ -119,12 +116,10 @@ export function VocabularyClient({
   const filteredItems = useMemo<VocabularyItemWithMastery[]>(() => {
     let items = data.items;
 
-    // Tab filter
     if (activeTab !== "All") {
       items = items.filter((item) => item.masteryLabel === activeTab);
     }
 
-    // Search filter — matches word or translation, case-insensitive
     if (search.trim()) {
       const q = search.toLowerCase();
       items = items.filter(
@@ -170,14 +165,15 @@ export function VocabularyClient({
               <button
                 key={lang}
                 onClick={() => router.push(`/dashboard/vocabulary?lang=${lang}` as never)}
-                className="rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors"
+                className="flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors"
                 style={{
                   borderColor: lang === currentLang ? "var(--color-brand-500)" : "var(--border)",
                   backgroundColor: lang === currentLang ? "var(--color-brand-100)" : "transparent",
                   color: lang === currentLang ? "var(--color-brand-700)" : "var(--muted-foreground)",
                 }}
               >
-                {LANGUAGE_LABELS[lang] ?? lang}
+                <LanguageFlag language={lang} className="w-4 h-auto rounded-sm" />
+                {getLanguageDisplayName(lang)}
               </button>
             ))}
           </div>

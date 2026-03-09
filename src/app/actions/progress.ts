@@ -26,20 +26,50 @@ export type VocabGrowthPoint = {
   mastered: number;
 };
 
+export type GrammarErrorDetail = {
+  userSentence: string;
+  correction: string;
+  explanation: string;
+  date: string;
+};
+
+export type GrammarConceptRow = {
+  conceptId: string;
+  name: string;
+  description: string;
+  errorCount: number;
+  recentScore: number;
+  lastSeenAt: string;
+  isMastered: boolean;
+  recentErrors: GrammarErrorDetail[];
+};
+
 // Mirrors the MASTERED_REPS_THRESHOLD in vocabulary.ts
 const MASTERED_REPS_THRESHOLD = 5;
+
+// Concepts with no errors in the last 30 days are considered mastered
+const MASTERED_DAYS_THRESHOLD = 30;
+
+// Exponential decay half-life in days for recency weighting
+const DECAY_HALF_LIFE = 14;
 
 function isMastered(state: string, reps: number): boolean {
   return state === "REVIEW" && reps >= MASTERED_REPS_THRESHOLD;
 }
 
-// Returns the ISO date string for the Monday of the week containing `date`
 function getWeekStart(date: Date): string {
   const d = new Date(date);
-  const day = d.getUTCDay(); // 0 = Sunday, 1 = Monday, ...
-  const diff = day === 0 ? -6 : 1 - day; // adjust so Monday = start
+  const day = d.getUTCDay();
+  const diff = day === 0 ? -6 : 1 - day;
   d.setUTCDate(d.getUTCDate() + diff);
   return d.toISOString().slice(0, 10);
+}
+
+function computeDecayScore(errors: { createdAt: Date }[], now: Date): number {
+  return errors.reduce((score, error) => {
+    const daysSince = (now.getTime() - error.createdAt.getTime()) / (1000 * 60 * 60 * 24);
+    return score + Math.exp(-daysSince / DECAY_HALF_LIFE);
+  }, 0);
 }
 
 export async function getCefrHistory(language: string): Promise<CefrDataPoint[]> {
@@ -97,7 +127,6 @@ export async function getVocabularyGrowth(language: string): Promise<VocabGrowth
 
   if (items.length === 0) return [];
 
-  // Bucket items by week start date
   const weekMap = new Map<string, { learning: number; mastered: number }>();
 
   for (const item of items) {
@@ -113,7 +142,6 @@ export async function getVocabularyGrowth(language: string): Promise<VocabGrowth
     }
   }
 
-  // Sort weeks ascending and compute cumulative totals
   const sortedWeeks = [...weekMap.keys()].sort();
 
   let cumulativeLearning = 0;
@@ -130,4 +158,84 @@ export async function getVocabularyGrowth(language: string): Promise<VocabGrowth
       mastered: cumulativeMastered,
     };
   });
+}
+
+export async function getGrammarHeatmap(language: string): Promise<GrammarConceptRow[]> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Unauthenticated");
+
+  const userLanguage = await prisma.userLanguage.findUnique({
+    where: {
+      userId_language: { userId: session.user.id, language },
+    },
+    select: { id: true },
+  });
+
+  if (!userLanguage) return [];
+
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now.getTime() - MASTERED_DAYS_THRESHOLD * 24 * 60 * 60 * 1000);
+
+  // Query 1: all mastery records for this user language
+  const masteries = await prisma.userGrammarMastery.findMany({
+    where: { userLanguageId: userLanguage.id },
+    include: { grammarConcept: true },
+  });
+
+  if (masteries.length === 0) return [];
+
+  // Query 2: all recent errors (last 30 days) for this user language
+  const recentErrors = await prisma.grammarError.findMany({
+    where: {
+      userLanguageId: userLanguage.id,
+      createdAt: { gte: thirtyDaysAgo },
+    },
+    orderBy: { createdAt: "desc" },
+    select: {
+      grammarConceptId: true,
+      userSentence: true,
+      correction: true,
+      explanation: true,
+      createdAt: true,
+    },
+  });
+
+  // Group recent errors by conceptId
+  const errorsByConceptId = new Map<string, typeof recentErrors>();
+  for (const error of recentErrors) {
+    if (!errorsByConceptId.has(error.grammarConceptId)) {
+      errorsByConceptId.set(error.grammarConceptId, []);
+    }
+    errorsByConceptId.get(error.grammarConceptId)!.push(error);
+  }
+
+  // Build rows with decay scores
+  const rows: GrammarConceptRow[] = masteries.map((mastery) => {
+    const conceptErrors = errorsByConceptId.get(mastery.grammarConceptId) ?? [];
+    const recentScore = computeDecayScore(conceptErrors, now);
+    const isMasteredConcept = mastery.lastSeenAt < thirtyDaysAgo;
+
+    return {
+      conceptId: mastery.grammarConceptId,
+      name: mastery.grammarConcept.name,
+      description: mastery.grammarConcept.description,
+      errorCount: mastery.errorCount,
+      recentScore,
+      lastSeenAt: mastery.lastSeenAt.toISOString().slice(0, 10),
+      isMastered: isMasteredConcept,
+      recentErrors: conceptErrors.slice(0, 5).map((e) => ({
+        userSentence: e.userSentence,
+        correction: e.correction,
+        explanation: e.explanation,
+        date: e.createdAt.toISOString().slice(0, 10),
+      })),
+    };
+  });
+
+  // Active concepts sorted by recentScore desc, mastered concepts at the bottom
+  const active = rows.filter((r) => !r.isMastered).sort((a, b) => b.recentScore - a.recentScore);
+
+  const mastered = rows.filter((r) => r.isMastered).sort((a, b) => b.errorCount - a.errorCount);
+
+  return [...active, ...mastered];
 }

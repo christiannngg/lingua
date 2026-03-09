@@ -1,9 +1,10 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/db/prisma";
-import { getCefrHistory, getVocabularyGrowth } from "@/app/actions/progress";
+import { getCefrHistory, getVocabularyGrowth, getGrammarHeatmap } from "@/app/actions/progress";
 import { CefrHistoryChart } from "@/components/progress/CefrHistoryChart";
 import { VocabularyGrowthChart } from "@/components/progress/VocabularyGrowthChart";
+import { GrammarHeatmap } from "@/components/progress/GrammarHeatmap";
 import { redirect } from "next/navigation";
 
 const LANGUAGE_NAMES: Record<string, string> = {
@@ -35,9 +36,10 @@ export default async function DashboardPage() {
     );
   }
 
-  const [cefrHistory, vocabGrowth] = await Promise.all([
+  const [cefrHistory, vocabGrowth, grammarData] = await Promise.all([
     getCefrHistory(activeLanguage.language),
     getVocabularyGrowth(activeLanguage.language),
+    getGrammarHeatmap(activeLanguage.language),
   ]);
 
   const languageName = LANGUAGE_NAMES[activeLanguage.language] ?? activeLanguage.language;
@@ -66,6 +68,15 @@ export default async function DashboardPage() {
         </h2>
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
           <VocabularyGrowthChart data={vocabGrowth} />
+        </div>
+      </section>
+
+      <section>
+        <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">
+          Grammar Patterns
+        </h2>
+        <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+          <GrammarHeatmap data={grammarData} />
         </div>
       </section>
     </main>

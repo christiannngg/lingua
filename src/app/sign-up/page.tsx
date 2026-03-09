@@ -5,13 +5,24 @@ import { signUpAction } from "../actions/auth";
 
 export default function SignUpPage() {
   const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+
+  async function handleSubmit(formData: FormData) {
+    setError(null);
+    setPending(true);
+    const result = await signUpAction(formData);
+    setPending(false);
+    if (!result.success) {
+      setError(result.error);
+    }
+  }
 
   return (
     <main className="max-w-md mx-auto p-6 space-y-4 text-white">
       <h1 className="text-2xl font-bold">Sign Up</h1>
       {error && <p className="text-red-500">{error}</p>}
 
-      <form action={signUpAction} className="space-y-4">
+      <form action={handleSubmit} className="space-y-4">
         <input
           name="name"
           placeholder="Full Name"
@@ -35,9 +46,10 @@ export default function SignUpPage() {
         />
         <button
           type="submit"
-          className="w-full bg-white text-black font-medium rounded-md px-4 py-2 hover:bg-gray-200"
+          disabled={pending}
+          className="w-full bg-white text-black font-medium rounded-md px-4 py-2 hover:bg-gray-200 disabled:opacity-50"
         >
-          Sign Up
+          {pending ? "Signing up..." : "Sign Up"}
         </button>
       </form>
     </main>

@@ -5,6 +5,10 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 
+export type MemoryActionResult = { success: true } | { success: false; error: string };
+
+// ── Read actions (called from Server Components — throwing is fine) ──────────
+
 export async function getMemories() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Unauthenticated");
@@ -40,23 +44,32 @@ export async function getMemories() {
   }));
 }
 
-export async function deleteMemory(embeddingId: string) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) throw new Error("Unauthenticated");
+// ── Mutating actions (called from client interactions — return result) ────────
 
-  // Verify ownership before deleting
-  const embedding = await prisma.conversationEmbedding.findFirst({
-    where: {
-      id: embeddingId,
-      conversation: {
-        userLanguage: { userId: session.user.id },
+export async function deleteMemory(embeddingId: string): Promise<MemoryActionResult> {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session) return { success: false, error: "Unauthenticated" };
+
+    // Verify ownership before deleting
+    const embedding = await prisma.conversationEmbedding.findFirst({
+      where: {
+        id: embeddingId,
+        conversation: {
+          userLanguage: { userId: session.user.id },
+        },
       },
-    },
-  });
+    });
 
-  if (!embedding) throw new Error("Memory not found");
+    if (!embedding) return { success: false, error: "Memory not found" };
 
-  await prisma.conversationEmbedding.delete({ where: { id: embeddingId } });
+    await prisma.conversationEmbedding.delete({ where: { id: embeddingId } });
 
-  revalidatePath("/settings");
+    revalidatePath("/settings");
+
+    return { success: true };
+  } catch (err) {
+    console.error("[deleteMemory] Error:", err);
+    return { success: false, error: "Failed to delete memory" };
+  }
 }

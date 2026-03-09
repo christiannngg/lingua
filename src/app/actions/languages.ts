@@ -4,6 +4,10 @@ import { prisma } from "@/lib/db/prisma";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
+export type LanguageActionResult =
+  | { success: true; language: string }
+  | { success: false; error: string };
+
 const SUPPORTED_LANGUAGES = ["es", "it"] as const;
 type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
@@ -11,22 +15,7 @@ function isSupportedLanguage(lang: string): lang is SupportedLanguage {
   return SUPPORTED_LANGUAGES.includes(lang as SupportedLanguage);
 }
 
-export async function addUserLanguage(language: string) {
-  if (!isSupportedLanguage(language)) {
-    throw new Error(`Unsupported language: ${language}`);
-  }
-
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) throw new Error("Unauthenticated");
-
-  await prisma.userLanguage.upsert({
-    where: { userId_language: { userId: session.user.id, language } },
-    update: { isActive: true },
-    create: { userId: session.user.id, language },
-  });
-
-  return language; 
-}
+// ── Read actions (called from Server Components — throwing is fine) ──────────
 
 export async function getUserLanguages() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -38,33 +27,62 @@ export async function getUserLanguages() {
   });
 }
 
-export async function resetAssessment(language: string) {
-  if (!isSupportedLanguage(language)) {
-    throw new Error(`Unsupported language: ${language}`);
+// ── Mutating actions (called from client interactions — return result) ────────
+
+export async function addUserLanguage(language: string): Promise<LanguageActionResult> {
+  try {
+    if (!isSupportedLanguage(language)) {
+      return { success: false, error: `Unsupported language: ${language}` };
+    }
+
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session) return { success: false, error: "Unauthenticated" };
+
+    await prisma.userLanguage.upsert({
+      where: { userId_language: { userId: session.user.id, language } },
+      update: { isActive: true },
+      create: { userId: session.user.id, language },
+    });
+
+    return { success: true, language };
+  } catch (err) {
+    console.error("[addUserLanguage] Error:", err);
+    return { success: false, error: "Failed to add language" };
   }
+}
 
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) throw new Error("Unauthenticated");
+export async function resetAssessment(language: string): Promise<LanguageActionResult> {
+  try {
+    if (!isSupportedLanguage(language)) {
+      return { success: false, error: `Unsupported language: ${language}` };
+    }
 
-  const userLanguage = await prisma.userLanguage.findUnique({
-    where: { userId_language: { userId: session.user.id, language } },
-  });
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session) return { success: false, error: "Unauthenticated" };
 
-  if (!userLanguage) throw new Error("Language not found");
+    const userLanguage = await prisma.userLanguage.findUnique({
+      where: { userId_language: { userId: session.user.id, language } },
+    });
 
-  // Log current level to history before overwriting
-  await prisma.assessmentHistory.create({
-    data: {
-      userLanguageId: userLanguage.id,
-      cefrLevel: userLanguage.cefrLevel,
-    },
-  });
+    if (!userLanguage) return { success: false, error: "Language not found" };
 
-  // Reset assessment state
-  await prisma.userLanguage.update({
-    where: { id: userLanguage.id },
-    data: { assessmentCompleted: false },
-  });
+    // Log current level to history before overwriting
+    await prisma.assessmentHistory.create({
+      data: {
+        userLanguageId: userLanguage.id,
+        cefrLevel: userLanguage.cefrLevel,
+      },
+    });
 
-  return language;
+    // Reset assessment state
+    await prisma.userLanguage.update({
+      where: { id: userLanguage.id },
+      data: { assessmentCompleted: false },
+    });
+
+    return { success: true, language };
+  } catch (err) {
+    console.error("[resetAssessment] Error:", err);
+    return { success: false, error: "Failed to reset assessment" };
+  }
 }

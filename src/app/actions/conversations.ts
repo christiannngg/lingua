@@ -4,6 +4,10 @@ import { prisma } from "@/lib/db/prisma";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
+export type ConversationActionResult = { success: true } | { success: false; error: string };
+
+// ── Read actions (called from Server Components — throwing is fine) ──────────
+
 export async function getConversations(userLanguageId: string) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Unauthenticated");
@@ -35,19 +39,30 @@ export async function getConversationMessages(conversationId: string) {
   });
 }
 
-export async function deleteConversation(conversationId: string) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) throw new Error("Unauthenticated");
+// ── Mutating actions (called from client interactions — return result) ────────
 
-  // Verify the conversation belongs to this user before deleting
-  const conversation = await prisma.conversation.findFirst({
-    where: {
-      id: conversationId,
-      userLanguage: { userId: session.user.id },
-    },
-  });
+export async function deleteConversation(
+  conversationId: string,
+): Promise<ConversationActionResult> {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session) return { success: false, error: "Unauthenticated" };
 
-  if (!conversation) throw new Error("Conversation not found");
+    // Verify the conversation belongs to this user before deleting
+    const conversation = await prisma.conversation.findFirst({
+      where: {
+        id: conversationId,
+        userLanguage: { userId: session.user.id },
+      },
+    });
 
-  await prisma.conversation.delete({ where: { id: conversationId } });
+    if (!conversation) return { success: false, error: "Conversation not found" };
+
+    await prisma.conversation.delete({ where: { id: conversationId } });
+
+    return { success: true };
+  } catch (err) {
+    console.error("[deleteConversation] Error:", err);
+    return { success: false, error: "Failed to delete conversation" };
+  }
 }

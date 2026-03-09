@@ -4,35 +4,9 @@ import { VocabularyExtractionSchema } from "@/lib/ai/vocabulary-schema";
 
 const client = new Anthropic();
 
-export async function extractAndSaveVocabulary({
-  userMessage,
-  aiMessage,
-  language,
-  userLanguageId,
-  conversationId,
-}: {
-  userMessage: string;
-  aiMessage: string;
-  language: "es" | "it";
-  userLanguageId: string;
-  conversationId: string;
-}): Promise<void> {
-  const languageName = language === "es" ? "Spanish" : "Italian";
-
-  let words: Array<{
-    word: string;
-    translation: string;
-    partOfSpeech?: string | undefined;
-    exampleSentence?: string | undefined;
-  }> = [];
-
-  let attempts = 0;
-  while (attempts < 2) {
-    try {
-      const response = await client.messages.create({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 1024,
-        system: `You are a vocabulary extraction tool for ${languageName} language learning.
+const EXTRACTION_SYSTEM_PROMPT = (
+  languageName: string,
+) => `You are a vocabulary extraction tool for ${languageName} language learning.
 
 Given a short conversation exchange, extract ${languageName} vocabulary words that a learner should study.
 
@@ -57,13 +31,81 @@ Respond ONLY with valid JSON — no markdown, no code fences, no explanation:
   ]
 }
 
-If there are no words worth extracting, return: { "words": [] }`,
-        messages: [
-          {
-            role: "user",
-            content: `Extract vocabulary from this ${languageName} exchange:\n\nUser: ${userMessage}\nAI tutor: ${aiMessage}`,
-          },
-        ],
+If there are no words worth extracting, return: { "words": [] }`;
+
+const EXTRACTION_USER_PROMPT = (languageName: string, userMessage: string, aiMessage: string) =>
+  `Extract vocabulary from this ${languageName} exchange:\n\nUser: ${userMessage}\nAI tutor: ${aiMessage}`;
+
+const CORRECTIVE_USER_PROMPT = (
+  languageName: string,
+  userMessage: string,
+  aiMessage: string,
+  rawBadOutput: string,
+) =>
+  `Extract vocabulary from this ${languageName} exchange:\n\nUser: ${userMessage}\nAI tutor: ${aiMessage}
+
+Your previous response could not be parsed as valid JSON matching the required schema. 
+Previous response: ${rawBadOutput}
+
+You must respond ONLY with valid JSON matching exactly this shape — no markdown, no code fences:
+{
+  "words": [
+    {
+      "word": "string",
+      "translation": "string",
+      "partOfSpeech": "noun" | "verb" | "adjective" | "adverb",
+      "exampleSentence": "string"
+    }
+  ]
+}
+
+If there are no words worth extracting, return: { "words": [] }`;
+
+function stripFences(raw: string): string {
+  return raw
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```\s*$/i, "")
+    .trim();
+}
+
+export async function extractAndSaveVocabulary({
+  userMessage,
+  aiMessage,
+  language,
+  userLanguageId,
+  conversationId,
+}: {
+  userMessage: string;
+  aiMessage: string;
+  language: "es" | "it";
+  userLanguageId: string;
+  conversationId: string;
+}): Promise<void> {
+  const languageName = language === "es" ? "Spanish" : "Italian";
+
+  let words: Array<{
+    word: string;
+    translation: string;
+    partOfSpeech?: string | undefined;
+    exampleSentence?: string | undefined;
+  }> = [];
+
+  let attempts = 0;
+  let lastRawOutput = "";
+
+  while (attempts < 2) {
+    try {
+      // On the second attempt, use the corrective prompt that includes the bad output
+      const userContent =
+        attempts === 0
+          ? EXTRACTION_USER_PROMPT(languageName, userMessage, aiMessage)
+          : CORRECTIVE_USER_PROMPT(languageName, userMessage, aiMessage, lastRawOutput);
+
+      const response = await client.messages.create({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 1024,
+        system: EXTRACTION_SYSTEM_PROMPT(languageName),
+        messages: [{ role: "user", content: userContent }],
       });
 
       const raw =
@@ -71,16 +113,20 @@ If there are no words worth extracting, return: { "words": [] }`,
           ? (response.content[0] as { type: "text"; text: string }).text
           : "";
 
-      const cleaned = raw
-        .replace(/^```(?:json)?\s*/i, "")
-        .replace(/\s*```\s*$/i, "")
-        .trim();
+      lastRawOutput = raw;
+      const cleaned = stripFences(raw);
       const extracted = VocabularyExtractionSchema.parse(JSON.parse(cleaned));
       words = extracted.words;
-      break;
+      break; // success
     } catch (err) {
       attempts++;
-      console.error(`[extractVocabulary] attempt ${attempts} failed:`, err);
+      // Only log parse/validation failures differently so we can distinguish
+      // them from network errors in the logs
+      if (err instanceof SyntaxError || (err instanceof Error && err.name === "ZodError")) {
+        console.error(`[extractVocabulary] parse/validation failure on attempt ${attempts}:`, err);
+      } else {
+        console.error(`[extractVocabulary] attempt ${attempts} failed:`, err);
+      }
     }
   }
 
@@ -91,24 +137,28 @@ If there are no words worth extracting, return: { "words": [] }`,
     return;
   }
 
-  const existing = await prisma.vocabularyItem.findMany({
-    where: { userLanguageId },
-    select: { word: true },
-  });
-  const existingSet = new Set(existing.map((v) => v.word.toLowerCase()));
-  const newWords = words.filter((w) => !existingSet.has(w.word.toLowerCase()));
+  try {
+    const existing = await prisma.vocabularyItem.findMany({
+      where: { userLanguageId },
+      select: { word: true },
+    });
+    const existingSet = new Set(existing.map((v) => v.word.toLowerCase()));
+    const newWords = words.filter((w) => !existingSet.has(w.word.toLowerCase()));
 
-  if (newWords.length === 0) return;
+    if (newWords.length === 0) return;
 
-  const result = await prisma.vocabularyItem.createMany({
-    data: newWords.map((w) => ({
-      userLanguageId,
-      word: w.word,
-      translation: w.translation,
-      partOfSpeech: w.partOfSpeech ?? null,
-      exampleSentence: w.exampleSentence ?? null,
-      sourceConversationId: conversationId,
-    })),
-    skipDuplicates: true,
-  });
+    await prisma.vocabularyItem.createMany({
+      data: newWords.map((w) => ({
+        userLanguageId,
+        word: w.word,
+        translation: w.translation,
+        partOfSpeech: w.partOfSpeech ?? null,
+        exampleSentence: w.exampleSentence ?? null,
+        sourceConversationId: conversationId,
+      })),
+      skipDuplicates: true,
+    });
+  } catch (err) {
+    console.error("[extractVocabulary] DB insert failed:", err);
+  }
 }

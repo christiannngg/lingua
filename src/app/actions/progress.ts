@@ -78,6 +78,8 @@ function computeDecayScore(errors: { createdAt: Date }[], now: Date): number {
   }, 0);
 }
 
+// ── All read actions — throwing is fine, called from Server Components ────────
+
 export async function getCefrHistory(language: string): Promise<CefrDataPoint[]> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Unauthenticated");
@@ -182,7 +184,6 @@ export async function getGrammarHeatmap(language: string): Promise<GrammarConcep
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - MASTERED_DAYS_THRESHOLD * 24 * 60 * 60 * 1000);
 
-  // Query 1: all mastery records for this user language
   const masteries = await prisma.userGrammarMastery.findMany({
     where: { userLanguageId: userLanguage.id },
     include: { grammarConcept: true },
@@ -190,7 +191,6 @@ export async function getGrammarHeatmap(language: string): Promise<GrammarConcep
 
   if (masteries.length === 0) return [];
 
-  // Query 2: all recent errors (last 30 days) for this user language
   const recentErrors = await prisma.grammarError.findMany({
     where: {
       userLanguageId: userLanguage.id,
@@ -206,7 +206,6 @@ export async function getGrammarHeatmap(language: string): Promise<GrammarConcep
     },
   });
 
-  // Group recent errors by conceptId
   const errorsByConceptId = new Map<string, typeof recentErrors>();
   for (const error of recentErrors) {
     if (!errorsByConceptId.has(error.grammarConceptId)) {
@@ -215,7 +214,6 @@ export async function getGrammarHeatmap(language: string): Promise<GrammarConcep
     errorsByConceptId.get(error.grammarConceptId)!.push(error);
   }
 
-  // Build rows with decay scores
   const rows: GrammarConceptRow[] = masteries.map((mastery) => {
     const conceptErrors = errorsByConceptId.get(mastery.grammarConceptId) ?? [];
     const recentScore = computeDecayScore(conceptErrors, now);
@@ -238,9 +236,7 @@ export async function getGrammarHeatmap(language: string): Promise<GrammarConcep
     };
   });
 
-  // Active concepts sorted by recentScore desc, mastered concepts at the bottom
   const active = rows.filter((r) => !r.isMastered).sort((a, b) => b.recentScore - a.recentScore);
-
   const mastered = rows.filter((r) => r.isMastered).sort((a, b) => b.errorCount - a.errorCount);
 
   return [...active, ...mastered];
@@ -303,21 +299,35 @@ export async function getWeeklySummary(language: string): Promise<WeeklySummaryR
     }),
   ]);
 
-  const content = await generateWeeklySummary({
-    language,
-    cefrLevel: userLanguage.cefrLevel,
-    wordsLearned,
-    conversationsHad,
-    grammarErrorsThisWeek: grammarErrors,
-    levelChangedTo: levelChange?.cefrLevel ?? null,
-  });
+  // The AI call is the only thing that can fail here in a non-DB way.
+  // If it throws, return null so the UI shows an empty/retry state rather
+  // than crashing the entire progress page.
+  let content: string;
+  try {
+    content = await generateWeeklySummary({
+      language,
+      cefrLevel: userLanguage.cefrLevel,
+      wordsLearned,
+      conversationsHad,
+      grammarErrorsThisWeek: grammarErrors,
+      levelChangedTo: levelChange?.cefrLevel ?? null,
+    });
+  } catch (err) {
+    console.error("[getWeeklySummary] AI generation failed:", err);
+    return null;
+  }
 
   // Upsert cache — replace any existing summary for this user language
-  await prisma.weeklySummary.upsert({
-    where: { userLanguageId: userLanguage.id },
-    create: { userLanguageId: userLanguage.id, content },
-    update: { content, generatedAt: new Date() },
-  });
+  try {
+    await prisma.weeklySummary.upsert({
+      where: { userLanguageId: userLanguage.id },
+      create: { userLanguageId: userLanguage.id, content },
+      update: { content, generatedAt: new Date() },
+    });
+  } catch (err) {
+    // Cache write failure is non-critical — still return the generated content
+    console.error("[getWeeklySummary] Cache write failed:", err);
+  }
 
   return {
     content,

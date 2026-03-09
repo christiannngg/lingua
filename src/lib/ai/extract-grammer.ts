@@ -5,6 +5,68 @@ import { GRAMMAR_CONCEPTS } from "@/lib/ai/grammar-concepts";
 
 const client = new Anthropic();
 
+const EXTRACTION_SYSTEM_PROMPT = (languageName: string, conceptList: string) =>
+  `You are a ${languageName} grammar error detector for language learners.
+
+Analyze ONLY the user's message for grammar mistakes. The AI tutor's message is provided as context only.
+
+Rules:
+- Only flag genuine grammar errors, not stylistic choices or informal language
+- Only categorize errors using EXACTLY one of these concept names: ${conceptList}
+- If the user's message has no grammar errors, return { "errors": [] }
+- userSentence: copy the exact phrase or clause containing the error
+- correction: the corrected version of that phrase or clause
+- explanation: one plain-English sentence explaining the mistake
+- Maximum 3 errors per message — prioritize the most important ones
+
+Respond ONLY with valid JSON — no markdown, no code fences, no explanation:
+{
+  "errors": [
+    {
+      "concept": "one of the concept names above",
+      "userSentence": "what the user wrote",
+      "correction": "corrected version",
+      "explanation": "brief explanation in English"
+    }
+  ]
+}`;
+
+const EXTRACTION_USER_PROMPT = (userMessage: string, aiMessage: string, languageName: string) =>
+  `User's message (analyze this for errors): "${userMessage}"\n\nAI tutor's response (context only): "${aiMessage}"`;
+
+const CORRECTIVE_USER_PROMPT = (
+  userMessage: string,
+  aiMessage: string,
+  languageName: string,
+  conceptList: string,
+  rawBadOutput: string,
+) =>
+  `User's message (analyze this for errors): "${userMessage}"\n\nAI tutor's response (context only): "${aiMessage}"
+
+Your previous response could not be parsed as valid JSON matching the required schema.
+Previous response: ${rawBadOutput}
+
+You must respond ONLY with valid JSON matching exactly this shape — no markdown, no code fences:
+{
+  "errors": [
+    {
+      "concept": "must be exactly one of: ${conceptList}",
+      "userSentence": "string",
+      "correction": "string",
+      "explanation": "string"
+    }
+  ]
+}
+
+If there are no errors, return: { "errors": [] }`;
+
+function stripFences(raw: string): string {
+  return raw
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```\s*$/i, "")
+    .trim();
+}
+
 export async function extractAndSaveGrammar({
   userMessage,
   aiMessage,
@@ -30,41 +92,27 @@ export async function extractAndSaveGrammar({
   }> = [];
 
   let attempts = 0;
+  let lastRawOutput = "";
+
   while (attempts < 2) {
     try {
+      // On the second attempt, use the corrective prompt that includes the bad output
+      const userContent =
+        attempts === 0
+          ? EXTRACTION_USER_PROMPT(userMessage, aiMessage, languageName)
+          : CORRECTIVE_USER_PROMPT(
+              userMessage,
+              aiMessage,
+              languageName,
+              conceptList,
+              lastRawOutput,
+            );
+
       const response = await client.messages.create({
         model: "claude-haiku-4-5-20251001",
         max_tokens: 1024,
-        system: `You are a ${languageName} grammar error detector for language learners.
-
-Analyze ONLY the user's message for grammar mistakes. The AI tutor's message is provided as context only.
-
-Rules:
-- Only flag genuine grammar errors, not stylistic choices or informal language
-- Only categorize errors using EXACTLY one of these concept names: ${conceptList}
-- If the user's message has no grammar errors, return { "errors": [] }
-- userSentence: copy the exact phrase or clause containing the error
-- correction: the corrected version of that phrase or clause
-- explanation: one plain-English sentence explaining the mistake
-- Maximum 3 errors per message — prioritize the most important ones
-
-Respond ONLY with valid JSON — no markdown, no code fences, no explanation:
-{
-  "errors": [
-    {
-      "concept": "one of the concept names above",
-      "userSentence": "what the user wrote",
-      "correction": "corrected version",
-      "explanation": "brief explanation in English"
-    }
-  ]
-}`,
-        messages: [
-          {
-            role: "user",
-            content: `User's message (analyze this for errors): "${userMessage}"\n\nAI tutor's response (context only): "${aiMessage}"`,
-          },
-        ],
+        system: EXTRACTION_SYSTEM_PROMPT(languageName, conceptList),
+        messages: [{ role: "user", content: userContent }],
       });
 
       const raw =
@@ -72,8 +120,8 @@ Respond ONLY with valid JSON — no markdown, no code fences, no explanation:
           ? (response.content[0] as { type: "text"; text: string }).text
           : "";
 
-      // Strip markdown fences (Haiku sometimes wraps output despite instructions)
-      const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
+      lastRawOutput = raw;
+      const cleaned = stripFences(raw);
       const extracted = GrammarExtractionSchema.parse(JSON.parse(cleaned));
 
       // Filter out any concepts Claude invented outside our predefined list
@@ -84,7 +132,11 @@ Respond ONLY with valid JSON — no markdown, no code fences, no explanation:
       break; // success
     } catch (err) {
       attempts++;
-      console.error(`[extractGrammar] attempt ${attempts} failed:`, err);
+      if (err instanceof SyntaxError || (err instanceof Error && err.name === "ZodError")) {
+        console.error(`[extractGrammar] parse/validation failure on attempt ${attempts}:`, err);
+      } else {
+        console.error(`[extractGrammar] attempt ${attempts} failed:`, err);
+      }
     }
   }
 
@@ -98,17 +150,17 @@ Respond ONLY with valid JSON — no markdown, no code fences, no explanation:
   // Persist each error — upsert mastery row + insert error occurrence
   for (const error of errors) {
     try {
-      // Look up the concept row (seeded at migration time)
       const concept = await prisma.grammarConcept.findUnique({
         where: { language_name: { language, name: error.concept } },
       });
 
       if (!concept) {
-        console.warn(`[extractGrammar] unknown concept "${error.concept}" for language "${language}", skipping`);
+        console.warn(
+          `[extractGrammar] unknown concept "${error.concept}" for language "${language}", skipping`,
+        );
         continue;
       }
 
-      // Upsert mastery: increment errorCount and update lastSeenAt
       await prisma.userGrammarMastery.upsert({
         where: {
           userLanguageId_grammarConceptId: {
@@ -128,7 +180,6 @@ Respond ONLY with valid JSON — no markdown, no code fences, no explanation:
         },
       });
 
-      // Insert the individual error occurrence for S6-03 drill-down
       await prisma.grammarError.create({
         data: {
           userLanguageId,
@@ -140,7 +191,6 @@ Respond ONLY with valid JSON — no markdown, no code fences, no explanation:
         },
       });
     } catch (err) {
-      // Per-error failure — log and continue, don't abort the whole batch
       console.error(`[extractGrammar] failed to persist concept "${error.concept}":`, err);
     }
   }

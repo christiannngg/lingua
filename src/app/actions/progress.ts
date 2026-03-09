@@ -20,6 +20,28 @@ export type CefrDataPoint = {
   isLevelUp: boolean;
 };
 
+export type VocabGrowthPoint = {
+  week: string;
+  learning: number;
+  mastered: number;
+};
+
+// Mirrors the MASTERED_REPS_THRESHOLD in vocabulary.ts
+const MASTERED_REPS_THRESHOLD = 5;
+
+function isMastered(state: string, reps: number): boolean {
+  return state === "REVIEW" && reps >= MASTERED_REPS_THRESHOLD;
+}
+
+// Returns the ISO date string for the Monday of the week containing `date`
+function getWeekStart(date: Date): string {
+  const d = new Date(date);
+  const day = d.getUTCDay(); // 0 = Sunday, 1 = Monday, ...
+  const diff = day === 0 ? -6 : 1 - day; // adjust so Monday = start
+  d.setUTCDate(d.getUTCDate() + diff);
+  return d.toISOString().slice(0, 10);
+}
+
 export async function getCefrHistory(language: string): Promise<CefrDataPoint[]> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Unauthenticated");
@@ -52,4 +74,60 @@ export async function getCefrHistory(language: string): Promise<CefrDataPoint[]>
   });
 
   return points;
+}
+
+export async function getVocabularyGrowth(language: string): Promise<VocabGrowthPoint[]> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Unauthenticated");
+
+  const userLanguage = await prisma.userLanguage.findUnique({
+    where: {
+      userId_language: { userId: session.user.id, language },
+    },
+    select: { id: true },
+  });
+
+  if (!userLanguage) return [];
+
+  const items = await prisma.vocabularyItem.findMany({
+    where: { userLanguageId: userLanguage.id },
+    select: { createdAt: true, state: true, reps: true },
+    orderBy: { createdAt: "asc" },
+  });
+
+  if (items.length === 0) return [];
+
+  // Bucket items by week start date
+  const weekMap = new Map<string, { learning: number; mastered: number }>();
+
+  for (const item of items) {
+    const week = getWeekStart(item.createdAt);
+    if (!weekMap.has(week)) {
+      weekMap.set(week, { learning: 0, mastered: 0 });
+    }
+    const bucket = weekMap.get(week)!;
+    if (isMastered(item.state, item.reps)) {
+      bucket.mastered++;
+    } else {
+      bucket.learning++;
+    }
+  }
+
+  // Sort weeks ascending and compute cumulative totals
+  const sortedWeeks = [...weekMap.keys()].sort();
+
+  let cumulativeLearning = 0;
+  let cumulativeMastered = 0;
+
+  return sortedWeeks.map((week) => {
+    const bucket = weekMap.get(week)!;
+    cumulativeLearning += bucket.learning;
+    cumulativeMastered += bucket.mastered;
+
+    return {
+      week,
+      learning: cumulativeLearning,
+      mastered: cumulativeMastered,
+    };
+  });
 }

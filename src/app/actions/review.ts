@@ -13,6 +13,7 @@ import { CardState, Rating } from "@/lib/fsrs/types";
 export type ReviewCard = {
   id: string;
   word: string;
+  lemma: string;
   translation: string;
   partOfSpeech: string | null;
   exampleSentence: string | null;
@@ -137,6 +138,7 @@ export async function getReviewQueue(
     select: {
       id: true,
       word: true,
+      lemma: true,
       translation: true,
       partOfSpeech: true,
       exampleSentence: true,

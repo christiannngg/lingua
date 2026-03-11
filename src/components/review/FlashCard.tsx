@@ -83,7 +83,7 @@ export function FlashCard({
               className="text-4xl font-bold tracking-tight"
               style={{ color: "var(--foreground)" }}
             >
-              {card.word}
+              {card.lemma}
             </span>
             {card.partOfSpeech && (
               <span className="text-sm" style={{ color: "var(--muted-foreground)" }}>

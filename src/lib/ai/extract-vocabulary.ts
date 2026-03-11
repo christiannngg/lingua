@@ -17,16 +17,24 @@ Rules:
 - Skip any word that is already very basic/common (e.g. "sí", "no", "gracias", "hola")
 - Aim for 3–8 words per exchange. Return fewer if the exchange is short or simple.
 - translation must be in English
-- exampleSentence must be a simple ${languageName} sentence using the word
+- exampleSentence must be a simple ${languageName} sentence using the CANONICAL form of the word
+
+CANONICAL FORM RULES — always extract the dictionary/lemma form, never an inflected form:
+- Nouns: masculine singular where applicable (casa not casas, libro not libros)
+- Adjectives: masculine singular (alto not alta/altos/altas, grande not grandes, bueno not buena)
+- Verbs: infinitive always (hablar not habló/hablando/hablaba/hablamos, essere not sono/era)
+- Adverbs: extract as-is (rápidamente, facilmente)
+- If you see "altas" in the text, extract "alto". If you see "hablamos", extract "hablar".
 
 Respond ONLY with valid JSON — no markdown, no code fences, no explanation:
 {
   "words": [
     {
-      "word": "${languageName} word",
+      "word": "${languageName} word as it appeared in the conversation",
+      "lemma": "canonical dictionary form",
       "translation": "English translation",
       "partOfSpeech": "noun" | "verb" | "adjective" | "adverb",
-      "exampleSentence": "Simple ${languageName} sentence."
+      "exampleSentence": "Simple ${languageName} sentence using the canonical form."
     }
   ]
 }
@@ -52,6 +60,7 @@ You must respond ONLY with valid JSON matching exactly this shape — no markdow
   "words": [
     {
       "word": "string",
+      "lemma": "string", 
       "translation": "string",
       "partOfSpeech": "noun" | "verb" | "adjective" | "adverb",
       "exampleSentence": "string"
@@ -85,6 +94,7 @@ export async function extractAndSaveVocabulary({
 
   let words: Array<{
     word: string;
+    lemma: string;
     translation: string;
     partOfSpeech?: string | undefined;
     exampleSentence?: string | undefined;
@@ -139,17 +149,29 @@ export async function extractAndSaveVocabulary({
     // The @@unique([userLanguageId, word]) constraint on VocabularyItem
     // guarantees no duplicates at the DB level. skipDuplicates silently
     // drops any word that already exists — no pre-fetch needed.
-    await prisma.vocabularyItem.createMany({
-      data: words.map((w) => ({
-        userLanguageId,
-        word: w.word,
-        translation: w.translation,
-        partOfSpeech: w.partOfSpeech ?? null,
-        exampleSentence: w.exampleSentence ?? null,
-        sourceConversationId: conversationId,
-      })),
-      skipDuplicates: true,
-    });
+    await prisma.$transaction(
+      words.map((w) =>
+        prisma.vocabularyItem.upsert({
+          where: {
+            userLanguageId_lemma: {
+              // updated unique constraint name
+              userLanguageId,
+              lemma: w.lemma,
+            },
+          },
+          create: {
+            userLanguageId,
+            word: w.word,
+            lemma: w.lemma,
+            translation: w.translation,
+            partOfSpeech: w.partOfSpeech ?? null,
+            exampleSentence: w.exampleSentence ?? null,
+            sourceConversationId: conversationId,
+          },
+          update: {}, // already exists — don't overwrite anything, FSRS state stays intact
+        }),
+      ),
+    );
   } catch (err) {
     console.error("[extractVocabulary] DB insert failed:", err);
   }

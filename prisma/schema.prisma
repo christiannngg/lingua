@@ -156,6 +156,8 @@ model VocabularyItem {
   exampleSentence      String?   @db.Text
   sourceConversationId String?
 
+  lemma                String // canonical form — this is what deduplication keys on
+
   // ── FSRS scheduling fields ──────────────────────────────────────────────
   // state mirrors CardState enum values: "NEW" | "LEARNING" | "REVIEW" | "RELEARNING"
   state       String    @default("NEW")
@@ -171,7 +173,7 @@ model VocabularyItem {
   userLanguage       UserLanguage @relation(fields: [userLanguageId], references: [id], onDelete: Cascade)
   sourceConversation Conversation? @relation(fields: [sourceConversationId], references: [id], onDelete: SetNull)
 
-  @@unique([userLanguageId, word])
+  @@unique([userLanguageId, lemma])
   @@index([userLanguageId])
   @@index([nextReview])   // daily review queue queries filter by this
   @@map("vocabulary_items")

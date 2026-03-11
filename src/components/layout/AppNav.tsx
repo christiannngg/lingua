@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LanguageFlag } from "@/components/ui/LanguageFlag";
 import { getLanguageDisplayName } from "@/lib/languages.config";
+import { signOutAction } from "@/app/actions/auth";
 
 const NAV_ITEMS: {
   href: "/dashboard" | "/learn" | "/dashboard/review" | "/dashboard/vocabulary" | "/settings" | "/chat/es";
@@ -76,6 +77,26 @@ export function AppNav({ languages }: AppNavProps) {
           ))}
         </div>
       )}
+
+      {/* Logout */}
+      <form action={signOutAction} className={languages.length > 0 ? "mt-3" : "mt-auto"}>
+        <button
+          type="submit"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
+          style={{ color: "var(--muted-foreground)" }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.backgroundColor = "var(--color-brand-100)";
+            (e.currentTarget as HTMLButtonElement).style.color = "var(--color-brand-700)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
+            (e.currentTarget as HTMLButtonElement).style.color = "var(--muted-foreground)";
+          }}
+        >
+          <span aria-hidden="true">→</span>
+          Log out
+        </button>
+      </form>
     </nav>
   );
 }

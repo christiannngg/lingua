@@ -124,7 +124,7 @@ export function VocabularyClient({
       const q = search.toLowerCase();
       items = items.filter(
         (item) =>
-          item.word.toLowerCase().includes(q) ||
+          item.lemma.toLowerCase().includes(q) ||
           item.translation.toLowerCase().includes(q)
       );
     }

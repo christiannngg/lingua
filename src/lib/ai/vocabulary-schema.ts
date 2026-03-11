@@ -2,8 +2,9 @@ import { z } from "zod/v4";
 
 export const VocabularyItemSchema = z.object({
   word: z.string(),
+  lemma: z.string(),
   translation: z.string(),
-  partOfSpeech: z.string().optional(),
+  partOfSpeech: z.enum(["noun", "verb", "adjective", "adverb"]).optional(),
   exampleSentence: z.string().optional(),
 });
 

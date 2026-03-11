@@ -58,7 +58,7 @@ export function WordCard({ item }: WordCardProps) {
             className="text-base font-semibold"
             style={{ color: "var(--foreground)" }}
           >
-            {item.word}
+            {item.lemma}
           </span>
           {item.partOfSpeech && (
             <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>

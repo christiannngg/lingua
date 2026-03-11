@@ -14,6 +14,7 @@ import { CardState } from "@/lib/fsrs/types";
 export type VocabularyItemRow = {
   id: string;
   word: string;
+  lemma: string;
   translation: string;
   partOfSpeech: string | null;
   exampleSentence: string | null;
@@ -137,6 +138,7 @@ export async function getVocabularyDashboard(
     select: {
       id: true,
       word: true,
+      lemma: true,
       translation: true,
       partOfSpeech: true,
       exampleSentence: true,

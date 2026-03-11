@@ -25,8 +25,11 @@ Write 3-5 sentences in plain English. Focus on:
 - Their apparent confidence level and any recurring struggles
 - Anything they said they wanted to discuss again or learn more about
 - The general tone and energy of the conversation
+- Specific topics, words, or phrases discussed — name them explicitly 
+  (e.g. "discussed vegetables including lettuce, tomatoes, and peppers" 
+  not "talked about food")
 
-Do NOT summarize what the tutor said. Do NOT list vocabulary words.
+Do NOT summarize what the tutor said. 
 Do NOT write "The user said...". Just write the memory note directly, as if briefing someone 
 who is about to meet this person for the first time.
 

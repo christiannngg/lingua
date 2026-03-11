@@ -28,30 +28,32 @@ export async function retrieveRelevantMemory(
   userLanguageId: string,
   currentConversationId: string,
 ): Promise<string | null> {
-  // Embed the user's first message as the query vector
   const queryEmbedding = await embedText(firstUserMessage, "query");
   const queryLiteral = `[${queryEmbedding.join(",")}]`;
 
-  // pgvector cosine similarity: 1 - cosine_distance
-  // <=> is the cosine distance operator in pgvector
+  // ── Use a CTE so Postgres computes the distance expression once ──────────
+  // Previously the vector literal was repeated in both SELECT and ORDER BY,
+  // causing Postgres to evaluate the cosine distance twice per row.
   const results = await prisma.$queryRaw<MemoryRow[]>`
-    SELECT
-      ce.summary,
-      1 - (ce.embedding <=> ${queryLiteral}::vector(512)) AS similarity
-    FROM conversation_embeddings ce
-    INNER JOIN conversations c ON c.id = ce."conversationId"
-    WHERE
-      c."userLanguageId" = ${userLanguageId}
-      AND ce."conversationId" != ${currentConversationId}
-    ORDER BY ce.embedding <=> ${queryLiteral}::vector(512)
-    LIMIT ${TOP_K}
+    WITH ranked AS (
+      SELECT
+        ce.summary,
+        1 - (ce.embedding <=> ${queryLiteral}::vector(512)) AS similarity
+      FROM conversation_embeddings ce
+      INNER JOIN conversations c ON c.id = ce."conversationId"
+      WHERE
+        c."userLanguageId" = ${userLanguageId}
+        AND ce."conversationId" != ${currentConversationId}
+      ORDER BY ce.embedding <=> ${queryLiteral}::vector(512)
+      LIMIT ${TOP_K}
+    )
+    SELECT summary, similarity FROM ranked
   `;
 
   const relevant = results.filter((r) => r.similarity >= SIMILARITY_THRESHOLD);
 
   if (relevant.length === 0) return null;
 
-  // Format into a readable memory block for the system prompt
   const memoriesText = relevant
     .map((r, i) => `Memory ${i + 1}: ${r.summary}`)
     .join("\n\n");

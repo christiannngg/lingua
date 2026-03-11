@@ -95,7 +95,6 @@ export async function extractAndSaveVocabulary({
 
   while (attempts < 2) {
     try {
-      // On the second attempt, use the corrective prompt that includes the bad output
       const userContent =
         attempts === 0
           ? EXTRACTION_USER_PROMPT(languageName, userMessage, aiMessage)
@@ -117,11 +116,9 @@ export async function extractAndSaveVocabulary({
       const cleaned = stripFences(raw);
       const extracted = VocabularyExtractionSchema.parse(JSON.parse(cleaned));
       words = extracted.words;
-      break; // success
+      break;
     } catch (err) {
       attempts++;
-      // Only log parse/validation failures differently so we can distinguish
-      // them from network errors in the logs
       if (err instanceof SyntaxError || (err instanceof Error && err.name === "ZodError")) {
         console.error(`[extractVocabulary] parse/validation failure on attempt ${attempts}:`, err);
       } else {
@@ -138,17 +135,12 @@ export async function extractAndSaveVocabulary({
   }
 
   try {
-    const existing = await prisma.vocabularyItem.findMany({
-      where: { userLanguageId },
-      select: { word: true },
-    });
-    const existingSet = new Set(existing.map((v) => v.word.toLowerCase()));
-    const newWords = words.filter((w) => !existingSet.has(w.word.toLowerCase()));
-
-    if (newWords.length === 0) return;
-
+    // ── Skip the O(n) findMany + existingSet filter ───────────────────────
+    // The @@unique([userLanguageId, word]) constraint on VocabularyItem
+    // guarantees no duplicates at the DB level. skipDuplicates silently
+    // drops any word that already exists — no pre-fetch needed.
     await prisma.vocabularyItem.createMany({
-      data: newWords.map((w) => ({
+      data: words.map((w) => ({
         userLanguageId,
         word: w.word,
         translation: w.translation,

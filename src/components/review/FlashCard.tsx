@@ -7,17 +7,24 @@ interface FlashCardProps {
   revealed: boolean;
   onReveal: () => void;
   onRate: (rating: Rating) => void;
+  onRegenerate: (cardId: string) => void;
   submitting: boolean;
+  isRegenerating: boolean;
   cardNumber: number;
   totalCards: number;
-  aiSentence: string | null;      // AI-generated sentence — replaces stored one when available
-  isGenerating: boolean;          // true while the AI call is in flight
+  sentence: string | null;
 }
 
 const PART_OF_SPEECH_ABBR: Record<string, string> = {
-  noun: "n.", verb: "v.", adjective: "adj.", adverb: "adv.",
-  pronoun: "pron.", preposition: "prep.", conjunction: "conj.",
-  interjection: "interj.", article: "art.",
+  noun: "n.",
+  verb: "v.",
+  adjective: "adj.",
+  adverb: "adv.",
+  pronoun: "pron.",
+  preposition: "prep.",
+  conjunction: "conj.",
+  interjection: "interj.",
+  article: "art.",
 };
 
 function formatPos(pos: string): string {
@@ -29,23 +36,24 @@ export function FlashCard({
   revealed,
   onReveal,
   onRate,
+  onRegenerate,
   submitting,
+  isRegenerating,
   cardNumber,
   totalCards,
-  aiSentence,
-  isGenerating,
+  sentence,
 }: FlashCardProps) {
-  // Prefer AI-generated sentence when available, fall back to stored sentence
-  const displaySentence = aiSentence ?? card.exampleSentence;
-
   return (
     <div className="flex w-full max-w-xl flex-col gap-4">
 
       {/* Progress indicator */}
-      <div className="flex items-center justify-between text-xs" style={{ color: "var(--muted-foreground)" }}>
+      <div
+        className="flex items-center justify-between text-xs"
+        style={{ color: "var(--muted-foreground)" }}
+      >
         <span>{cardNumber} / {totalCards}</span>
         <div
-          className="h-1 flex-1 mx-4 rounded-full overflow-hidden"
+          className="mx-4 h-1 flex-1 overflow-hidden rounded-full"
           style={{ backgroundColor: "var(--border)" }}
         >
           <div
@@ -84,28 +92,75 @@ export function FlashCard({
             )}
           </div>
 
-          {/* Example sentence — shimmer while generating, sentence when ready */}
-          {isGenerating ? (
-            <div
-              className="mt-3 h-4 w-64 rounded"
+          {/* Example sentence + regenerate button */}
+          {sentence ? (
+            <div className="mt-3 flex w-full max-w-sm items-start gap-2">
+              <p
+                className="flex-1 border-l-2 pl-3 text-left text-sm italic"
+                style={{
+                  borderColor: "var(--color-brand-500)",
+                  color: "var(--muted-foreground)",
+                }}
+              >
+                {sentence}
+              </p>
+              <button
+                onClick={() => onRegenerate(card.id)}
+                disabled={isRegenerating}
+                title="Generate a new example sentence"
+                className="mt-0.5 flex-shrink-0 rounded-md p-1 transition-opacity"
+                style={{
+                  color: "var(--muted-foreground)",
+                  opacity: isRegenerating ? 0.4 : 0.6,
+                  cursor: isRegenerating ? "not-allowed" : "pointer",
+                }}
+                onMouseEnter={(e) => {
+                  if (!isRegenerating)
+                    (e.currentTarget as HTMLButtonElement).style.opacity = "1";
+                }}
+                onMouseLeave={(e) => {
+                  if (!isRegenerating)
+                    (e.currentTarget as HTMLButtonElement).style.opacity = "0.6";
+                }}
+              >
+                {/* Inline SVG refresh icon — no icon library dependency */}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{
+                    animation: isRegenerating ? "spin 1s linear infinite" : "none",
+                  }}
+                >
+                  <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                  <path d="M21 3v5h-5" />
+                  <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                  <path d="M8 16H3v5" />
+                </svg>
+              </button>
+            </div>
+          ) : (
+            /* No sentence yet — show the regenerate button alone so user can generate one */
+            <button
+              onClick={() => onRegenerate(card.id)}
+              disabled={isRegenerating}
+              className="mt-3 text-xs underline-offset-2 transition-opacity"
               style={{
-                background: "linear-gradient(90deg, var(--border) 25%, var(--muted-foreground) 50%, var(--border) 75%)",
-                backgroundSize: "200% 100%",
-                animation: "shimmer 1.5s infinite",
-                opacity: 0.3,
-              }}
-            />
-          ) : displaySentence ? (
-            <p
-              className="mt-3 max-w-sm border-l-2 pl-3 text-left text-sm italic transition-opacity duration-300"
-              style={{
-                borderColor: "var(--color-brand-500)",
                 color: "var(--muted-foreground)",
+                opacity: isRegenerating ? 0.4 : 0.6,
+                textDecoration: "underline",
+                cursor: isRegenerating ? "not-allowed" : "pointer",
               }}
             >
-              {displaySentence}
-            </p>
-          ) : null}
+              {isRegenerating ? "Generating…" : "Generate example sentence"}
+            </button>
+          )}
         </div>
 
         {/* Divider + translation reveal */}
@@ -114,7 +169,10 @@ export function FlashCard({
             className="mt-6 border-t pt-6 text-center"
             style={{ borderColor: "var(--border)" }}
           >
-            <p className="text-sm font-medium uppercase tracking-widest" style={{ color: "var(--muted-foreground)", opacity: 0.5 }}>
+            <p
+              className="text-sm font-medium uppercase tracking-widest"
+              style={{ color: "var(--muted-foreground)", opacity: 0.5 }}
+            >
               translation
             </p>
             <p
@@ -124,8 +182,12 @@ export function FlashCard({
               {card.translation}
             </p>
             {card.reps > 0 && (
-              <p className="mt-2 text-xs" style={{ color: "var(--muted-foreground)", opacity: 0.5 }}>
-                reviewed {card.reps} {card.reps === 1 ? "time" : "times"} · {card.lapses} {card.lapses === 1 ? "lapse" : "lapses"}
+              <p
+                className="mt-2 text-xs"
+                style={{ color: "var(--muted-foreground)", opacity: 0.5 }}
+              >
+                reviewed {card.reps} {card.reps === 1 ? "time" : "times"} ·{" "}
+                {card.lapses} {card.lapses === 1 ? "lapse" : "lapses"}
               </p>
             )}
           </div>
@@ -140,7 +202,8 @@ export function FlashCard({
                 backgroundColor: "transparent",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.backgroundColor = "var(--color-brand-100)";
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                  "var(--color-brand-100)";
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
@@ -162,11 +225,11 @@ export function FlashCard({
         </div>
       )}
 
-      {/* Shimmer keyframe — injected inline so no global CSS dependency */}
+      {/* Spin keyframe for the regenerate icon */}
       <style>{`
-        @keyframes shimmer {
-          0% { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
         }
       `}</style>
     </div>

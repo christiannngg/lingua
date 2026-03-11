@@ -97,7 +97,6 @@ export async function extractAndSaveGrammar({
 
   while (attempts < 2) {
     try {
-      // On the second attempt, use the corrective prompt that includes the bad output
       const userContent =
         attempts === 0
           ? EXTRACTION_USER_PROMPT(userMessage, aiMessage, languageName)
@@ -125,12 +124,11 @@ export async function extractAndSaveGrammar({
       const cleaned = stripFences(raw);
       const extracted = GrammarExtractionSchema.parse(JSON.parse(cleaned));
 
-      // Filter out any concepts Claude invented outside our predefined list
       errors = extracted.errors.filter((e) =>
         conceptNames.includes(e.concept as (typeof conceptNames)[number]),
       );
 
-      break; // success
+      break;
     } catch (err) {
       attempts++;
       if (err instanceof SyntaxError || (err instanceof Error && err.name === "ZodError")) {
@@ -148,51 +146,58 @@ export async function extractAndSaveGrammar({
     return;
   }
 
-  // Persist each error — upsert mastery row + insert error occurrence
-  for (const error of errors) {
-    try {
-      const concept = await prisma.grammarConcept.findUnique({
-        where: { language_name: { language, name: error.concept } },
-      });
+  // ── Parallelise DB writes across all errors ──────────────────────────────
+  // Each error's concept lookup, mastery upsert, and error insert are
+  // independent of the others — no reason to pay for sequential round-trips.
+  await Promise.all(
+    errors.map(async (error) => {
+      try {
+        const concept = await prisma.grammarConcept.findUnique({
+          where: { language_name: { language, name: error.concept } },
+        });
 
-      if (!concept) {
-        console.warn(
-          `[extractGrammar] unknown concept "${error.concept}" for language "${language}", skipping`,
-        );
-        continue;
-      }
+        if (!concept) {
+          console.warn(
+            `[extractGrammar] unknown concept "${error.concept}" for language "${language}", skipping`,
+          );
+          return;
+        }
 
-      await prisma.userGrammarMastery.upsert({
-        where: {
-          userLanguageId_grammarConceptId: {
+        // Upsert mastery and insert error record — these two are dependent on
+        // the concept lookup above but independent across different errors,
+        // so we await them sequentially only within each error's own task.
+        await prisma.userGrammarMastery.upsert({
+          where: {
+            userLanguageId_grammarConceptId: {
+              userLanguageId,
+              grammarConceptId: concept.id,
+            },
+          },
+          update: {
+            errorCount: { increment: 1 },
+            lastSeenAt: new Date(),
+          },
+          create: {
             userLanguageId,
             grammarConceptId: concept.id,
+            errorCount: 1,
+            lastSeenAt: new Date(),
           },
-        },
-        update: {
-          errorCount: { increment: 1 },
-          lastSeenAt: new Date(),
-        },
-        create: {
-          userLanguageId,
-          grammarConceptId: concept.id,
-          errorCount: 1,
-          lastSeenAt: new Date(),
-        },
-      });
+        });
 
-      await prisma.grammarError.create({
-        data: {
-          userLanguageId,
-          grammarConceptId: concept.id,
-          conversationId,
-          userSentence: error.userSentence,
-          correction: error.correction,
-          explanation: error.explanation,
-        },
-      });
-    } catch (err) {
-      console.error(`[extractGrammar] failed to persist concept "${error.concept}":`, err);
-    }
-  }
+        await prisma.grammarError.create({
+          data: {
+            userLanguageId,
+            grammarConceptId: concept.id,
+            conversationId,
+            userSentence: error.userSentence,
+            correction: error.correction,
+            explanation: error.explanation,
+          },
+        });
+      } catch (err) {
+        console.error(`[extractGrammar] failed to persist concept "${error.concept}":`, err);
+      }
+    }),
+  );
 }

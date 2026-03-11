@@ -91,13 +91,11 @@ If there are no words worth extracting, return: { "words": [] }`,
       break; // success — exit retry loop
     } catch (err) {
       attempts++;
-      console.error(`[vocabulary/extract] attempt ${attempts} failed:`, err);
     }
   }
 
   // If both attempts failed, log and return silently — never interrupt the chat
   if (attempts === 2 && words.length === 0) {
-    console.error("[vocabulary/extract] extraction failed after 2 attempts, skipping insert");
     return NextResponse.json({ inserted: 0 });
   }
 
@@ -135,7 +133,6 @@ If there are no words worth extracting, return: { "words": [] }`,
     return NextResponse.json({ inserted: result.count });
   } catch (err) {
     // DB failure — log silently, never surface to user
-    console.error("[vocabulary/extract] DB insert failed:", err);
     return NextResponse.json({ inserted: 0 });
   }
 }

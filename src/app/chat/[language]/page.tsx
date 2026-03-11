@@ -2,17 +2,15 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/db/prisma";
-import { ChatInterface } from "@/components/conversation/ChatInterface";
 import { getConversations, getConversationMessages } from "@/app/actions/conversations";
 import { ConversationSidebar } from "@/components/conversation/ConversationSidebar";
+import { ChatInterfaceLoader } from "@/components/conversation/ChatInterfaceLoader";
 import { isSupportedLanguage, type SupportedLanguage } from "@/lib/languages.config";
 
 interface ChatPageProps {
   params: Promise<{ language: string }>;
   searchParams: Promise<{ conv?: string }>;
 }
-
-type Conversation = Awaited<ReturnType<typeof getConversations>>[number];
 
 export default async function ChatPage({ params, searchParams }: ChatPageProps) {
   const { language } = await params;
@@ -31,24 +29,19 @@ export default async function ChatPage({ params, searchParams }: ChatPageProps) 
   if (!userLanguage?.assessmentCompleted) redirect(`/assessment/${language}`);
 
   const lang = userLanguage!;
-  const conversations = await getConversations(lang.id);
 
-  let initialMessages: {
-    id: string;
-    role: "user" | "assistant";
-    parts: { type: "text"; text: string }[];
-  }[] = [];
-  let initialConversationId: string | null = null;
+  // Parallelise sidebar list + active conversation messages
+  const [conversations, dbMessages] = await Promise.all([
+    getConversations(lang.id),
+    conv ? getConversationMessages(conv) : Promise.resolve([]),
+  ]);
 
-  if (conv) {
-    const dbMessages = await getConversationMessages(conv);
-    initialConversationId = conv;
-    initialMessages = dbMessages.map((m) => ({
-      id: m.id,
-      role: m.role as "user" | "assistant",
-      parts: [{ type: "text" as const, text: m.content }],
-    }));
-  }
+  const initialConversationId = conv ?? null;
+  const initialMessages = dbMessages.map((m) => ({
+    id: m.id,
+    role: m.role as "user" | "assistant",
+    parts: [{ type: "text" as const, text: m.content }],
+  }));
 
   return (
     <div style={{ display: "flex", height: "100vh", backgroundColor: "#0d0d1a" }}>
@@ -58,8 +51,8 @@ export default async function ChatPage({ params, searchParams }: ChatPageProps) 
         activeConvId={initialConversationId}
       />
 
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <ChatInterface
+      <div style={{ flex: 1, minWidth: 0, display: "flex" }}>
+        <ChatInterfaceLoader
           language={language as SupportedLanguage}
           cefrLevel={lang.cefrLevel ?? "A1"}
           userLanguageId={lang.id}

@@ -7,7 +7,7 @@ import { headers } from "next/headers";
 import { prisma } from "@/lib/db/prisma";
 import { buildConversationSystemPrompt } from "@/lib/ai/conversation-prompt";
 import { extractAndSaveVocabulary } from "@/lib/ai/extract-vocabulary";
-import { extractAndSaveGrammar } from "@/lib/ai/extract-grammer";
+import { extractAndSaveGrammar } from "@/lib/ai/extract-grammar";
 import { embedConversation } from "@/lib/embeddings";
 import { retrieveRelevantMemory } from "@/lib/ai/retrieve-memory";
 import { isSupportedLanguage, type SupportedLanguage } from "@/lib/languages.config";
@@ -46,7 +46,6 @@ export async function POST(req: NextRequest) {
 
     const { messages, language: rawLanguage, userLanguageId, conversationId } = parsed.data;
 
-    // Guard — validate language against config after parsing
     if (!isSupportedLanguage(rawLanguage)) {
       return new Response("Invalid language", { status: 400 });
     }
@@ -60,7 +59,6 @@ export async function POST(req: NextRequest) {
 
     const cefrLevel = (userLanguage.cefrLevel ?? "A1") as "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
 
-    // Get or create conversation + handle memory retrieval for new sessions
     let convId = conversationId;
     let memorySnippets: string | null = null;
 
@@ -75,30 +73,16 @@ export async function POST(req: NextRequest) {
         ? extractText(firstUserMessage.parts as MessagePart[])
         : null;
 
+      // Parallelise memory retrieval — no longer needs to find the previous
+      // conversation here since embedding is now handled in onFinish.
       if (firstUserText) {
-        memorySnippets = await retrieveRelevantMemory(firstUserText, userLanguageId, convId).catch(
-          (err) => {
-            console.error("[chat/route] memory retrieval failed:", err);
-            return null;
-          },
-        );
-      }
-
-      const previousConv = await prisma.conversation.findFirst({
-        where: {
+        memorySnippets = await retrieveRelevantMemory(
+          firstUserText,
           userLanguageId,
-          id: { not: convId },
-        },
-        orderBy: { updatedAt: "desc" },
-        select: {
-          id: true,
-          _count: { select: { messages: true } },
-        },
-      });
-
-      if (previousConv && previousConv._count.messages >= 2) {
-        void embedConversation(previousConv.id).catch((err) => {
-          console.error("[chat/route] embedding failed:", err);
+          convId,
+        ).catch((err) => {
+          console.error("[chat/route] memory retrieval failed:", err);
+          return null;
         });
       }
     }
@@ -127,6 +111,7 @@ export async function POST(req: NextRequest) {
       system: systemPrompt,
       messages: modelMessages,
       onFinish: async ({ text }) => {
+        // ── Persist assistant message ──────────────────────────────────────
         try {
           await prisma.message.create({
             data: { conversationId: convId, role: "assistant", content: text },
@@ -135,6 +120,7 @@ export async function POST(req: NextRequest) {
           console.error("[chat/route] failed to persist assistant message:", err);
         }
 
+        // ── Update conversation title ──────────────────────────────────────
         try {
           await prisma.conversation.updateMany({
             where: { id: convId, title: null },
@@ -146,6 +132,17 @@ export async function POST(req: NextRequest) {
         } catch (err) {
           console.error("[chat/route] failed to update conversation title:", err);
         }
+
+        // ── Background jobs — all void, never block the stream ─────────────
+
+        // Embed the current conversation after every turn. The upsert in
+        // embedConversation handles repeat calls cleanly — it just refreshes
+        // the summary and vector to reflect the latest state of the conversation.
+        // Running here (rather than on next session start) ensures every
+        // conversation is embedded, including the first one and the latest one.
+        void embedConversation(convId).catch((err) => {
+          console.error("[chat/route] embedding failed:", err);
+        });
 
         if (userText && text) {
           void extractAndSaveVocabulary({

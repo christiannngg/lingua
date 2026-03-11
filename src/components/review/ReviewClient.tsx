@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import type { ReviewQueue, ReviewCard } from "@/app/actions/review";
 import { submitReview } from "@/app/actions/review";
@@ -46,45 +46,25 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
   const [submitting, setSubmitting] = useState(false);
   const [ratingSummary, setRatingSummary] = useState<RatingSummary>(emptyRatingSummary);
   const [done, setDone] = useState(false);
-
   const [earliestNextReview, setEarliestNextReview] = useState<Date | null>(null);
 
-  // ── AI sentence state ─────────────────────────────────────────────────────
-  const [aiSentences, setAiSentences] = useState<Record<string, string>>({});
-  const [isGenerating, setIsGenerating] = useState(false);
-  const generatedRef = useRef<Set<string>>(new Set());
+  // ── Sentence cache — seeded from DB, updated on regenerate ───────────────
+  // Keyed by card ID. Initialised once from the queue so cards render
+  // instantly with no generation delay on mount.
+  const [cardSentences, setCardSentences] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      queue.cards
+        .filter((c) => c.exampleSentence !== null)
+        .map((c) => [c.id, c.exampleSentence as string]),
+    ),
+  );
 
-  // ── Empty queue ──────────────────────────────────────────────────────────
+  // ── Regenerate state — tracks which card has an in-flight regen request ──
+  const [regeneratingIds, setRegeneratingIds] = useState<Set<string>>(new Set());
+
+  // ── Derived ───────────────────────────────────────────────────────────────
   const isEmpty = cards.length === 0;
   const currentCard = cards[currentIndex];
-
-  // ── Generate sentence on card mount ──────────────────────────────────────
-  useEffect(() => {
-    if (!currentCard || done || isEmpty) return;
-    if (generatedRef.current.has(currentCard.id)) return;
-
-    generatedRef.current.add(currentCard.id);
-    setIsGenerating(true);
-
-    fetch("/api/vocabulary/generate-sentence", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ vocabularyItemId: currentCard.id }),
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json() as Promise<{ sentence: string }>;
-      })
-      .then(({ sentence }) => {
-        setAiSentences((prev) => ({ ...prev, [currentCard.id]: sentence }));
-      })
-      .catch((err) => {
-        console.error("[ReviewClient] sentence generation failed:", err);
-      })
-      .finally(() => {
-        setIsGenerating(false);
-      });
-  }, [currentCard, done, isEmpty]);
 
   // ── Handlers ────────────────────────────────────────────────────────────
 
@@ -118,7 +98,7 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
         if (result.success && result.updatedCard.nextReview) {
           const next = new Date(result.updatedCard.nextReview);
           setEarliestNextReview((prev) =>
-            prev === null || next < prev ? next : prev
+            prev === null || next < prev ? next : prev,
           );
         }
       } catch (err) {
@@ -127,8 +107,38 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
         setSubmitting(false);
       }
     },
-    [cards, currentIndex, submitting]
+    [cards, currentIndex, submitting],
   );
+
+  // ── Regenerate — fires a new Claude call, writes to DB, updates local cache
+  const handleRegenerate = useCallback(async (cardId: string) => {
+    if (regeneratingIds.has(cardId)) return;
+
+    setRegeneratingIds((prev) => new Set(prev).add(cardId));
+
+    try {
+      const res = await fetch("/api/vocabulary/generate-sentence", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vocabularyItemId: cardId }),
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const { sentence } = (await res.json()) as { sentence: string };
+
+      setCardSentences((prev) => ({ ...prev, [cardId]: sentence }));
+    } catch (err) {
+      console.error("[ReviewClient] regenerate failed:", err);
+      // Silent failure — the existing sentence stays in place
+    } finally {
+      setRegeneratingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(cardId);
+        return next;
+      });
+    }
+  }, [regeneratingIds]);
 
   const handleReviewAgain = useCallback(() => {
     router.refresh();
@@ -137,8 +147,6 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
     setRevealed(false);
     setRatingSummary(emptyRatingSummary());
     setEarliestNextReview(null);
-    setAiSentences({});
-    generatedRef.current.clear();
   }, [router]);
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -155,13 +163,15 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
           <h1 className="text-xl font-bold" style={{ color: "var(--foreground)" }}>
             Review
           </h1>
-          <p className="flex items-center gap-2 text-sm" style={{ color: "var(--muted-foreground)" }}>
+          <p
+            className="flex items-center gap-2 text-sm"
+            style={{ color: "var(--muted-foreground)" }}
+          >
             <LanguageFlag language={currentLang} className="w-4 h-auto rounded-sm" />
             {getLanguageDisplayName(currentLang)} · CEFR {queue.cefrLevel}
           </p>
         </div>
 
-        {/* Language switcher */}
         {languages.length > 1 && (
           <div className="flex gap-2">
             {languages.map((lang) => (
@@ -171,8 +181,12 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
                 className="flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors"
                 style={{
                   borderColor: lang === currentLang ? "var(--color-brand-500)" : "var(--border)",
-                  backgroundColor: lang === currentLang ? "var(--color-brand-100)" : "transparent",
-                  color: lang === currentLang ? "var(--color-brand-700)" : "var(--muted-foreground)",
+                  backgroundColor:
+                    lang === currentLang ? "var(--color-brand-100)" : "transparent",
+                  color:
+                    lang === currentLang
+                      ? "var(--color-brand-700)"
+                      : "var(--muted-foreground)",
                 }}
               >
                 <LanguageFlag language={lang} className="w-4 h-auto rounded-sm" />
@@ -186,7 +200,6 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
       {/* Main content area */}
       <div className="flex flex-1 items-center justify-center px-6 py-10">
 
-        {/* Empty queue */}
         {isEmpty && !done && (
           <div className="flex flex-col items-center gap-3 text-center">
             <span className="text-4xl">✅</span>
@@ -209,7 +222,6 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
           </div>
         )}
 
-        {/* Completion screen */}
         {done && (
           <CompletionScreen
             totalReviewed={currentIndex + 1}
@@ -220,18 +232,18 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
           />
         )}
 
-        {/* Active card */}
         {!isEmpty && !done && currentCard && (
           <FlashCard
             card={currentCard}
             revealed={revealed}
             onReveal={handleReveal}
             onRate={handleRate}
+            onRegenerate={handleRegenerate}
             submitting={submitting}
+            isRegenerating={regeneratingIds.has(currentCard.id)}
             cardNumber={currentIndex + 1}
             totalCards={cards.length}
-            aiSentence={aiSentences[currentCard.id] ?? null}
-            isGenerating={isGenerating}
+            sentence={cardSentences[currentCard.id] ?? null}
           />
         )}
       </div>

@@ -21,7 +21,6 @@ interface ChatInterfaceProps {
 
 const TIMEOUT_MS = 30_000;
 
-// Detect whether a useChat error is a timeout/abort
 function isTimeoutError(err: Error): boolean {
   return (
     err.name === "AbortError" ||
@@ -47,7 +46,6 @@ export function ChatInterface({
   const router = useRouter();
   const isOnline = useOnlineStatus();
 
-  // null = no error, "timeout" = LLM timed out, "generic" = other failure
   const [errorKind, setErrorKind] = useState<"timeout" | "generic" | null>(null);
 
   const welcomeMessage: UIMessage = {
@@ -81,18 +79,15 @@ export function ChatInterface({
       api: "/api/chat",
       body: { language, userLanguageId },
       fetch: async (url, options) => {
-        // Inject the current conversationId into the request body
         if (options?.body) {
           const body = JSON.parse(options.body as string);
           body.conversationId = conversationIdRef.current;
           options = { ...options, body: JSON.stringify(body) };
         }
 
-        // Create a fresh AbortController for this request
         const controller = new AbortController();
         abortControllerRef.current = controller;
 
-        // Start the timeout — abort if the stream hasn't finished in TIMEOUT_MS
         timeoutRef.current = setTimeout(() => {
           controller.abort();
         }, TIMEOUT_MS);
@@ -114,7 +109,6 @@ export function ChatInterface({
 
   const isLoading = status === "submitted" || status === "streaming";
 
-  // Clear timeout on unmount
   useEffect(() => {
     return () => {
       clearTimeout(timeoutRef.current ?? undefined);
@@ -147,6 +141,13 @@ export function ChatInterface({
       style={{
         display: "flex",
         flexDirection: "column",
+        // ── width: 100% is the fix ───────────────────────────────────────
+        // ChatInterface is rendered inside a flex parent. Without an explicit
+        // width, a flex column doesn't stretch to fill available horizontal
+        // space — it sizes to its content instead, leaving dead space to the
+        // right. height: 100% handles the vertical axis; width: 100% handles
+        // the horizontal.
+        width: "100%",
         height: "100%",
         backgroundColor: "#0d0d1a",
       }}
@@ -199,7 +200,6 @@ export function ChatInterface({
           <MessageBubble key={message.id} message={message} personaName={personaName} />
         ))}
 
-        {/* Timeout error — show retry button */}
         {errorKind === "timeout" && (
           <div
             style={{
@@ -236,7 +236,6 @@ export function ChatInterface({
           </div>
         )}
 
-        {/* Generic error — no retry button since we don't know if resubmit is safe */}
         {errorKind === "generic" && (
           <div
             style={{

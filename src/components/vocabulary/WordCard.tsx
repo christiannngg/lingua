@@ -104,9 +104,9 @@ export function WordCard({ item }: WordCardProps) {
         className="mt-auto flex items-center justify-between pt-1 text-xs"
         style={{ color: "var(--muted-foreground)", opacity: 0.6 }}
       >
-        <span className="truncate" title={formatConversationLabel(item.sourceConversation)}>
+        {/* <span className="truncate" title={formatConversationLabel(item.sourceConversation)}>
           📖 {formatConversationLabel(item.sourceConversation)}
-        </span>
+        </span> */}
         {item.reps > 0 && (
           <span className="shrink-0 pl-2">
             {item.reps} {item.reps === 1 ? "review" : "reviews"}

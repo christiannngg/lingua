@@ -16,272 +16,8 @@
 // ---------------------------------------------------------------------------
 
 export interface LanguageConfig {
-  flagCode:
-    | "AC"
-    | "AD"
-    | "AE"
-    | "AF"
-    | "AG"
-    | "AI"
-    | "AL"
-    | "AM"
-    | "AO"
-    | "AQ"
-    | "AR"
-    | "AS"
-    | "AT"
-    | "AU"
-    | "AW"
-    | "AX"
-    | "AZ"
-    | "BA"
-    | "BB"
-    | "BD"
-    | "BE"
-    | "BF"
-    | "BG"
-    | "BH"
-    | "BI"
-    | "BJ"
-    | "BL"
-    | "BM"
-    | "BN"
-    | "BO"
-    | "BQ_BO"
-    | "BQ_SA"
-    | "BQ_SE"
-    | "BQ"
-    | "BR"
-    | "BS"
-    | "BT"
-    | "BV"
-    | "BW"
-    | "BY"
-    | "BZ"
-    | "CA"
-    | "CC"
-    | "CD"
-    | "CF"
-    | "CG"
-    | "CH"
-    | "CI"
-    | "CK"
-    | "CL"
-    | "CM"
-    | "CN"
-    | "CO"
-    | "CR"
-    | "CU"
-    | "CV"
-    | "CW"
-    | "CX"
-    | "CY"
-    | "CZ"
-    | "DE"
-    | "DJ"
-    | "DK"
-    | "DM"
-    | "DO"
-    | "DZ"
-    | "EC"
-    | "EE"
-    | "EG"
-    | "EH"
-    | "ER"
-    | "ES_CT"
-    | "ES"
-    | "ET"
-    | "EU"
-    | "FI"
-    | "FJ"
-    | "FK"
-    | "FM"
-    | "FO"
-    | "FR"
-    | "GA"
-    | "GB_ENG"
-    | "GB_NIR"
-    | "GB_SCT"
-    | "GB_WLS"
-    | "GB"
-    | "GD"
-    | "GE"
-    | "GF"
-    | "GG"
-    | "GH"
-    | "GI"
-    | "GL"
-    | "GM"
-    | "GN"
-    | "GP"
-    | "GQ"
-    | "GR"
-    | "GS"
-    | "GT"
-    | "GU"
-    | "GW"
-    | "GY"
-    | "HK"
-    | "HM"
-    | "HN"
-    | "HR"
-    | "HT"
-    | "HU"
-    | "IC"
-    | "ID"
-    | "IE"
-    | "IL"
-    | "IM"
-    | "IN"
-    | "IO"
-    | "IQ"
-    | "IR"
-    | "IS"
-    | "IT"
-    | "JE"
-    | "JM"
-    | "JO"
-    | "JP"
-    | "KE"
-    | "KG"
-    | "KH"
-    | "KI"
-    | "KM"
-    | "KN"
-    | "KP"
-    | "KR"
-    | "KW"
-    | "KY"
-    | "KZ"
-    | "LA"
-    | "LB"
-    | "LC"
-    | "LI"
-    | "LK"
-    | "LR"
-    | "LS"
-    | "LT"
-    | "LU"
-    | "LV"
-    | "LY"
-    | "MA"
-    | "MC"
-    | "MD"
-    | "ME"
-    | "MF"
-    | "MG"
-    | "MH"
-    | "MK"
-    | "ML"
-    | "MM"
-    | "MN"
-    | "MO"
-    | "MP"
-    | "MQ"
-    | "MR"
-    | "MS"
-    | "MT"
-    | "MU"
-    | "MV"
-    | "MW"
-    | "MX"
-    | "MY"
-    | "MZ"
-    | "NA"
-    | "NC"
-    | "NE"
-    | "NF"
-    | "NG"
-    | "NI"
-    | "NL"
-    | "NO"
-    | "NP"
-    | "NR"
-    | "NU"
-    | "NZ"
-    | "OM"
-    | "PA"
-    | "PE"
-    | "PF"
-    | "PG"
-    | "PH"
-    | "PK"
-    | "PL"
-    | "PM"
-    | "PN"
-    | "PR"
-    | "PS"
-    | "PT"
-    | "PW"
-    | "PY"
-    | "QA"
-    | "RE"
-    | "RO"
-    | "RS"
-    | "RU"
-    | "RW"
-    | "SA"
-    | "SB"
-    | "SC"
-    | "SD"
-    | "SE"
-    | "SG"
-    | "SH"
-    | "SI"
-    | "SJ"
-    | "SK"
-    | "SL"
-    | "SM"
-    | "SN"
-    | "SO"
-    | "SR"
-    | "SS"
-    | "ST"
-    | "SV"
-    | "SX"
-    | "SY"
-    | "SZ"
-    | "TA"
-    | "TC"
-    | "TD"
-    | "TF"
-    | "TG"
-    | "TH"
-    | "TJ"
-    | "TK"
-    | "TL"
-    | "TM"
-    | "TN"
-    | "TO"
-    | "TR"
-    | "TT"
-    | "TV"
-    | "TW"
-    | "TZ"
-    | "UA"
-    | "UG"
-    | "UM"
-    | "US"
-    | "UY"
-    | "UZ"
-    | "VA"
-    | "VC"
-    | "VE"
-    | "VG"
-    | "VI"
-    | "VN"
-    | "VU"
-    | "WF"
-    | "WS"
-    | "XA"
-    | "XC"
-    | "XK"
-    | "XO"
-    | "YE"
-    | "YT"
-    | "ZA"
-    | "ZM"
-    | "ZW";
+  /** Flag code for supported languages only */
+  flagCode: "CN" | "DE" | "ES" | "FR" | "IT" | "JP" | "KR" | "PT" | "RU";
   /** BCP-47 language code used throughout the app and DB */
   code: string;
   /** Human-readable name shown in the UI */
@@ -303,15 +39,47 @@ const LANGUAGE_CONFIG = [
     personaName: "Marco",
     flagCode: "IT",
   },
-  // ── Add new languages below this line ─────────────────────────────────────
-  // Stub: French — persona prompt + grammar concepts still needed before
-  // this language is fully functional, but all config-driven lookups will
-  // work immediately once this entry exists.
   {
     code: "fr",
     displayName: "French",
     personaName: "Camille",
     flagCode: "FR",
+  },
+  {
+    code: "pt",
+    displayName: "Portuguese",
+    personaName: "Beatriz",
+    flagCode: "PT",
+  },
+  {
+    code: "de",
+    displayName: "German",
+    personaName: "Lena",
+    flagCode: "DE",
+  },
+  {
+    code: "ja",
+    displayName: "Japanese",
+    personaName: "Hana",
+    flagCode: "JP",
+  },
+  {
+    code: "zh",
+    displayName: "Mandarin",
+    personaName: "Wei",
+    flagCode: "CN",
+  },
+  {
+    code: "ko",
+    displayName: "Korean",
+    personaName: "Jisoo",
+    flagCode: "KR",
+  },
+  {
+    code: "ru",
+    displayName: "Russian",
+    personaName: "Natasha",
+    flagCode: "RU",
   },
 ] as const satisfies LanguageConfig[];
 
@@ -319,7 +87,7 @@ const LANGUAGE_CONFIG = [
 // Derived types — inferred from the config, never manually maintained
 // ---------------------------------------------------------------------------
 
-/** Union of all supported language codes: "es" | "it" | "fr" */
+/** Union of all supported language codes: "es" | "it" | "fr" | "pt" | "de" | "ja" | "zh" | "ko" | "ru" */
 export type SupportedLanguage = (typeof LANGUAGE_CONFIG)[number]["code"];
 
 /** Tuple of all supported language codes — used for runtime validation */
@@ -365,7 +133,7 @@ export function getPersonaNameForLanguage(code: string): string {
  * Use this anywhere you need to validate untrusted input (API routes, actions).
  *
  * @example isSupportedLanguage("fr") // true
- * @example isSupportedLanguage("de") // false
+ * @example isSupportedLanguage("de") // false (before this update: now true)
  */
 export function isSupportedLanguage(code: string): code is SupportedLanguage {
   return SUPPORTED_LANGUAGE_CODES.includes(code as SupportedLanguage);

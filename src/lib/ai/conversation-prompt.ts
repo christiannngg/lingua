@@ -7,6 +7,10 @@
  * Usage:
  *   import { buildConversationSystemPrompt } from "@/lib/ai/conversation-prompt";
  *   const systemPrompt = buildConversationSystemPrompt({ language: "es", cefrLevel: "B1" });
+ *
+ * NOTE: Memory snippets from past conversations are intentionally NOT injected
+ * into the system prompt. They are passed as a synthetic user-role message in
+ * chat/route.ts to keep user-derived content out of the trusted system role.
  */
 
 import type { CefrLevel, SupportedLanguage } from "./assessment-schema";
@@ -272,45 +276,28 @@ Rules:
 `;
 
 // ---------------------------------------------------------------------------
-// Memory injection placeholder (used by S3-Memory feature later)
-// ---------------------------------------------------------------------------
-
-const MEMORY_SECTION = (memorySnippets: string | null) => {
-  if (!memorySnippets) return "";
-  return `
-## What you remember about this person from past conversations
-
-${memorySnippets}
-
-Draw on this naturally — mention it when relevant, not as a recitation.
-`;
-};
-
-// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
 export interface BuildConversationPromptOptions {
   language: SupportedLanguage;
   cefrLevel: CefrLevel;
-  /**
-   * Optional: Semantically retrieved memory snippets from past conversations.
-   * Injected into the system prompt when the memory layer (S4) is built.
-   */
-  memorySnippets?: string | null;
 }
 
 /**
- * Builds the full system prompt for a conversation session.
+ * Builds the system prompt for a conversation session.
  *
- * @param options.language       - The target language ("es" | "it" | "fr" | "pt" | "de" | "ja" | "zh" | "ko" | "ru")
- * @param options.cefrLevel      - The user's assessed CEFR level
- * @param options.memorySnippets - Optional past-conversation context
+ * Memory snippets are intentionally excluded from the system prompt.
+ * Pass them to buildMemoryMessage() and prepend the result to the
+ * messages array in chat/route.ts to keep user-derived content out
+ * of the trusted system role.
+ *
+ * @param options.language   - The target language
+ * @param options.cefrLevel  - The user's assessed CEFR level
  */
 export function buildConversationSystemPrompt({
   language,
   cefrLevel,
-  memorySnippets = null,
 }: BuildConversationPromptOptions): string {
   const persona = PERSONAS[language];
   const cefr = CEFR_GUIDES[cefrLevel];
@@ -368,10 +355,28 @@ ${correctionBlock}
   Never write a monologue unless the user explicitly asks for a longer explanation.
 - Never use markdown formatting (no bullet points, no bold, no headers) in your replies — 
   this is a chat, not a document.
-
----
-${MEMORY_SECTION(memorySnippets)}
 `.trim();
+}
+
+/**
+ * Builds the synthetic user-role message that carries memory context
+ * into the conversation. Returns null when there are no snippets.
+ *
+ * Inject this as the FIRST entry in the messages array passed to streamText,
+ * before the user's actual conversation history.
+ *
+ * Keeping memory in the user role (not the system role) ensures that
+ * user-derived content cannot override system-level persona instructions.
+ */
+export function buildMemoryMessage(
+  memorySnippets: string,
+): { role: "user"; content: string } {
+  return {
+    role: "user",
+    content: `[Context from past conversations with this user — draw on this naturally, do not recite it:]
+
+${memorySnippets}`,
+  };
 }
 
 /**

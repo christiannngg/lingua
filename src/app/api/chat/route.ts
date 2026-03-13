@@ -5,7 +5,7 @@ import { z } from "zod/v4";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/db/prisma";
-import { buildConversationSystemPrompt } from "@/lib/ai/conversation-prompt";
+import { buildConversationSystemPrompt, buildMemoryMessage } from "@/lib/ai/conversation-prompt";
 import { extractAndSaveVocabulary } from "@/lib/ai/extract-vocabulary";
 import { extractAndSaveGrammar } from "@/lib/ai/extract-grammar";
 import { embedConversation } from "@/lib/embeddings";
@@ -53,9 +53,14 @@ export async function POST(req: NextRequest) {
 
     const userLanguage = await prisma.userLanguage.findUnique({
       where: { id: userLanguageId },
-      select: { cefrLevel: true },
+      select: { cefrLevel: true, userId: true },
     });
     if (!userLanguage) return new Response("Language not found", { status: 404 });
+
+    // Ownership check
+    if (userLanguage.userId !== session.user.id) {
+      return new Response("Unauthorized", { status: 403 });
+    }
 
     const cefrLevel = (userLanguage.cefrLevel ?? "A1") as "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
 
@@ -73,8 +78,6 @@ export async function POST(req: NextRequest) {
         ? extractText(firstUserMessage.parts as MessagePart[])
         : null;
 
-      // Parallelise memory retrieval — no longer needs to find the previous
-      // conversation here since embedding is now handled in onFinish.
       if (firstUserText) {
         memorySnippets = await retrieveRelevantMemory(
           firstUserText,
@@ -87,7 +90,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const systemPrompt = buildConversationSystemPrompt({ language, cefrLevel, memorySnippets });
+    // System prompt contains NO user-derived content — pure persona + CEFR rules only
+    const systemPrompt = buildConversationSystemPrompt({ language, cefrLevel });
 
     const lastUserMessage = messages.at(-1);
     const userText = lastUserMessage ? extractText(lastUserMessage.parts as MessagePart[]) : "";
@@ -98,13 +102,23 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const modelMessages = messages
+    const conversationMessages = messages
       .filter((m) => m.role === "user" || m.role === "assistant")
       .map((m) => ({
         role: m.role as "user" | "assistant",
         content: extractText(m.parts as MessagePart[]),
       }))
       .filter((m) => m.content.length > 0);
+
+    // ── Memory injection — user role, not system role ──────────────────────
+    // User-derived content (conversation summaries) must never be interpolated
+    // into the system prompt. By prepending it as a user-role message, it
+    // reaches the model naturally but cannot override system-level instructions.
+    const modelMessages: { role: "user" | "assistant"; content: string }[] = [
+      ...(memorySnippets ? [buildMemoryMessage(memorySnippets)] : []),
+      ...conversationMessages,
+    ];
+    // ──────────────────────────────────────────────────────────────────────
 
     const result = streamText({
       model: anthropic("claude-haiku-4-5-20251001"),
@@ -134,12 +148,6 @@ export async function POST(req: NextRequest) {
         }
 
         // ── Background jobs — all void, never block the stream ─────────────
-
-        // Embed the current conversation after every turn. The upsert in
-        // embedConversation handles repeat calls cleanly — it just refreshes
-        // the summary and vector to reflect the latest state of the conversation.
-        // Running here (rather than on next session start) ensures every
-        // conversation is embedded, including the first one and the latest one.
         void embedConversation(convId).catch((err) => {
           console.error("[chat/route] embedding failed:", err);
         });

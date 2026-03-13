@@ -10,7 +10,6 @@ import { isSupportedLanguage, getLanguageDisplayName, type SupportedLanguage } f
 
 const client = new Anthropic();
 
-// Schema for incoming request body — language validated as string, guard below
 const RequestSchema = z.object({
   language: z.string(),
   userLanguageId: z.string(),
@@ -22,7 +21,6 @@ const RequestSchema = z.object({
   ),
 });
 
-// Secondary AI call to extract structured CEFR result from the conversation
 async function extractCefrResult(
   conversation: Array<{ role: "user" | "assistant"; content: string }>,
   language: SupportedLanguage,
@@ -76,19 +74,16 @@ Respond ONLY with valid JSON matching this exact shape — no markdown, no expla
     }
   }
 
-  // Fallback after 2 failed attempts
   return { cefrLevel: "A1", description: CEFR_DESCRIPTIONS["A1"] };
 }
 
 export async function POST(req: NextRequest) {
   try {
-    // Verify auth
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Validate request body
     const body = await req.json();
     const parsed = RequestSchema.safeParse(body);
     if (!parsed.success) {
@@ -97,18 +92,27 @@ export async function POST(req: NextRequest) {
 
     const { language: rawLanguage, userLanguageId, messages } = parsed.data;
 
-    // Guard — validate language against config after parsing
     if (!isSupportedLanguage(rawLanguage)) {
       return NextResponse.json({ error: "Invalid language" }, { status: 400 });
     }
     const language = rawLanguage;
+
+    // ── Ownership check — verify userLanguageId belongs to the session user ──
+    const userLanguageOwner = await prisma.userLanguage.findUnique({
+      where: { id: userLanguageId },
+      select: { userId: true },
+    });
+
+    if (!userLanguageOwner || userLanguageOwner.userId !== session.user.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     const messagesForApi =
       messages.length === 0
         ? [{ role: "user" as const, content: "Hello, I'm ready to begin." }]
         : messages;
 
-    // Main conversation AI call
     let response;
     try {
       response = await client.messages.create({
@@ -130,11 +134,9 @@ export async function POST(req: NextRequest) {
     const isComplete = replyText.includes("[ASSESSMENT_COMPLETE]");
     const cleanReply = replyText.replace("[ASSESSMENT_COMPLETE]", "").trim();
 
-    // If assessment is done, run evaluator and persist result
     if (isComplete) {
       const allMessages = [...messages, { role: "assistant" as const, content: cleanReply }];
 
-      // extractCefrResult already has its own retry logic and fallback — safe to await
       const { cefrLevel, description } = await extractCefrResult(allMessages, language);
 
       try {

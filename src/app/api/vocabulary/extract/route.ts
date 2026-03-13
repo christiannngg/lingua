@@ -5,13 +5,14 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/db/prisma";
 import { VocabularyExtractionSchema } from "@/lib/ai/vocabulary-schema";
+import { SUPPORTED_LANGUAGE_CODES } from "@/lib/languages.config";
 
 const client = new Anthropic();
 
 const RequestSchema = z.object({
   userMessage: z.string(),
   aiMessage: z.string(),
-  language: z.enum(["es", "it"]),
+  language: z.enum(SUPPORTED_LANGUAGE_CODES),
   userLanguageId: z.string(),
   conversationId: z.string(),
 });
@@ -29,7 +30,19 @@ export async function POST(req: NextRequest) {
   }
 
   const { userMessage, aiMessage, language, userLanguageId, conversationId } = parsed.data;
-  const languageName = language === "es" ? "Spanish" : "Italian";
+
+  // ── Ownership check — verify userLanguageId belongs to the session user ──
+  const userLanguage = await prisma.userLanguage.findUnique({
+    where: { id: userLanguageId },
+    select: { userId: true },
+  });
+
+  if (!userLanguage || userLanguage.userId !== session.user.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const languageName = language === "es" ? "Spanish" : language === "it" ? "Italian" : "French";
 
   let words: Array<{
     word: string;
@@ -133,9 +146,6 @@ If there are no words worth extracting, return: { "words": [] }`,
   }
 
   try {
-    // Upsert on lemma — the @@unique([userLanguageId, lemma]) constraint
-    // guarantees no duplicates. update: {} means a re-encountered lemma
-    // never overwrites existing FSRS state.
     const results = await prisma.$transaction(
       words.map((w) =>
         prisma.vocabularyItem.upsert({
@@ -154,7 +164,7 @@ If there are no words worth extracting, return: { "words": [] }`,
             exampleSentence: w.exampleSentence ?? null,
             sourceConversationId: conversationId,
           },
-          update: {}, // already exists — never reset FSRS state
+          update: {},
         })
       )
     );

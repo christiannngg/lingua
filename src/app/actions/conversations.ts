@@ -13,7 +13,7 @@ export async function getConversations(userLanguageId: string) {
   if (!session) throw new Error("Unauthenticated");
 
   return prisma.conversation.findMany({
-    where: { userLanguageId },
+    where: { userLanguageId, userLanguage: { userId: session.user.id } },
     orderBy: { updatedAt: "desc" },
     select: {
       id: true,
@@ -32,6 +32,17 @@ export async function getConversations(userLanguageId: string) {
 export async function getConversationMessages(conversationId: string) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Unauthenticated");
+
+  // Verify the conversation belongs to the session user before returning messages
+  const conversation = await prisma.conversation.findFirst({
+    where: {
+      id: conversationId,
+      userLanguage: { userId: session.user.id },
+    },
+    select: { id: true },
+  });
+
+  if (!conversation) return [];
 
   return prisma.message.findMany({
     where: { conversationId },

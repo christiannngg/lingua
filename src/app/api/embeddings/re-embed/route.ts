@@ -23,7 +23,20 @@ export async function POST(req: NextRequest) {
     const { conversationId } = body as { conversationId?: string };
 
     if (conversationId) {
-      // Re-embed a single conversation
+      // ── Ownership check — verify this conversation belongs to the session user ──
+      const conversation = await prisma.conversation.findFirst({
+        where: {
+          id: conversationId,
+          userLanguage: { userId: session.user.id },
+        },
+        select: { id: true },
+      });
+
+      if (!conversation) {
+        return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
+      }
+      // ─────────────────────────────────────────────────────────────────────────
+
       try {
         await embedConversation(conversationId);
       } catch (err) {
@@ -33,7 +46,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ reembedded: [conversationId] });
     }
 
-    // Re-embed all conversations with enough messages
+    // Re-embed all conversations belonging to the session user with enough messages
     const conversations = await prisma.conversation.findMany({
       where: {
         messages: { some: {} },

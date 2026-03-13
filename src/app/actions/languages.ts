@@ -91,3 +91,44 @@ export async function resetAssessment(language: string): Promise<LanguageActionR
     return { success: false, error: "Failed to reset assessment" };
   }
 }
+
+/**
+ * Soft-deletes a language by setting isActive: false.
+ * All associated vocabulary, grammar history, and conversation data is preserved —
+ * re-adding the language restores full progress.
+ *
+ * Blocked if the user only has one active language — removing it would leave
+ * them in a broken state with no language to learn.
+ */
+export async function removeUserLanguage(language: string): Promise<LanguageActionResult> {
+  try {
+    if (!isSupportedLanguage(language)) {
+      return { success: false, error: `Unsupported language: ${language}` };
+    }
+
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session) return { success: false, error: "Unauthenticated" };
+
+    // Count active languages before removal — block if this is the last one
+    const activeCount = await prisma.userLanguage.count({
+      where: { userId: session.user.id, isActive: true },
+    });
+
+    if (activeCount <= 1) {
+      return {
+        success: false,
+        error: "You must have at least one active language.",
+      };
+    }
+
+    await prisma.userLanguage.update({
+      where: { userId_language: { userId: session.user.id, language } },
+      data: { isActive: false },
+    });
+
+    return { success: true, language };
+  } catch (err) {
+    console.error("[removeUserLanguage] Error:", err);
+    return { success: false, error: "Failed to remove language" };
+  }
+}

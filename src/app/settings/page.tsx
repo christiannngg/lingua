@@ -1,10 +1,13 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { getUserLanguages, resetAssessment, addUserLanguage, getAvailableLanguages } from "@/app/actions/languages";
+import { getUserLanguages, resetAssessment, getAvailableLanguages } from "@/app/actions/languages";
 import { getMemories } from "../actions/memory";
 import { MemoryDeleteButton } from "@/components/settings/MemoryDeleteButton";
+import { RemoveLanguageButton } from "@/components/settings/RemoveLanguageButton";
+import { LanguageFlag } from "@/components/ui/LanguageFlag";
 import { getLanguageDisplayName } from "@/lib/languages.config";
+import Link from "next/link";
 
 export default async function SettingsPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -17,7 +20,8 @@ export default async function SettingsPage() {
   ]);
 
   const addedCodes = new Set(userLanguages.map((ul) => ul.language));
-  const unadded = availableLanguages.filter((lang) => !addedCodes.has(lang.code));
+  const hasUnadded = availableLanguages.some((lang) => !addedCodes.has(lang.code));
+  const isOnly = userLanguages.length === 1;
 
   return (
     <main className="max-w-lg mx-auto p-8 text-white">
@@ -33,75 +37,70 @@ export default async function SettingsPage() {
           {userLanguages.map((ul) => (
             <div
               key={ul.id}
-              className="flex items-center justify-between rounded-xl border p-4"
+              className="rounded-xl border p-4"
               style={{ borderColor: "var(--border)" }}
             >
-              <div>
-                <p className="font-medium">{getLanguageDisplayName(ul.language)}</p>
-                <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
-                  Current level:{" "}
-                  <span className="font-semibold text-white">{ul.cefrLevel ?? "Not assessed"}</span>
-                </p>
+              {/* Top row: flag + language name + level */}
+              <div className="flex items-center gap-3 mb-3">
+                <LanguageFlag language={ul.language} className="w-8 h-6 rounded-sm shrink-0" />
+                <div>
+                  <p className="font-medium">{getLanguageDisplayName(ul.language)}</p>
+                  <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
+                    Current level:{" "}
+                    <span className="font-semibold text-white">
+                      {ul.cefrLevel ?? "Not assessed"}
+                    </span>
+                  </p>
+                </div>
               </div>
-              <form
-                action={async () => {
-                  "use server";
-                  const result = await resetAssessment(ul.language);
-                  if (result.success) {
-                    redirect(`/assessment/${result.language}` as never);
-                  }
-                }}
+
+              {/* Bottom row: actions */}
+              <div
+                className="flex items-center justify-between gap-3 pt-3 border-t"
+                style={{ borderColor: "var(--border)" }}
               >
-                <button
-                  type="submit"
-                  className="rounded-lg border px-4 py-2 text-sm font-medium transition-colors hover:bg-white hover:text-black"
-                  style={{ borderColor: "var(--border)" }}
+                <form
+                  action={async () => {
+                    "use server";
+                    const result = await resetAssessment(ul.language);
+                    if (result.success) {
+                      redirect(`/assessment/${result.language}` as never);
+                    }
+                  }}
                 >
-                  Re-take Assessment
-                </button>
-              </form>
+                  <button
+                    type="submit"
+                    className="rounded-lg border px-4 py-2 text-sm font-medium transition-colors hover:bg-white hover:text-black"
+                    style={{ borderColor: "var(--border)" }}
+                  >
+                    Re-take Assessment
+                  </button>
+                </form>
+
+                <RemoveLanguageButton language={ul.language} isOnly={isOnly} />
+              </div>
             </div>
           ))}
         </div>
-      </section>
 
-      {/* ── Add a language ── */}
-      {unadded.length > 0 && (
-        <section className="mt-8">
-          <h2 className="text-lg font-semibold mb-1">Add a Language</h2>
-          <p className="text-sm mb-4" style={{ color: "var(--muted-foreground)" }}>
-            Start learning a new language. You&apos;ll take a short assessment to find your level.
-          </p>
-          <div className="flex flex-col gap-3">
-            {unadded.map((lang) => (
-              <form
-                key={lang.code}
-                action={async () => {
-                  "use server";
-                  const result = await addUserLanguage(lang.code);
-                  if (result.success) {
-                    redirect(`/assessment/${result.language}` as never);
-                  }
-                }}
-              >
-                <button
-                  type="submit"
-                  className="w-full rounded-xl border px-4 py-3 text-left text-sm font-medium transition-colors hover:bg-white hover:text-black"
-                  style={{ borderColor: "var(--border)" }}
-                >
-                  + Start learning {lang.displayName}
-                </button>
-              </form>
-            ))}
+        {hasUnadded && (
+          <div className="mt-4">
+            <Link
+              href="/onboarding"
+              className="flex items-center justify-center gap-2 w-full rounded-xl border px-4 py-3 text-sm font-medium transition-colors hover:bg-white hover:text-black"
+              style={{ borderColor: "var(--border)" }}
+            >
+              + Add a language
+            </Link>
           </div>
-        </section>
-      )}
+        )}
+      </section>
 
       {/* ── Memory ── */}
       <section className="mt-10">
         <h2 className="text-lg font-semibold mb-1">Conversation Memory</h2>
         <p className="text-sm mb-4" style={{ color: "var(--muted-foreground)" }}>
-          These are summaries Sofia and Marco use to remember past conversations. Removing a memory
+          These are summaries your tutors use to remember past conversations. Removing a memory
           means it won&apos;t influence future sessions — your conversation history is preserved.
         </p>
 

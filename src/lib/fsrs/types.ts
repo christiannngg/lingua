@@ -40,13 +40,13 @@ export enum CardState {
  * This is what gets persisted to VocabularyItem and passed into schedule().
  *
  * Field mapping to Prisma VocabularyItem (fields to be added via migration):
- *   state       → state        String  @default("NEW")
- *   stability   → stability    Float   @default(0)
- *   difficulty  → difficulty   Float   @default(0)
- *   reps        → reps         Int     @default(0)
- *   lapses      → lapses       Int     @default(0)
- *   lastReview  → lastReview   DateTime?
- *   nextReview  → nextReview   DateTime?
+ *   state       -> state        String  @default("NEW")
+ *   stability   -> stability    Float   @default(0)
+ *   difficulty  -> difficulty   Float   @default(0)
+ *   reps        -> reps         Int     @default(0)
+ *   lapses      -> lapses       Int     @default(0)
+ *   lastReview  -> lastReview   DateTime?
+ *   nextReview  -> nextReview   DateTime?
  */
 export interface CardSchedule {
   state: CardState;

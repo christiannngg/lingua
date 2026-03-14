@@ -144,8 +144,8 @@ Actively steer the conversation to elicit specific grammar and vocabulary signal
 - **C1/C2:** ${probeSignals.c1c2}
 
 ## Adapting
-- Strong response → increase complexity on next turn
-- Weak response → simplify and confirm the lower bound
+- Strong response -> increase complexity on next turn
+- Weak response -> simplify and confirm the lower bound
 - After establishing a floor and ceiling, you have enough data
 
 ## Handling Difficult Inputs

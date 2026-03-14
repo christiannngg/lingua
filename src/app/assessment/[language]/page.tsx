@@ -167,7 +167,7 @@ export default function AssessmentPage() {
           onClick={() => router.push("/dashboard")}
           style={{ padding: "0.75rem 1.5rem", cursor: "pointer" }}
         >
-          Start Learning →
+          Start Learning ->
         </button>
       </main>
     );

@@ -48,7 +48,7 @@ describe("createNewCard", () => {
   });
 });
 
-// ─── First review (New → Learning) ───────────────────────────────────────────
+// ─── First review (New -> Learning) ───────────────────────────────────────────
 
 describe("First review — New card", () => {
   it("transitions to Learning state on any rating", () => {
@@ -269,14 +269,14 @@ describe("Relearning state", () => {
   it("does not increment lapses further on Again in Relearning", () => {
     const card = getRelearningCard(); // already has 1 lapse
     const { card: next } = schedule(card, Rating.Again, card.nextReview!);
-    expect(next.lapses).toBe(1); // lapses only increment on Review → Relearning transition
+    expect(next.lapses).toBe(1); // lapses only increment on Review -> Relearning transition
   });
 
   it("stability after lapse is lower than before lapse", () => {
     // Need a mature Review card with high stability so the lapse has room to drop it.
     // Graduate via Good+Good, then do several more Good reviews to build stability.
     let result = schedule(createNewCard(), Rating.Good, new Date("2024-01-01T00:00:00Z"));
-    result = schedule(result.card, Rating.Good, result.card.nextReview!); // → Review
+    result = schedule(result.card, Rating.Good, result.card.nextReview!); // -> Review
     result = schedule(result.card, Rating.Good, result.card.nextReview!);
     result = schedule(result.card, Rating.Good, result.card.nextReview!);
     result = schedule(result.card, Rating.Good, result.card.nextReview!);

@@ -104,7 +104,7 @@ function unpackWeights(w: readonly number[]): {
  *
  *   D0(rating) = w4 - exp(w5 * (rating - 1)) + 1
  *
- * Higher ratings → lower (easier) difficulty.
+ * Higher ratings -> lower (easier) difficulty.
  */
 function initDifficulty(rating: Rating, w4: number, w5: number): number {
   const d = w4 - Math.exp(w5 * (rating - 1)) + 1;

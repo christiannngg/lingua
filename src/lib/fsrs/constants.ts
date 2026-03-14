@@ -11,7 +11,7 @@
  * Weights control the shape of the stability and difficulty functions.
  * These defaults work well without any user-specific training.
  *
- * Index → role:
+ * Index -> role:
  *   w0–w3   Initial stability for ratings Again / Hard / Good / Easy
  *   w4      Initial difficulty for Good rating (baseline)
  *   w5      Difficulty delta scale

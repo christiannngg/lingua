@@ -156,7 +156,7 @@ export const GRAMMAR_CONCEPTS: Record<
     },
     {
       name: "separable-verbs",
-      description: "Splitting separable prefix verbs correctly (anfangen → ich fange an)",
+      description: "Splitting separable prefix verbs correctly (anfangen -> ich fange an)",
     },
     {
       name: "modal-verbs",
@@ -250,7 +250,7 @@ export const GRAMMAR_CONCEPTS: Record<
     {
       name: "hiragana-katakana",
       description:
-        "Using hiragana and katakana in the correct contexts (foreign loanwords → katakana)",
+        "Using hiragana and katakana in the correct contexts (foreign loanwords -> katakana)",
     },
     {
       name: "kanji-reading",
@@ -481,7 +481,7 @@ export const GRAMMAR_CONCEPTS: Record<
     {
       name: "numeral-agreement",
       description:
-        "Correct noun case after numerals (один → nominative, два/три/четыре → genitive singular, пять+ → genitive plural)",
+        "Correct noun case after numerals (один -> nominative, два/три/четыре -> genitive singular, пять+ -> genitive plural)",
     },
     {
       name: "soft-hard-consonants",

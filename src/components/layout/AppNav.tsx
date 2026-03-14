@@ -93,7 +93,7 @@ export function AppNav({ languages }: AppNavProps) {
             (e.currentTarget as HTMLButtonElement).style.color = "var(--muted-foreground)";
           }}
         >
-          <span aria-hidden="true">→</span>
+          <span aria-hidden="true">-></span>
           Log out
         </button>
       </form>

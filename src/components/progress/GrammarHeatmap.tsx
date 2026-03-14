@@ -12,7 +12,7 @@ function ErrorDetail({ error }: { error: GrammarConceptRow["recentErrors"][numbe
     <div className="border-l-2 border-slate-700 pl-3 py-1 space-y-1">
       <div className="flex flex-wrap gap-2 text-xs">
         <span className="text-red-400 line-through">{error.userSentence}</span>
-        <span className="text-slate-500">→</span>
+        <span className="text-slate-500">-></span>
         <span className="text-emerald-400">{error.correction}</span>
       </div>
       <p className="text-slate-500 text-xs">{error.explanation}</p>

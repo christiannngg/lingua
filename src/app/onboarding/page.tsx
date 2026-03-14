@@ -69,7 +69,7 @@ export default async function OnboardingPage() {
                   className="text-sm group-hover:text-black"
                   style={{ color: "var(--muted-foreground)" }}
                 >
-                  ->
+                  {"->"}
                 </span>
               </button>
             </form>

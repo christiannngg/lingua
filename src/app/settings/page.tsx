@@ -1,10 +1,11 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { getUserLanguages, resetAssessment, getAvailableLanguages } from "@/app/actions/languages";
+import { getUserLanguages, getAvailableLanguages } from "@/app/actions/languages";
 import { getMemories } from "../actions/memory";
 import { MemoryDeleteButton } from "@/components/settings/MemoryDeleteButton";
 import { RemoveLanguageButton } from "@/components/settings/RemoveLanguageButton";
+import { RetakeAssessmentButton } from "@/components/settings/RetakeAssessmentButton";
 import { LanguageFlag } from "@/components/ui/LanguageFlag";
 import { getLanguageDisplayName } from "@/lib/languages.config";
 import Link from "next/link";
@@ -59,24 +60,7 @@ export default async function SettingsPage() {
                 className="flex items-center justify-between gap-3 pt-3 border-t"
                 style={{ borderColor: "var(--border)" }}
               >
-                <form
-                  action={async () => {
-                    "use server";
-                    const result = await resetAssessment(ul.language);
-                    if (result.success) {
-                      redirect(`/assessment/${result.language}` as never);
-                    }
-                  }}
-                >
-                  <button
-                    type="submit"
-                    className="rounded-lg border px-4 py-2 text-sm font-medium transition-colors hover:bg-white hover:text-black"
-                    style={{ borderColor: "var(--border)" }}
-                  >
-                    Re-take Assessment
-                  </button>
-                </form>
-
+                <RetakeAssessmentButton language={ul.language} />
                 <RemoveLanguageButton language={ul.language} isOnly={isOnly} />
               </div>
             </div>

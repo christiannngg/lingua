@@ -201,7 +201,7 @@ model UserGrammarMastery {
   lastSeenAt       DateTime
 
   userLanguage   UserLanguage   @relation(fields: [userLanguageId], references: [id], onDelete: Cascade)
-  grammarConcept GrammarConcept @relation(fields: [grammarConceptId], references: [id], onDelete: Cascade)
+  grammarConcept GrammarConcept @relation(fields: [grammarConceptId], references: [id], onDelete: Restrict)
 
   @@unique([userLanguageId, grammarConceptId])
   @@index([userLanguageId])
@@ -219,7 +219,7 @@ model GrammarError {
   createdAt        DateTime @default(now())
 
   userLanguage   UserLanguage   @relation(fields: [userLanguageId], references: [id], onDelete: Cascade)
-  grammarConcept GrammarConcept @relation(fields: [grammarConceptId], references: [id], onDelete: Cascade)
+  grammarConcept GrammarConcept @relation(fields: [grammarConceptId], references: [id], onDelete: Restrict)
   conversation   Conversation   @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([userLanguageId])

@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db/prisma";
 import { headers } from "next/headers";
 import { isSupportedLanguage } from "@/lib/languages.config";
+import { assessmentLimiter } from "@/ratelimit";
 
 export async function GET(req: NextRequest) {
   try {
@@ -10,6 +11,24 @@ export async function GET(req: NextRequest) {
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    // ── Rate limiting ──────────────────────────────────────────────────────
+    const { success, limit, remaining, reset } = await assessmentLimiter.limit(session.user.id);
+    if (!success) {
+      return NextResponse.json(
+        { error: "Too many requests" },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Limit": limit.toString(),
+            "X-RateLimit-Remaining": remaining.toString(),
+            "X-RateLimit-Reset": reset.toString(),
+            "Retry-After": Math.ceil((reset - Date.now()) / 1000).toString(),
+          },
+        },
+      );
+    }
+    // ──────────────────────────────────────────────────────────────────────
 
     const language = req.nextUrl.searchParams.get("language");
     if (!language || !isSupportedLanguage(language)) {
@@ -23,8 +42,6 @@ export async function GET(req: NextRequest) {
     });
 
     if (!userLanguage) {
-      // The user navigated directly to /assessment/[language] without first
-      // adding the language via onboarding — tell the client to redirect.
       return NextResponse.json(
         { error: "Language not added", code: "LANGUAGE_NOT_ADDED" },
         { status: 404 },

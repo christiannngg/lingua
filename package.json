@@ -19,6 +19,8 @@
     "@anthropic-ai/sdk": "^0.78.0",
     "@prisma/adapter-pg": "^7.4.0",
     "@prisma/client": "^7.4.0",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.37.0",
     "ai": "^6.0.105",
     "country-flag-icons": "^1.6.15",
     "next": "16.1.6",

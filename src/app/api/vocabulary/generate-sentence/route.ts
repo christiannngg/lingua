@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/db/prisma";
 import { buildSentenceGenerationPrompt } from "@/lib/ai/sentence-generation";
+import { sentenceLimiter } from "@/ratelimit";
 
 const anthropic = new Anthropic();
 
@@ -18,6 +19,24 @@ export async function POST(req: NextRequest) {
     if (!session) {
       return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
     }
+
+    // ── Rate limiting ──────────────────────────────────────────────────────
+    const { success, limit, remaining, reset } = await sentenceLimiter.limit(session.user.id);
+    if (!success) {
+      return NextResponse.json(
+        { error: "Too many requests" },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Limit": limit.toString(),
+            "X-RateLimit-Remaining": remaining.toString(),
+            "X-RateLimit-Reset": reset.toString(),
+            "Retry-After": Math.ceil((reset - Date.now()) / 1000).toString(),
+          },
+        },
+      );
+    }
+    // ──────────────────────────────────────────────────────────────────────
 
     const body = await req.json();
     const parsed = RequestSchema.safeParse(body);
@@ -89,9 +108,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Empty sentence generated" }, { status: 500 });
     }
 
-    // ── Persist the new sentence back to the DB ──────────────────────────
-    // This makes exampleSentence the durable cache — the next review session
-    // will use this sentence immediately with no generation delay.
     await prisma.vocabularyItem.update({
       where: { id: vocabularyItemId },
       data: { exampleSentence: sentence },

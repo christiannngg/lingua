@@ -11,6 +11,7 @@ import { extractAndSaveGrammar } from "@/lib/ai/extract-grammar";
 import { embedConversation } from "@/lib/embeddings";
 import { retrieveRelevantMemory } from "@/lib/ai/retrieve-memory";
 import { isSupportedLanguage, type SupportedLanguage } from "@/lib/languages.config";
+import { chatLimiter } from "@/ratelimit";
 
 const anthropic = createAnthropic();
 
@@ -40,6 +41,21 @@ export async function POST(req: NextRequest) {
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session) return new Response("Unauthorized", { status: 401 });
 
+    // ── Rate limiting ──────────────────────────────────────────────────────
+    const { success, limit, remaining, reset } = await chatLimiter.limit(session.user.id);
+    if (!success) {
+      return new Response("Too many requests", {
+        status: 429,
+        headers: {
+          "X-RateLimit-Limit": limit.toString(),
+          "X-RateLimit-Remaining": remaining.toString(),
+          "X-RateLimit-Reset": reset.toString(),
+          "Retry-After": Math.ceil((reset - Date.now()) / 1000).toString(),
+        },
+      });
+    }
+    // ──────────────────────────────────────────────────────────────────────
+
     const body = await req.json();
     const parsed = RequestSchema.safeParse(body);
     if (!parsed.success) return new Response("Invalid request", { status: 400 });
@@ -57,7 +73,6 @@ export async function POST(req: NextRequest) {
     });
     if (!userLanguage) return new Response("Language not found", { status: 404 });
 
-    // Ownership check
     if (userLanguage.userId !== session.user.id) {
       return new Response("Unauthorized", { status: 403 });
     }
@@ -90,7 +105,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // System prompt contains NO user-derived content — pure persona + CEFR rules only
     const systemPrompt = buildConversationSystemPrompt({ language, cefrLevel });
 
     const lastUserMessage = messages.at(-1);
@@ -110,22 +124,16 @@ export async function POST(req: NextRequest) {
       }))
       .filter((m) => m.content.length > 0);
 
-    // ── Memory injection — user role, not system role ──────────────────────
-    // User-derived content (conversation summaries) must never be interpolated
-    // into the system prompt. By prepending it as a user-role message, it
-    // reaches the model naturally but cannot override system-level instructions.
     const modelMessages: { role: "user" | "assistant"; content: string }[] = [
       ...(memorySnippets ? [buildMemoryMessage(memorySnippets)] : []),
       ...conversationMessages,
     ];
-    // ──────────────────────────────────────────────────────────────────────
 
     const result = streamText({
       model: anthropic("claude-haiku-4-5-20251001"),
       system: systemPrompt,
       messages: modelMessages,
       onFinish: async ({ text }) => {
-        // ── Persist assistant message ──────────────────────────────────────
         try {
           await prisma.message.create({
             data: { conversationId: convId, role: "assistant", content: text },
@@ -134,7 +142,6 @@ export async function POST(req: NextRequest) {
           console.error("[chat/route] failed to persist assistant message:", err);
         }
 
-        // ── Update conversation title ──────────────────────────────────────
         try {
           await prisma.conversation.updateMany({
             where: { id: convId, title: null },
@@ -147,7 +154,6 @@ export async function POST(req: NextRequest) {
           console.error("[chat/route] failed to update conversation title:", err);
         }
 
-        // ── Background jobs — all void, never block the stream ─────────────
         void embedConversation(convId).catch((err) => {
           console.error("[chat/route] embedding failed:", err);
         });

@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db/prisma";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { isSupportedLanguage, getLanguageDisplayName, type SupportedLanguage } from "@/lib/languages.config";
+import { assessmentLimiter } from "@/ratelimit";
 
 const client = new Anthropic();
 
@@ -54,7 +55,7 @@ Respond ONLY with valid JSON matching this exact shape — no markdown, no expla
         messages: [
           {
             role: "user",
-            content: `Please evaluate this ${languageName} assessment conversation and return the CEFR rating as JSON:\n\n${transcript}`,
+            content: `Please evaluate this ${languageName} assessment conversation and return the CEFR rating as JSON:\n\n<transcript>\n${transcript}\n</transcript>`,
           },
         ],
       });
@@ -84,6 +85,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // ── Rate limiting ──────────────────────────────────────────────────────
+    const { success, limit, remaining, reset } = await assessmentLimiter.limit(session.user.id);
+    if (!success) {
+      return NextResponse.json(
+        { error: "Too many requests" },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Limit": limit.toString(),
+            "X-RateLimit-Remaining": remaining.toString(),
+            "X-RateLimit-Reset": reset.toString(),
+            "Retry-After": Math.ceil((reset - Date.now()) / 1000).toString(),
+          },
+        },
+      );
+    }
+    // ──────────────────────────────────────────────────────────────────────
+
     const body = await req.json();
     const parsed = RequestSchema.safeParse(body);
     if (!parsed.success) {
@@ -97,7 +116,7 @@ export async function POST(req: NextRequest) {
     }
     const language = rawLanguage;
 
-    // ── Ownership check — verify userLanguageId belongs to the session user ──
+    // Ownership check
     const userLanguageOwner = await prisma.userLanguage.findUnique({
       where: { id: userLanguageId },
       select: { userId: true },
@@ -106,7 +125,6 @@ export async function POST(req: NextRequest) {
     if (!userLanguageOwner || userLanguageOwner.userId !== session.user.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
-    // ─────────────────────────────────────────────────────────────────────────
 
     const messagesForApi =
       messages.length === 0

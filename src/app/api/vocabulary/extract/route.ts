@@ -5,7 +5,8 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/db/prisma";
 import { VocabularyExtractionSchema } from "@/lib/ai/vocabulary-schema";
-import { SUPPORTED_LANGUAGE_CODES } from "@/lib/languages.config";
+import { SUPPORTED_LANGUAGE_CODES, getLanguageDisplayName } from "@/lib/languages.config";
+import { extractLimiter } from "@/ratelimit";
 
 const client = new Anthropic();
 
@@ -23,6 +24,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // ── Rate limiting ────────────────────────────────────────────────────────
+  const { success, limit, remaining, reset } = await extractLimiter.limit(session.user.id);
+  if (!success) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      {
+        status: 429,
+        headers: {
+          "X-RateLimit-Limit": limit.toString(),
+          "X-RateLimit-Remaining": remaining.toString(),
+          "X-RateLimit-Reset": reset.toString(),
+          "Retry-After": Math.ceil((reset - Date.now()) / 1000).toString(),
+        },
+      },
+    );
+  }
+  // ────────────────────────────────────────────────────────────────────────
+
   const body = await req.json();
   const parsed = RequestSchema.safeParse(body);
   if (!parsed.success) {
@@ -31,7 +50,7 @@ export async function POST(req: NextRequest) {
 
   const { userMessage, aiMessage, language, userLanguageId, conversationId } = parsed.data;
 
-  // ── Ownership check — verify userLanguageId belongs to the session user ──
+  // ── Ownership check ──────────────────────────────────────────────────────
   const userLanguage = await prisma.userLanguage.findUnique({
     where: { id: userLanguageId },
     select: { userId: true },
@@ -40,9 +59,10 @@ export async function POST(req: NextRequest) {
   if (!userLanguage || userLanguage.userId !== session.user.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
-  // ─────────────────────────────────────────────────────────────────────────
+  // ────────────────────────────────────────────────────────────────────────
 
-  const languageName = language === "es" ? "Spanish" : language === "it" ? "Italian" : "French";
+  // Derive language name from config — never hardcode per-language strings here
+  const languageName = getLanguageDisplayName(language);
 
   let words: Array<{
     word: string;

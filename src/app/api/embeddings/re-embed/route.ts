@@ -13,17 +13,36 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/db/prisma";
 import { embedConversation } from "@/lib/embeddings";
+import { reembedLimiter } from "@/ratelimit";
 
 export async function POST(req: NextRequest) {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session) return new Response("Unauthorized", { status: 401 });
 
+    // ── Rate limiting ──────────────────────────────────────────────────────
+    const { success, limit, remaining, reset } = await reembedLimiter.limit(session.user.id);
+    if (!success) {
+      return NextResponse.json(
+        { error: "Too many requests" },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Limit": limit.toString(),
+            "X-RateLimit-Remaining": remaining.toString(),
+            "X-RateLimit-Reset": reset.toString(),
+            "Retry-After": Math.ceil((reset - Date.now()) / 1000).toString(),
+          },
+        },
+      );
+    }
+    // ──────────────────────────────────────────────────────────────────────
+
     const body = await req.json().catch(() => ({}));
     const { conversationId } = body as { conversationId?: string };
 
     if (conversationId) {
-      // ── Ownership check — verify this conversation belongs to the session user ──
+      // Ownership check
       const conversation = await prisma.conversation.findFirst({
         where: {
           id: conversationId,
@@ -35,7 +54,6 @@ export async function POST(req: NextRequest) {
       if (!conversation) {
         return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
       }
-      // ─────────────────────────────────────────────────────────────────────────
 
       try {
         await embedConversation(conversationId);

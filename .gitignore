@@ -30,8 +30,11 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files — ignore all real env files, but NOT .env.example
+# .env.example is a documentation file with no real secrets and must be committed
+.env
+.env.*
+!.env.example
 
 # vercel
 .vercel
@@ -39,8 +42,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-.env.example
 
 commands.txt
 /generated/prisma

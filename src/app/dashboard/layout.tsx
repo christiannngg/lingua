@@ -19,13 +19,13 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const userLanguages = await getCachedUserLanguages();
-  const languages = userLanguages.map((ul: UserLanguage) => ul.language);
+  const enrolledCodes = userLanguages.map((ul: UserLanguage) => ul.language);
 
   return (
     <div className="flex flex-col h-screen">
-      <HeadNav />
+      <HeadNav enrolledCodes={enrolledCodes} />
       <div className="flex flex-1 overflow-hidden">
-        <SideNav languages={languages} />
+        <SideNav languages={enrolledCodes} />
         <div className="flex-1 overflow-auto">{children}</div>
       </div>
       <OfflineBanner />

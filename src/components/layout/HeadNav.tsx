@@ -2,14 +2,17 @@
 
 import Link from "next/link";
 import { Menu, Flame, Bell } from "lucide-react";
+import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 
-export function HeadNav() {
+interface HeadNavProps {
+  enrolledCodes: string[];
+}
+
+export function HeadNav({ enrolledCodes }: HeadNavProps) {
   return (
     <header
       className="flex h-14 w-full items-center justify-between px-6"
-      style={{
-        backgroundColor: "transparent",
-      }}
+      style={{ backgroundColor: "transparent" }}
     >
       {/* Left: hamburger + logo */}
       <div className="flex items-center gap-3">
@@ -27,8 +30,13 @@ export function HeadNav() {
         </Link>
       </div>
 
-      {/* Right: streak, bell, avatar */}
+      {/* Right: language switcher, streak, bell, avatar */}
       <div className="flex items-center gap-3">
+        {/* Language switcher — only shown when user has enrolled languages */}
+        {enrolledCodes.length > 0 && (
+          <LanguageSwitcher enrolledCodes={enrolledCodes} />
+        )}
+
         {/* Streak */}
         <button
           className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-semibold transition-colors"
@@ -53,7 +61,7 @@ export function HeadNav() {
           className="flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold"
           style={{ backgroundColor: "#CA7DF9", color: "#FFFFFF" }}
           aria-label="Profile"
-        ></button>
+        />
       </div>
     </header>
   );

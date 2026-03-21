@@ -20,10 +20,11 @@ export default async function DashboardLayout({
 }) {
   const userLanguages = await getCachedUserLanguages();
   const languages = userLanguages.map((ul: UserLanguage) => ul.language);
+  // const enrolledCodes = userLanguages.map((ul: UserLanguage) => ul.language);
 
   return (
     <div className="flex flex-col h-screen">
-      <HeadNav />
+      <HeadNav enrolledCodes={languages} />
       <div className="flex flex-1 overflow-hidden">
         <SideNav languages={languages} />
         <div className="flex-1 overflow-auto">{children}</div>

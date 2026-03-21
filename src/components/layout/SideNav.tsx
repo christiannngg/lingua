@@ -5,23 +5,19 @@ import { usePathname } from "next/navigation";
 import { LanguageFlag } from "@/components/ui/LanguageFlag";
 import { getLanguageDisplayName } from "@/lib/languages.config";
 import { signOutAction } from "@/app/actions/auth";
+import { useActiveLanguage } from "@/hooks/useActiveLanguage";
 import {
   LayoutDashboard,
   BookOpenText,
   Languages,
   Settings,
-  MessageSquare, 
+  MessageSquare,
   LucideIcon,
   LogOut,
 } from "lucide-react";
 
-const NAV_ITEMS: {
-  href:
-    | "/dashboard"
-    | "/dashboard/review"
-    | "/dashboard/vocabulary"
-    | "/settings"
-    | "/chat/es";
+const STATIC_NAV_ITEMS: {
+  href: "/dashboard" | "/dashboard/review" | "/dashboard/vocabulary" | "/settings";
   label: string;
   icon: LucideIcon;
 }[] = [
@@ -29,7 +25,6 @@ const NAV_ITEMS: {
   { href: "/dashboard/review", label: "Review", icon: BookOpenText },
   { href: "/dashboard/vocabulary", label: "Vocabulary", icon: Languages },
   { href: "/settings", label: "Settings", icon: Settings },
-  { href: "/chat/es", label: "Chat", icon: MessageSquare },
 ];
 
 interface SideNavProps {
@@ -38,21 +33,29 @@ interface SideNavProps {
 
 export function SideNav({ languages }: SideNavProps) {
   const pathname = usePathname();
+  const activeLanguage = useActiveLanguage(languages);
+  const chatHref = `/chat/${activeLanguage}`;
+
+  // All nav items including the dynamic chat link
+  const allNavItems = [
+    ...STATIC_NAV_ITEMS,
+    { href: chatHref, label: "Chat", icon: MessageSquare } as const,
+  ];
 
   return (
     <nav
       className="flex h-full w-56 shrink-0 flex-col gap-1 p-4"
-      style={{ backgroundColor: "var(--muted)"}}
+      style={{ backgroundColor: "var(--muted)" }}
     >
       {/* Navigation links */}
       <ul className="flex flex-col gap-1">
-        {NAV_ITEMS.map((item) => {
+        {allNavItems.map((item) => {
           const isActive =
             item.href === "/dashboard"
               ? pathname === "/dashboard"
               : pathname === item.href || pathname.startsWith(item.href + "/");
           return (
-            <li key={item.href}>
+            <li key={item.label}>
               <Link
                 href={item.href as never}
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors"

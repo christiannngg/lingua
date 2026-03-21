@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { getUserLanguages, getAvailableLanguages } from "@/app/actions/languages";
-import { getMemories } from "../actions/memory";
+import { getMemories } from "@/app/actions/memory";
 import { MemoryDeleteButton } from "@/components/settings/MemoryDeleteButton";
 import { RemoveLanguageButton } from "@/components/settings/RemoveLanguageButton";
 import { RetakeAssessmentButton } from "@/components/settings/RetakeAssessmentButton";
@@ -25,7 +25,7 @@ export default async function SettingsPage() {
   const isOnly = userLanguages.length === 1;
 
   return (
-    <main className="max-w-lg mx-auto p-8 text-white">
+    <main className="max-w-lg mx-auto p-8 text-black">
       <h1 className="text-2xl font-bold mb-2">Settings</h1>
       <p className="mb-8" style={{ color: "var(--muted-foreground)" }}>
         Manage your languages and memory.

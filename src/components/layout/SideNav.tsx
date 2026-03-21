@@ -5,54 +5,63 @@ import { usePathname } from "next/navigation";
 import { LanguageFlag } from "@/components/ui/LanguageFlag";
 import { getLanguageDisplayName } from "@/lib/languages.config";
 import { signOutAction } from "@/app/actions/auth";
+import {
+  LayoutDashboard,
+  BookOpenText,
+  Languages,
+  Settings,
+  MessageSquare, 
+  LucideIcon,
+  LogOut,
+} from "lucide-react";
 
 const NAV_ITEMS: {
-  href: "/dashboard" | "/learn" | "/dashboard/review" | "/dashboard/vocabulary" | "/settings" | "/chat/es";
+  href:
+    | "/dashboard"
+    | "/dashboard/review"
+    | "/dashboard/vocabulary"
+    | "/settings"
+    | "/chat/es";
   label: string;
-  icon: string;
+  icon: LucideIcon;
 }[] = [
-  { href: "/dashboard", label: "Dashboard", icon: "⊞" },
-  { href: "/learn", label: "Learn", icon: "💬" },
-  { href: "/dashboard/review", label: "Review", icon: "🔁" },
-  { href: "/dashboard/vocabulary", label: "Vocabulary", icon: "📖" },
-  { href: "/settings", label: "Settings", icon: "⚙️" },
-  { href: "/chat/es", label: "Chat", icon: "💬" },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard/review", label: "Review", icon: BookOpenText },
+  { href: "/dashboard/vocabulary", label: "Vocabulary", icon: Languages },
+  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/chat/es", label: "Chat", icon: MessageSquare },
 ];
 
-interface AppNavProps {
+interface SideNavProps {
   languages: string[];
 }
 
-export function AppNav({ languages }: AppNavProps) {
+export function SideNav({ languages }: SideNavProps) {
   const pathname = usePathname();
 
   return (
     <nav
-      className="flex h-full w-56 shrink-0 flex-col gap-1 border-r p-4"
-      style={{ borderColor: "var(--border)", backgroundColor: "var(--muted)" }}
+      className="flex h-full w-56 shrink-0 flex-col gap-1 p-4"
+      style={{ backgroundColor: "var(--muted)"}}
     >
-      {/* Logo */}
-      <Link href="/" className="mb-6 flex items-center gap-2 px-2">
-        <span className="text-xl font-bold" style={{ color: "var(--color-brand-500)" }}>
-          Lingua
-        </span>
-      </Link>
-
       {/* Navigation links */}
       <ul className="flex flex-col gap-1">
         {NAV_ITEMS.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+          const isActive =
+            item.href === "/dashboard"
+              ? pathname === "/dashboard"
+              : pathname === item.href || pathname.startsWith(item.href + "/");
           return (
             <li key={item.href}>
               <Link
                 href={item.href as never}
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
                 style={{
-                  backgroundColor: isActive ? "var(--color-brand-100)" : "transparent",
-                  color: isActive ? "var(--color-brand-700)" : "var(--foreground)",
+                  backgroundColor: isActive ? "#FFFFFF" : "transparent",
+                  color: isActive ? "#CA7DF9" : "var(--foreground)",
                 }}
               >
-                <span aria-hidden="true">{item.icon}</span>
+                <item.icon size={24} aria-hidden="true" />
                 {item.label}
               </Link>
             </li>
@@ -85,15 +94,15 @@ export function AppNav({ languages }: AppNavProps) {
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
           style={{ color: "var(--muted-foreground)" }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.backgroundColor = "var(--color-brand-100)";
-            (e.currentTarget as HTMLButtonElement).style.color = "var(--color-brand-700)";
+            (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#FFFFFF";
+            (e.currentTarget as HTMLButtonElement).style.color = "#CA7DF9";
           }}
           onMouseLeave={(e) => {
             (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
             (e.currentTarget as HTMLButtonElement).style.color = "var(--muted-foreground)";
           }}
         >
-          <span aria-hidden="true">{"->"}</span>
+          <LogOut size={24} aria-hidden="true" />
           Log out
         </button>
       </form>

@@ -141,23 +141,17 @@ export function ChatInterface({
       style={{
         display: "flex",
         flexDirection: "column",
-        // ── width: 100% is the fix ───────────────────────────────────────
-        // ChatInterface is rendered inside a flex parent. Without an explicit
-        // width, a flex column doesn't stretch to fill available horizontal
-        // space — it sizes to its content instead, leaving dead space to the
-        // right. height: 100% handles the vertical axis; width: 100% handles
-        // the horizontal.
         width: "100%",
         height: "100%",
-        backgroundColor: "#0d0d1a",
+        backgroundColor: "var(--background)"
       }}
     >
       {/* Header */}
-      <div
+      {/* <div
         style={{
           padding: "1rem 1.25rem",
           borderBottom: "1px solid #2d2d44",
-          backgroundColor: "#13131f",
+          backgroundColor: "var(--background)",
           display: "flex",
           alignItems: "center",
           gap: "0.75rem",
@@ -180,7 +174,7 @@ export function ChatInterface({
           {personaName[0]}
         </div>
         <div>
-          <p style={{ margin: 0, fontWeight: 600, color: "#e2e8f0", fontSize: "0.9375rem" }}>
+          <p style={{ margin: 0, fontWeight: 600, color: "black", fontSize: "0.9375rem" }}>
             {personaName}
           </p>
           <p style={{ margin: 0, fontSize: "0.75rem", color: "#6366f1" }}>
@@ -192,7 +186,7 @@ export function ChatInterface({
             {personaName} is typing…
           </span>
         )}
-      </div>
+      </div> */}
 
       {/* Messages */}
       <div style={{ flex: 1, overflowY: "auto", padding: "1.25rem" }}>
@@ -208,9 +202,8 @@ export function ChatInterface({
               justifyContent: "space-between",
               padding: "0.75rem 1rem",
               marginTop: "0.5rem",
-              backgroundColor: "#1e1e2e",
+              backgroundColor: "var(--background)",
               borderRadius: "0.5rem",
-              border: "1px solid #44334a",
             }}
           >
             <span style={{ fontSize: "0.875rem", color: "#94a3b8" }}>

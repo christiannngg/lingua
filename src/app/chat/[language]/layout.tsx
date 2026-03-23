@@ -1,32 +1,57 @@
 import { cache } from "react";
+import { redirect } from "next/navigation";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/db/prisma";
 import { SideNav } from "@/components/layout/SideNav";
-import { getUserLanguages } from "@/app/actions/languages";
-import { OfflineBanner } from "@/components/layout/OfflineBanner";
 import { HeadNav } from "@/components/layout/HeadNav";
+import { OfflineBanner } from "@/components/layout/OfflineBanner";
+import { getUserLanguages } from "@/app/actions/languages";
+import { getConversations } from "@/app/actions/conversations";
+import { isSupportedLanguage } from "@/lib/languages.config";
 
-// ── cache() deduplicates this call within a single render pass ──────────────
-// getUserLanguages is called on every dashboard page render to populate SideNav.
-// The languages list doesn't change mid-session, so we wrap it with React's
-// cache() to avoid redundant DB round-trips when multiple Server Components
-// in the same render tree need the same data.
 const getCachedUserLanguages = cache(getUserLanguages);
 
 type UserLanguage = Awaited<ReturnType<typeof getUserLanguages>>[number];
 
-export default async function DashboardLayout({
-  children,
-}: {
+interface ChatLayoutProps {
   children: React.ReactNode;
-}) {
-  const userLanguages = await getCachedUserLanguages();
-  const languages = userLanguages.map((ul: UserLanguage) => ul.language);
-  // const enrolledCodes = userLanguages.map((ul: UserLanguage) => ul.language);
+  params: Promise<{ language: string }>;
+}
+
+export default async function ChatLayout({
+  children,
+  params,
+}: ChatLayoutProps) {
+  const { language } = await params;
+
+  if (!isSupportedLanguage(language)) redirect("/dashboard");
+
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) redirect("/sign-in");
+
+  const [userLanguages, userLanguage] = await Promise.all([
+    getCachedUserLanguages(),
+    prisma.userLanguage.findUnique({
+      where: { userId_language: { userId: session.user.id, language } },
+      select: { id: true },
+    }),
+  ]);
+
+  if (!userLanguage) redirect("/dashboard");
+
+  const enrolledCodes = userLanguages.map((ul: UserLanguage) => ul.language);
+  const conversations = await getConversations(userLanguage.id);
 
   return (
     <div className="flex flex-col h-screen">
-      <HeadNav enrolledCodes={languages} />
+      <HeadNav enrolledCodes={enrolledCodes} />
       <div className="flex flex-1 overflow-hidden">
-        <SideNav languages={languages} />
+        <SideNav
+          languages={enrolledCodes}
+          conversations={conversations}
+          chatLanguage={language}
+        />
         <div className="flex-1 overflow-auto">{children}</div>
       </div>
       <OfflineBanner />

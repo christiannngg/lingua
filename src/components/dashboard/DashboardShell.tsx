@@ -3,6 +3,10 @@
 import { motion } from "framer-motion";
 import { StartSessionCard } from "@/components/dashboard/StartSessionCard";
 import { ReviewCard } from "@/components/dashboard/ReviewCard";
+import { WordOfTheDayCard } from "@/components/dashboard/WordOfTheDayCard";
+import { CefrProgressRing } from "@/components/dashboard/CefrProgressRing";
+import { ActivityHeatmap } from "@/components/dashboard/ActivityHeatmap";
+import { MasteryProgressBar } from "@/components/dashboard/MasteryProgressBar";
 import { WeeklySummary } from "@/components/progress/WeeklySummary";
 import { CefrHistoryChart } from "@/components/progress/CefrHistoryChart";
 import { VocabularyGrowthChart } from "@/components/progress/VocabularyGrowthChart";
@@ -13,15 +17,17 @@ import type {
   VocabGrowthPoint,
   GrammarConceptRow,
   WeeklySummaryResult,
+  WordOfTheDay,
+  ActivityDay,
+  MasteryProgress,
 } from "@/app/actions/progress";
+
+// ── Animation primitives ─────────────────────────────────────────────────────
 
 const container = {
   hidden: {},
   show: {
-    transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.05,
-    },
+    transition: { staggerChildren: 0.08, delayChildren: 0.05 },
   },
 };
 
@@ -42,6 +48,8 @@ const fadeIn = {
   },
 };
 
+// ── Types ────────────────────────────────────────────────────────────────────
+
 type Props = {
   firstName: string;
   languageName: string;
@@ -49,11 +57,16 @@ type Props = {
   activeLanguage: SupportedLanguage;
   enrolledCodes: SupportedLanguage[];
   dueCount: number;
+  wordOfTheDay: WordOfTheDay | null;
+  activityData: ActivityDay[];
+  masteryProgress: MasteryProgress | null;
   cefrHistory: CefrDataPoint[];
   vocabGrowth: VocabGrowthPoint[];
   grammarData: GrammarConceptRow[];
   weeklySummary: WeeklySummaryResult | null;
 };
+
+// ── Component ────────────────────────────────────────────────────────────────
 
 export function DashboardShell({
   firstName,
@@ -62,6 +75,9 @@ export function DashboardShell({
   activeLanguage,
   enrolledCodes,
   dueCount,
+  wordOfTheDay,
+  activityData,
+  masteryProgress,
   cefrHistory,
   vocabGrowth,
   grammarData,
@@ -75,16 +91,20 @@ export function DashboardShell({
       animate="show"
     >
       {/* ── Header ── */}
-      <motion.div variants={fadeUp}>
-        <h1 className="text-3xl font-bold" style={{ color: "#020122" }}>
-          Welcome back, {firstName}!
-        </h1>
-        <p className="text-slate-500 text-sm mt-1">
-          {languageName} · Level {cefrLevel}
-        </p>
+      <motion.div variants={fadeUp} className="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h1 className="text-3xl font-bold" style={{ color: "#020122" }}>
+            Welcome back, {firstName}!
+          </h1>
+          <p className="text-slate-500 text-sm mt-1">
+            Here's your progress overview.
+          </p>
+        </div>
+        {/* CEFR ring replaces the plain "Level B2" subtitle */}
+        <CefrProgressRing cefrLevel={cefrLevel} languageName={languageName} />
       </motion.div>
 
-      {/* ── Top action grid ── */}
+      {/* ── Top action grid: CTA + Review ── */}
       <motion.div variants={fadeUp} className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="md:col-span-2">
           <StartSessionCard language={activeLanguage} />
@@ -93,6 +113,28 @@ export function DashboardShell({
           <ReviewCard dueCount={dueCount} languages={enrolledCodes} />
         </div>
       </motion.div>
+
+      {/* ── Word of the Day ── */}
+      <motion.section variants={fadeUp}>
+        <WordOfTheDayCard word={wordOfTheDay} language={activeLanguage} />
+      </motion.section>
+
+      {/* ── Mastery + Activity row ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <motion.section variants={fadeUp}>
+          <SectionHeading>Vocabulary Mastery</SectionHeading>
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+            <MasteryProgressBar data={masteryProgress} />
+          </div>
+        </motion.section>
+
+        <motion.section variants={fadeUp}>
+          <SectionHeading>Activity</SectionHeading>
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+            <ActivityHeatmap data={activityData} />
+          </div>
+        </motion.section>
+      </div>
 
       {/* ── Weekly Summary ── */}
       <motion.section variants={fadeUp}>

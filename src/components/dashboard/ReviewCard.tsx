@@ -21,8 +21,8 @@ export function ReviewCard({ dueCount, languages }: Props) {
     if (dueCount === 0 || !countRef.current) return;
 
     const controls = animate(0, dueCount, {
-      duration: 1.2,
-      ease: [0.16, 1, 0.3, 1],
+      duration: 1.25,
+      ease: [1, 1, 0.3, 1],
       onUpdate(value) {
         if (countRef.current) {
           countRef.current.textContent = Math.round(value).toString();

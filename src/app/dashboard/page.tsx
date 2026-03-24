@@ -6,6 +6,9 @@ import {
   getVocabularyGrowth,
   getGrammarHeatmap,
   getWeeklySummary,
+  getWordOfTheDay,
+  getActivityHeatmap,
+  getMasteryProgress,
 } from "@/app/actions/progress";
 import { redirect } from "next/navigation";
 import { getLanguageDisplayName } from "@/lib/languages.config";
@@ -45,11 +48,22 @@ export default async function DashboardPage() {
     },
   });
 
-  const [cefrHistory, vocabGrowth, grammarData, weeklySummary] = await Promise.all([
+  const [
+    cefrHistory,
+    vocabGrowth,
+    grammarData,
+    weeklySummary,
+    wordOfTheDay,
+    activityData,
+    masteryProgress,
+  ] = await Promise.all([
     getCefrHistory(activeLanguage.language),
     getVocabularyGrowth(activeLanguage.language),
     getGrammarHeatmap(activeLanguage.language),
     getWeeklySummary(activeLanguage.language),
+    getWordOfTheDay(activeLanguage.language),
+    getActivityHeatmap(activeLanguage.language),
+    getMasteryProgress(activeLanguage.language),
   ]);
 
   return (
@@ -60,6 +74,9 @@ export default async function DashboardPage() {
       activeLanguage={activeLanguage.language as SupportedLanguage}
       enrolledCodes={enrolledCodes}
       dueCount={dueCount}
+      wordOfTheDay={wordOfTheDay}
+      activityData={activityData}
+      masteryProgress={masteryProgress}
       cefrHistory={cefrHistory}
       vocabGrowth={vocabGrowth}
       grammarData={grammarData}

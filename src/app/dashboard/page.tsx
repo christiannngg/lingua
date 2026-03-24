@@ -7,12 +7,10 @@ import {
   getGrammarHeatmap,
   getWeeklySummary,
 } from "@/app/actions/progress";
-import { CefrHistoryChart } from "@/components/progress/CefrHistoryChart";
-import { VocabularyGrowthChart } from "@/components/progress/VocabularyGrowthChart";
-import { GrammarHeatmap } from "@/components/progress/GrammarHeatmap";
 import { redirect } from "next/navigation";
-import { WeeklySummary } from "@/components/progress/WeeklySummary";
 import { getLanguageDisplayName } from "@/lib/languages.config";
+import type { SupportedLanguage } from "@/lib/languages.config";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 
 export default async function DashboardPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -28,15 +26,24 @@ export default async function DashboardPage() {
   if (!activeLanguage) {
     return (
       <main className="max-w-2xl mx-auto p-6">
-        <p className="text-slate-400 text-sm">
+        <p className="text-slate-500 text-sm">
           No language selected yet.{" "}
-          <a href="/onboarding" className="text-indigo-400 underline">
+          <a href="/onboarding" className="underline" style={{ color: "#CA7DF9" }}>
             Get started
           </a>
         </p>
       </main>
     );
   }
+
+  const enrolledCodes = userLanguages.map((ul) => ul.language as SupportedLanguage);
+
+  const dueCount = await prisma.vocabularyItem.count({
+    where: {
+      userLanguageId: { in: userLanguages.map((ul) => ul.id) },
+      nextReview: { lte: new Date() },
+    },
+  });
 
   const [cefrHistory, vocabGrowth, grammarData, weeklySummary] = await Promise.all([
     getCefrHistory(activeLanguage.language),
@@ -46,49 +53,17 @@ export default async function DashboardPage() {
   ]);
 
   return (
-    <main className="max-w-2xl mx-auto p-6 space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-black">Progress</h1>
-        <p className="text-slate-400 text-sm mt-1">
-          {getLanguageDisplayName(activeLanguage.language)} · {activeLanguage.cefrLevel}
-        </p>
-      </div>
-
-      <section>
-        <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">
-          This Week
-        </h2>
-        <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-          <WeeklySummary initial={weeklySummary} language={activeLanguage.language} />
-        </div>
-      </section>
-
-      <section>
-        <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">
-          CEFR Level History
-        </h2>
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-          <CefrHistoryChart data={cefrHistory} language={activeLanguage.language} />
-        </div>
-      </section>
-
-      <section>
-        <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">
-          Vocabulary Growth
-        </h2>
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-          <VocabularyGrowthChart data={vocabGrowth} />
-        </div>
-      </section>
-
-      <section>
-        <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">
-          Grammar Patterns
-        </h2>
-        <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-          <GrammarHeatmap data={grammarData} />
-        </div>
-      </section>
-    </main>
+    <DashboardShell
+      firstName={session.user.name?.split(" ")[0] ?? "there"}
+      languageName={getLanguageDisplayName(activeLanguage.language)}
+      cefrLevel={activeLanguage.cefrLevel}
+      activeLanguage={activeLanguage.language as SupportedLanguage}
+      enrolledCodes={enrolledCodes}
+      dueCount={dueCount}
+      cefrHistory={cefrHistory}
+      vocabGrowth={vocabGrowth}
+      grammarData={grammarData}
+      weeklySummary={weeklySummary}
+    />
   );
 }

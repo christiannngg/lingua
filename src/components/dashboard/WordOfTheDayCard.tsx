@@ -33,7 +33,7 @@ export function WordOfTheDayCard({ word }: Props) {
   if (!word) {
     return (
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex items-center justify-center min-h-[140px]">
-        <p className="text-slate-400 text-sm text-center">
+        <p className="text-slate-600 text-sm text-center">
           Start a conversation to build your vocabulary.
           <br />
           <span className="text-slate-300">Your focus word will appear here.</span>
@@ -59,7 +59,7 @@ export function WordOfTheDayCard({ word }: Props) {
       <div className="flex items-start justify-between gap-4">
         <div>
           {/* Label */}
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">
+          <p className="text-xs font-semibold text-slate-600 uppercase tracking-widest mb-2">
             Focus Word
           </p>
 
@@ -75,13 +75,13 @@ export function WordOfTheDayCard({ word }: Props) {
               {word.word}
             </motion.span>
             {pos && (
-              <span className="text-xs text-slate-400 font-medium italic">{pos}</span>
+              <span className="text-xs text-slate-600 font-medium italic">{pos}</span>
             )}
           </div>
 
           {/* Translation */}
           <motion.p
-            className="text-base text-slate-500 mt-0.5"
+            className="text-base text-slate-600 mt-0.5"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.18, duration: 0.35 }}
@@ -111,7 +111,7 @@ export function WordOfTheDayCard({ word }: Props) {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.25, duration: 0.4 }}
         >
-          <p className="text-sm text-slate-500 leading-relaxed italic">
+          <p className="text-sm text-slate-600 leading-relaxed italic">
             "{word.exampleSentence}"
           </p>
         </motion.div>

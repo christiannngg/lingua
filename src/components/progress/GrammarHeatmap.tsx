@@ -12,10 +12,10 @@ function ErrorDetail({ error }: { error: GrammarConceptRow["recentErrors"][numbe
     <div className="border-l-2 border-slate-200 pl-3 py-1 space-y-1">
       <div className="flex flex-wrap gap-2 text-xs">
         <span className="text-red-500 line-through">{error.userSentence}</span>
-        <span className="text-slate-400">{"->"}</span>
+        <span className="text-slate-600">{"->"}</span>
         <span className="text-emerald-600">{error.correction}</span>
       </div>
-      <p className="text-slate-400 text-xs">{error.explanation}</p>
+      <p className="text-slate-600 text-xs">{error.explanation}</p>
       <p className="text-slate-300 text-xs">{error.date}</p>
     </div>
   );
@@ -53,11 +53,11 @@ function ConceptRow({
               <span className="text-sm font-medium text-slate-700 font-mono">
                 {concept.name}
               </span>
-              <span className="text-xs text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+              <span className="text-xs text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">
                 {concept.errorCount} total
               </span>
             </div>
-            <p className="text-xs text-slate-400 truncate">{concept.description}</p>
+            <p className="text-xs text-slate-600 truncate">{concept.description}</p>
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
@@ -69,7 +69,7 @@ function ConceptRow({
             </div>
             {concept.recentErrors.length > 0 && (
               <span
-                className={`text-slate-400 text-xs transition-transform duration-200 ${
+                className={`text-slate-600 text-xs transition-transform duration-200 ${
                   expanded ? "rotate-180" : ""
                 }`}
               >
@@ -82,7 +82,7 @@ function ConceptRow({
 
       {expanded && concept.recentErrors.length > 0 && (
         <div className="mx-5 mb-3 space-y-3">
-          <p className="text-xs text-slate-400 uppercase tracking-wider font-medium mb-2">
+          <p className="text-xs text-slate-600 uppercase tracking-wider font-medium mb-2">
             Recent errors
           </p>
           {concept.recentErrors.map((error, i) => (
@@ -98,10 +98,10 @@ export function GrammarHeatmap({ data }: Props) {
   if (data.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-48 text-center px-4">
-        <p className="text-slate-400 text-sm leading-relaxed">
+        <p className="text-slate-600 text-sm leading-relaxed">
           No grammar data yet.
           <br />
-          <span className="text-slate-500">
+          <span className="text-slate-600">
             Keep chatting — errors and patterns will appear here automatically.
           </span>
         </p>
@@ -125,7 +125,7 @@ export function GrammarHeatmap({ data }: Props) {
 
       {mastered.length > 0 && (
         <div className="mt-4 pt-4 border-t border-slate-100">
-          <p className="text-xs text-slate-400 uppercase tracking-wider font-medium px-5 mb-2">
+          <p className="text-xs text-slate-600 uppercase tracking-wider font-medium px-5 mb-2">
             No recent errors
           </p>
           <div className="space-y-0.5">
@@ -135,11 +135,11 @@ export function GrammarHeatmap({ data }: Props) {
                 className="flex items-center justify-between px-5 py-2.5"
               >
                 <div>
-                  <span className="text-sm text-slate-500 font-mono">{concept.name}</span>
-                  <p className="text-xs text-slate-400">{concept.description}</p>
+                  <span className="text-sm text-slate-600 font-mono">{concept.name}</span>
+                  <p className="text-xs text-slate-600">{concept.description}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-400">{concept.errorCount} total</span>
+                  <span className="text-xs text-slate-600">{concept.errorCount} total</span>
                   <span className="text-emerald-500 text-xs font-medium">✓</span>
                 </div>
               </div>

@@ -56,7 +56,7 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
   return (
     <div className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm shadow-lg">
       <p className="font-semibold" style={{ color: "#020122" }}>{point.cefrLevel}</p>
-      <p className="text-slate-400">{point.date}</p>
+      <p className="text-slate-600">{point.date}</p>
       {point.isLevelUp && (
         <p className="text-xs mt-1 font-medium" style={{ color: "#CA7DF9" }}>Level up! 🎉</p>
       )}
@@ -74,10 +74,10 @@ export function CefrHistoryChart({ data, language }: Props) {
   if (data.length < 2) {
     return (
       <div className="flex flex-col items-center justify-center h-48 text-center px-4">
-        <p className="text-slate-400 text-sm leading-relaxed">
+        <p className="text-slate-600 text-sm leading-relaxed">
           Complete more assessments to see your {languageName} level history here.
           <br />
-          <span className="text-slate-500">Your progress will be charted over time.</span>
+          <span className="text-slate-600">Your progress will be charted over time.</span>
         </p>
       </div>
     );
@@ -123,7 +123,7 @@ export function CefrHistoryChart({ data, language }: Props) {
 
       <div className="flex items-center gap-4 justify-center mt-2 flex-wrap">
         {Object.entries(CEFR_COLORS).map(([level, color]) => (
-          <span key={level} className="flex items-center gap-1.5 text-xs text-slate-400">
+          <span key={level} className="flex items-center gap-1.5 text-xs text-slate-600">
             <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
             {level}
           </span>

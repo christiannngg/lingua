@@ -36,16 +36,11 @@ interface Conversation {
 
 interface SideNavProps {
   languages: string[];
-  // Only populated when the layout is inside /chat/[language]
   conversations?: Conversation[];
   chatLanguage?: string;
 }
 
-export function SideNav({
-  languages,
-  conversations,
-  chatLanguage,
-}: SideNavProps) {
+export function SideNav({ languages, conversations, chatLanguage }: SideNavProps) {
   const pathname = usePathname();
   const activeLanguage = useActiveLanguage(languages);
   const isInChat = pathname.startsWith("/chat/");
@@ -59,36 +54,44 @@ export function SideNav({
 
   return (
     <nav
-      className="flex h-full w-56 shrink-0 flex-col"
-      style={{ backgroundColor: "var(--muted)" }}
+      className="flex h-100 w-56 shrink-0 flex-col rounded-2xl m-3 shadow-sm"
+      style={{ backgroundColor: "#FFFFFF", border: "1px solid #f1f5f9" }}
     >
       {isInChat && conversations !== undefined && chatLanguage !== undefined ? (
-        // ── Drill-down: conversation list ─────────────────────────────────
-        <ConversationPanel
-          conversations={conversations}
-          language={chatLanguage}
-        />
+        <ConversationPanel conversations={conversations} language={chatLanguage} />
       ) : (
-        // ── Root nav ──────────────────────────────────────────────────────
         <div className="flex h-full flex-col gap-1 p-4">
-          <ul className="flex flex-col gap-1">
+          <ul className="flex flex-col gap-0.5">
             {allNavItems.map((item) => {
               const isActive =
                 item.href === "/dashboard"
                   ? pathname === "/dashboard"
-                  : pathname === item.href ||
-                    pathname.startsWith(item.href + "/");
+                  : pathname === item.href || pathname.startsWith(item.href + "/");
+
               return (
                 <li key={item.label}>
                   <Link
                     href={item.href as never}
                     className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
                     style={{
-                      backgroundColor: isActive ? "#FFFFFF" : "transparent",
-                      color: isActive ? "#CA7DF9" : "var(--foreground)",
+                      backgroundColor: isActive ? "#F3E8FF" : "transparent",
+                      color: isActive ? "#7c3aed" : "#64748b",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) {
+                        (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "#faf5ff";
+                        (e.currentTarget as HTMLAnchorElement).style.color = "#7c3aed";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) {
+                        (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
+                          "transparent";
+                        (e.currentTarget as HTMLAnchorElement).style.color = "#64748b";
+                      }
                     }}
                   >
-                    <item.icon size={24} aria-hidden="true" />
+                    <item.icon size={18} aria-hidden="true" strokeWidth={isActive ? 2.5 : 1.75} />
                     {item.label}
                   </Link>
                 </li>
@@ -96,47 +99,37 @@ export function SideNav({
             })}
           </ul>
 
-          {/* Active languages widget */}
+          {/* Languages widget */}
           {languages.length > 0 && (
-            <div
-              className="mt-auto rounded-lg border p-3 text-sm"
-              style={{ borderColor: "var(--border)" }}
-            >
-              <p className="mb-2 font-medium">Learning</p>
+            <div className="mt-auto rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm">
+              <p className="mb-2.5 text-xs font-semibold text-slate-400 uppercase tracking-widest">
+                Learning
+              </p>
               {languages.map((lang) => (
                 <div key={lang} className="flex items-center gap-2 py-0.5">
                   <LanguageFlag language={lang} className="w-5 h-auto rounded-sm" />
-                  <span
-                    className="text-xs"
-                    style={{ color: "var(--muted-foreground)" }}
-                  >
-                    {getLanguageDisplayName(lang)}
-                  </span>
+                  <span className="text-xs text-slate-500">{getLanguageDisplayName(lang)}</span>
                 </div>
               ))}
             </div>
           )}
 
           {/* Logout */}
-          <form
-            action={signOutAction}
-            className={languages.length > 0 ? "mt-3" : "mt-auto"}
-          >
+          <form action={signOutAction} className={languages.length > 0 ? "mt-3" : "mt-auto"}>
             <button
               type="submit"
               className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
-              style={{ color: "var(--muted-foreground)" }}
+              style={{ color: "#94a3b8" }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#FFFFFF";
-                (e.currentTarget as HTMLButtonElement).style.color = "#CA7DF9";
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#faf5ff";
+                (e.currentTarget as HTMLButtonElement).style.color = "#7c3aed";
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
-                (e.currentTarget as HTMLButtonElement).style.color =
-                  "var(--muted-foreground)";
+                (e.currentTarget as HTMLButtonElement).style.color = "#94a3b8";
               }}
             >
-              <LogOut size={24} aria-hidden="true" />
+              <LogOut size={18} aria-hidden="true" strokeWidth={1.75} />
               Log out
             </button>
           </form>

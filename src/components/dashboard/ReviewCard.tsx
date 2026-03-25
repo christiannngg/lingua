@@ -62,7 +62,7 @@ export function ReviewCard({ dueCount, languages }: Props) {
       {/* Text */}
       <div className="flex-1">
         <h3 className="font-bold text-[#020122] text-lg leading-tight">Next Review</h3>
-        <p className="text-slate-500 text-sm mt-1 leading-relaxed">
+        <p className="text-slate-600 text-sm mt-1 leading-relaxed">
           {dueCount > 0 ? (
             <>
               <span

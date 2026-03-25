@@ -12,21 +12,36 @@ export function StartSessionCard({ language }: Props) {
   const router = useRouter();
 
   return (
-    <div
-      className="relative overflow-hidden rounded-2xl p-7 flex flex-col justify-between min-h-[220px] start-session-card"
-      style={{ background: "linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #CA7DF9 100%)" }}
-    >
-      {/* Animated gradient overlay for pulse effect */}
+    <div className="relative overflow-hidden rounded-2xl p-7 flex flex-col justify-between min-h-[220px] start-session-card">
       <style>{`
+        @keyframes gradientFlow {
+          0%   { background-position: 0% 50%;   }
+          50%  { background-position: 100% 50%; }
+          100% { background-position: 0% 50%;   }
+        }
+        .start-session-card {
+          background: linear-gradient(
+            135deg,
+            #5b21b6 0%,
+            #7c3aed 25%,
+            #a855f7 50%,
+            #CA7DF9 75%,
+            #7c3aed 100%
+          );
+          background-size: 300% 300%;
+          animation: gradientFlow 10s ease-in-out infinite;
+        }
+
         @keyframes gradientShift {
-          0%   { opacity: 0.6; transform: scale(1)   rotate(0deg);   }
-          50%  { opacity: 1;   transform: scale(1.08) rotate(6deg);  }
-          100% { opacity: 0.6; transform: scale(1)   rotate(0deg);   }
+          0%   { opacity: 0.6; transform: scale(1)    rotate(0deg); }
+          50%  { opacity: 1;   transform: scale(1.08) rotate(6deg); }
+          100% { opacity: 0.6; transform: scale(1)    rotate(0deg); }
         }
         .start-session-orb {
           animation: gradientShift 6s ease-in-out infinite;
           transform-origin: center;
         }
+
         @keyframes onlinePulse {
           0%, 100% { opacity: 1;   transform: scale(1);   }
           50%      { opacity: 0.5; transform: scale(1.5); }
@@ -36,14 +51,10 @@ export function StartSessionCard({ language }: Props) {
         }
       `}</style>
 
-      {/* Decorative animated circle */}
+      {/* Decorative animated orb */}
       <div
         className="start-session-orb absolute right-6 top-1/2 -translate-y-1/2 rounded-full flex items-center justify-center"
-        style={{
-          width: 140,
-          height: 140,
-          background: "rgba(255,255,255,0.10)",
-        }}
+        style={{ width: 140, height: 140, background: "rgba(255,255,255,0.10)" }}
       >
         <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
           <path
@@ -56,7 +67,6 @@ export function StartSessionCard({ language }: Props) {
 
       {/* Content */}
       <div className="relative z-10 max-w-[60%]">
-        {/* Status pill */}
         <motion.div
           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 mb-4"
           initial={{ opacity: 0, x: -8 }}

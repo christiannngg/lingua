@@ -29,10 +29,10 @@ export function WeeklySummary({ initial, language }: Props) {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4 }}
       >
-        <p className="text-slate-400 text-sm leading-relaxed">
+        <p className="text-slate-600 text-sm leading-relaxed">
           No activity this week yet.
           <br />
-          <span className="text-slate-500">Start a conversation to generate your summary.</span>
+          <span className="text-slate-600">Start a conversation to generate your summary.</span>
         </p>
       </motion.div>
     );
@@ -50,7 +50,7 @@ export function WeeklySummary({ initial, language }: Props) {
           transition={{ duration: 0.3, ease: "easeOut" }}
         >
           {isPending ? (
-            <span className="text-slate-400 italic">Regenerating your summary…</span>
+            <span className="text-slate-600 italic">Regenerating your summary…</span>
           ) : (
             summary.content
           )}
@@ -58,11 +58,11 @@ export function WeeklySummary({ initial, language }: Props) {
       </AnimatePresence>
 
       <div className="flex items-center justify-between pt-1">
-        <span className="text-slate-400 text-xs">Generated {summary.generatedAt}</span>
+        <span className="text-slate-600 text-xs">Generated {summary.generatedAt}</span>
         <button
           onClick={handleRefresh}
           disabled={isPending}
-          className="text-xs text-slate-400 hover:text-slate-600 transition-colors disabled:opacity-40"
+          className="text-xs text-slate-600 hover:text-slate-600 transition-colors disabled:opacity-40"
         >
           {isPending ? "Regenerating..." : "↻ Regenerate"}
         </button>

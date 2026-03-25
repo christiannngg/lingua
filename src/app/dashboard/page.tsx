@@ -29,7 +29,7 @@ export default async function DashboardPage() {
   if (!activeLanguage) {
     return (
       <main className="max-w-2xl mx-auto p-6">
-        <p className="text-slate-500 text-sm">
+        <p className="text-slate-600 text-sm">
           No language selected yet.{" "}
           <a href="/onboarding" className="underline" style={{ color: "#CA7DF9" }}>
             Get started
@@ -75,8 +75,8 @@ export default async function DashboardPage() {
       enrolledCodes={enrolledCodes}
       dueCount={dueCount}
       wordOfTheDay={wordOfTheDay}
-      activityData={activityData}
       masteryProgress={masteryProgress}
+      activityData={activityData}
       cefrHistory={cefrHistory}
       vocabGrowth={vocabGrowth}
       grammarData={grammarData}

@@ -20,7 +20,6 @@ export function LanguageSwitcher({ enrolledCodes }: Props) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -31,7 +30,6 @@ export function LanguageSwitcher({ enrolledCodes }: Props) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [open]);
 
-  // Close on Escape
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
@@ -43,14 +41,10 @@ export function LanguageSwitcher({ enrolledCodes }: Props) {
   const switchLanguage = useCallback(
     (code: string) => {
       setOpen(false);
-
-      // If currently in a chat route, navigate to the new language's chat
       if (pathname.startsWith("/chat/")) {
         router.push(`/chat/${code}` as never);
         return;
       }
-
-      // Otherwise update ?lang= in place, preserving other search params
       const params = new URLSearchParams(searchParams.toString());
       params.set("lang", code);
       router.replace(`${pathname}?${params.toString()}` as never);
@@ -82,13 +76,17 @@ export function LanguageSwitcher({ enrolledCodes }: Props) {
         />
       </button>
 
-      {/* Dropdown */}
+      {/* Dropdown — glass effect */}
       {open && (
         <div
-          className="absolute left-0 top-full z-50 mt-1.5 w-48 overflow-hidden rounded-xl border py-1 shadow-lg"
+          className="absolute left-0 top-full z-50 mt-1.5 w-48 overflow-hidden rounded-xl py-1"
           style={{
-            backgroundColor: "var(--background)",
-            borderColor: "var(--border)",
+            backgroundColor: "rgba(255, 255, 255, 0.75)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
+            border: "1px solid rgba(255, 255, 255, 0.6)",
+            boxShadow:
+              "0 8px 32px rgba(202, 125, 249, 0.08), 0 2px 8px rgba(0,0,0,0.06)",
           }}
           role="listbox"
           aria-label="Languages"
@@ -104,17 +102,19 @@ export function LanguageSwitcher({ enrolledCodes }: Props) {
                 onClick={() => switchLanguage(code)}
                 className="flex w-full items-center gap-3 px-3 py-2 text-sm transition-colors"
                 style={{
-                  backgroundColor: isActive ? "#CA7DF914" : "transparent",
-                  color: isActive ? "#CA7DF9" : "var(--foreground)",
+                  backgroundColor: isActive ? "rgba(202, 125, 249, 0.10)" : "transparent",
+                  color: isActive ? "#7c3aed" : "#020122",
                   fontWeight: isActive ? 600 : 400,
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive)
-                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#FFFFFF0A";
+                    (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                      "rgba(202, 125, 249, 0.06)";
                 }}
                 onMouseLeave={(e) => {
                   if (!isActive)
-                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
+                    (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                      "transparent";
                 }}
               >
                 <LanguageFlag language={code} className="w-5 h-auto rounded-sm shrink-0" />
@@ -129,7 +129,7 @@ export function LanguageSwitcher({ enrolledCodes }: Props) {
           {/* Divider */}
           <div
             className="my-1 h-px"
-            style={{ backgroundColor: "var(--border)" }}
+            style={{ backgroundColor: "rgba(202, 125, 249, 0.15)" }}
           />
 
           {/* Add language */}
@@ -139,19 +139,20 @@ export function LanguageSwitcher({ enrolledCodes }: Props) {
               router.push("/onboarding");
             }}
             className="flex w-full items-center gap-3 px-3 py-2 text-sm transition-colors"
-            style={{ color: "var(--muted-foreground)" }}
+            style={{ color: "#94a3b8" }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#FFFFFF0A";
-              (e.currentTarget as HTMLButtonElement).style.color = "var(--foreground)";
+              (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                "rgba(202, 125, 249, 0.06)";
+              (e.currentTarget as HTMLButtonElement).style.color = "#64748b";
             }}
             onMouseLeave={(e) => {
               (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
-              (e.currentTarget as HTMLButtonElement).style.color = "var(--muted-foreground)";
+              (e.currentTarget as HTMLButtonElement).style.color = "#94a3b8";
             }}
           >
             <span
               className="flex h-5 w-5 items-center justify-center rounded-full"
-              style={{ border: "1.5px dashed var(--muted-foreground)" }}
+              style={{ border: "1.5px dashed #94a3b8" }}
             >
               <Plus size={11} />
             </span>

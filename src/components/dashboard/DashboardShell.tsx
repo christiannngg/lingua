@@ -58,8 +58,8 @@ type Props = {
   enrolledCodes: SupportedLanguage[];
   dueCount: number;
   wordOfTheDay: WordOfTheDay | null;
-  activityData: ActivityDay[];
   masteryProgress: MasteryProgress | null;
+  activityData: ActivityDay[];
   cefrHistory: CefrDataPoint[];
   vocabGrowth: VocabGrowthPoint[];
   grammarData: GrammarConceptRow[];
@@ -76,8 +76,8 @@ export function DashboardShell({
   enrolledCodes,
   dueCount,
   wordOfTheDay,
-  activityData,
   masteryProgress,
+  activityData,
   cefrHistory,
   vocabGrowth,
   grammarData,
@@ -96,11 +96,10 @@ export function DashboardShell({
           <h1 className="text-3xl font-bold" style={{ color: "#020122" }}>
             Welcome back, {firstName}!
           </h1>
-          <p className="text-slate-500 text-sm mt-1">
-            Here's your progress overview.
+          <p className="text-slate-600 text-sm mt-1" style={{ color: "#020122" }}>
+            Here&apos;s your progress overview.
           </p>
         </div>
-        {/* CEFR ring replaces the plain "Level B2" subtitle */}
         <CefrProgressRing cefrLevel={cefrLevel} languageName={languageName} />
       </motion.div>
 
@@ -114,27 +113,24 @@ export function DashboardShell({
         </div>
       </motion.div>
 
-      {/* ── Word of the Day ── */}
-      <motion.section variants={fadeUp}>
+      {/* ── Word of the Day + Mastery Progress — side by side ── */}
+      <motion.div variants={fadeUp} className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <WordOfTheDayCard word={wordOfTheDay} language={activeLanguage} />
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+          <p className="text-xs font-semibold text-slate-600 uppercase tracking-widest mb-4">
+            Vocabulary Mastery
+          </p>
+          <MasteryProgressBar data={masteryProgress} />
+        </div>
+      </motion.div>
+
+      {/* ── Activity heatmap — full width ── */}
+      <motion.section variants={fadeUp}>
+        <SectionHeading>Activity</SectionHeading>
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+          <ActivityHeatmap data={activityData} />
+        </div>
       </motion.section>
-
-      {/* ── Mastery + Activity row ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <motion.section variants={fadeUp}>
-          <SectionHeading>Vocabulary Mastery</SectionHeading>
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-            <MasteryProgressBar data={masteryProgress} />
-          </div>
-        </motion.section>
-
-        <motion.section variants={fadeUp}>
-          <SectionHeading>Activity</SectionHeading>
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-            <ActivityHeatmap data={activityData} />
-          </div>
-        </motion.section>
-      </div>
 
       {/* ── Weekly Summary ── */}
       <motion.section variants={fadeUp}>
@@ -174,7 +170,7 @@ export function DashboardShell({
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">
+    <h2 className="text-xs font-semibold text-slate-600 uppercase tracking-widest mb-3">
       {children}
     </h2>
   );

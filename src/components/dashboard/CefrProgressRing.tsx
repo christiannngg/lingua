@@ -47,7 +47,7 @@ export function CefrProgressRing({ cefrLevel, languageName }: Props) {
         <p className="text-sm font-semibold" style={{ color: "#020122" }}>
           {languageName}
         </p>
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-slate-600">
           {progress}% through CEFR
         </p>
       </div>

@@ -344,20 +344,20 @@ export type WordOfTheDay = {
   stability: number;
   state: string;
 };
- 
+
 export async function getWordOfTheDay(language: string): Promise<WordOfTheDay | null> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Unauthenticated");
- 
+
   const userLanguage = await prisma.userLanguage.findUnique({
     where: {
       userId_language: { userId: session.user.id, language },
     },
     select: { id: true },
   });
- 
+
   if (!userLanguage) return null;
- 
+
   // Lowest stability = word the user knows least well.
   // Prefer items that have an example sentence.
   // Tiebreak: nextReview asc (most overdue first).
@@ -377,7 +377,7 @@ export async function getWordOfTheDay(language: string): Promise<WordOfTheDay | 
       state: true,
     },
   });
- 
+
   // Fallback: no example sentence requirement if nothing has one yet
   if (!item) {
     const fallback = await prisma.vocabularyItem.findFirst({
@@ -395,59 +395,75 @@ export async function getWordOfTheDay(language: string): Promise<WordOfTheDay | 
     });
     return fallback;
   }
- 
+
   return item;
 }
+// ── REPLACE getActivityHeatmap in src/app/actions/progress.ts ────────────────
 
 export type ActivityDay = {
-  date: string;   // "YYYY-MM-DD"
-  count: number;  // number of conversations that day
+  date: string;
+  count: number;
+  isFuture: boolean; // true only for dates after today
+  isBeforeSignup: boolean; // true for dates before the user created their account
 };
- 
+
 export async function getActivityHeatmap(language: string): Promise<ActivityDay[]> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Unauthenticated");
- 
-  const userLanguage = await prisma.userLanguage.findUnique({
-    where: { userId_language: { userId: session.user.id, language } },
-    select: { id: true },
-  });
- 
+
+  const [user, userLanguage] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { createdAt: true },
+    }),
+    prisma.userLanguage.findUnique({
+      where: { userId_language: { userId: session.user.id, language } },
+      select: { id: true },
+    }),
+  ]);
+
   if (!userLanguage) return [];
- 
-  const oneYearAgo = new Date();
-  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
- 
+
+  const now = new Date();
+  const yearStart = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
+  const yearEnd = new Date(Date.UTC(now.getUTCFullYear(), 11, 31));
+  const activeStart = user && user.createdAt > yearStart ? user.createdAt : yearStart;
+
   const conversations = await prisma.conversation.findMany({
     where: {
       userLanguageId: userLanguage.id,
-      createdAt: { gte: oneYearAgo },
+      createdAt: { gte: activeStart },
     },
     select: { createdAt: true },
   });
- 
-  // Group by UTC date string
+
   const countsByDate = new Map<string, number>();
   for (const c of conversations) {
     const date = c.createdAt.toISOString().slice(0, 10);
     countsByDate.set(date, (countsByDate.get(date) ?? 0) + 1);
   }
- 
-  // Build a full 365-day grid so the heatmap always renders complete weeks
+
+  const today = now.toISOString().slice(0, 10);
+  const activeStartStr = activeStart.toISOString().slice(0, 10);
+
   const days: ActivityDay[] = [];
-  const today = new Date();
-  for (let i = 364; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    const date = d.toISOString().slice(0, 10);
-    days.push({ date, count: countsByDate.get(date) ?? 0 });
+  const cursor = new Date(yearStart);
+  while (cursor <= yearEnd) {
+    const date = cursor.toISOString().slice(0, 10);
+    days.push({
+      date,
+      count: countsByDate.get(date) ?? 0,
+      isFuture: date > today,
+      isBeforeSignup: date < activeStartStr,
+    });
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
   }
- 
+
   return days;
 }
- 
-// ── Mastery Progress ──────────────────────────────────────────────────────────
- 
+
+// mastery progress
+
 export type MasteryProgress = {
   newCount: number;
   learningCount: number;
@@ -459,29 +475,28 @@ export type MasteryProgress = {
   // The next milestone total mastered count (nearest multiple of 25)
   nextMilestone: number;
 };
- 
- 
+
 export async function getMasteryProgress(language: string): Promise<MasteryProgress | null> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Unauthenticated");
- 
+
   const userLanguage = await prisma.userLanguage.findUnique({
     where: { userId_language: { userId: session.user.id, language } },
     select: { id: true },
   });
- 
+
   if (!userLanguage) return null;
- 
+
   const items = await prisma.vocabularyItem.findMany({
     where: { userLanguageId: userLanguage.id },
     select: { state: true, reps: true },
   });
- 
+
   let newCount = 0;
   let learningCount = 0;
   let reviewCount = 0;
   let masteredCount = 0;
- 
+
   for (const item of items) {
     if (item.state === "REVIEW" && item.reps >= MASTERED_REPS_THRESHOLD) {
       masteredCount++;
@@ -493,11 +508,11 @@ export async function getMasteryProgress(language: string): Promise<MasteryProgr
       reviewCount++;
     }
   }
- 
+
   // Next milestone = nearest multiple of 25 above current mastered count
   const nextMilestone = Math.max(25, Math.ceil((masteredCount + 1) / 25) * 25);
   const wordsUntilNextMilestone = nextMilestone - masteredCount;
- 
+
   return {
     newCount,
     learningCount,

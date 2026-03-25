@@ -18,7 +18,7 @@ function TierPill({ label, count, color }: { label: string; count: number; color
         className="inline-block w-2 h-2 rounded-full shrink-0"
         style={{ backgroundColor: color }}
       />
-      <span className="text-xs text-slate-500">{label}</span>
+      <span className="text-xs text-slate-600">{label}</span>
       <span className="text-xs font-semibold tabular-nums" style={{ color: "#020122" }}>
         {count}
       </span>
@@ -46,7 +46,7 @@ export function MasteryProgressBar({ data }: Props) {
 
   if (!data || data.total === 0) {
     return (
-      <div className="flex items-center justify-center h-20 text-sm text-slate-400 text-center">
+      <div className="flex items-center justify-center h-20 text-sm text-slate-600 text-center">
         Start chatting to build your vocabulary list.
       </div>
     );
@@ -75,9 +75,9 @@ export function MasteryProgressBar({ data }: Props) {
             >
               {data.masteredCount}
             </span>
-            <span className="text-sm text-slate-400">/ {data.nextMilestone} mastered</span>
+            <span className="text-sm text-slate-600">/ {data.nextMilestone} mastered</span>
           </div>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-600 mt-0.5">
             {data.wordsUntilNextMilestone} word
             {data.wordsUntilNextMilestone !== 1 ? "s" : ""} until next milestone
           </p>

@@ -19,7 +19,9 @@
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
+  background-image: radial-gradient(circle, #CA7DF9 0.25px, transparent 1px);
+  background-size: 10px 10px;
   color: var(--foreground);
   font-family: sans-serif;
   margin: 0;

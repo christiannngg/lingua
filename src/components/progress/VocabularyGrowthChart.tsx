@@ -27,7 +27,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm shadow-lg">
-      <p className="text-slate-400 mb-1">{label}</p>
+      <p className="text-slate-600 mb-1">{label}</p>
       <p className="font-semibold" style={{ color: "#020122" }}>{total} words total</p>
       <p style={{ color: "#7c3aed" }}>{mastered} mastered</p>
       <p style={{ color: "#38bdf8" }}>{learning} learning</p>
@@ -44,10 +44,10 @@ export function VocabularyGrowthChart({ data }: Props) {
   if (data.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-48 text-center px-4">
-        <p className="text-slate-400 text-sm leading-relaxed">
+        <p className="text-slate-600 text-sm leading-relaxed">
           Start chatting to grow your vocabulary.
           <br />
-          <span className="text-slate-500">Words you encounter will appear here week by week.</span>
+          <span className="text-slate-600">Words you encounter will appear here week by week.</span>
         </p>
       </div>
     );
@@ -102,11 +102,11 @@ export function VocabularyGrowthChart({ data }: Props) {
       </ResponsiveContainer>
 
       <div className="flex items-center gap-4 justify-center mt-2">
-        <span className="flex items-center gap-1.5 text-xs text-slate-400">
+        <span className="flex items-center gap-1.5 text-xs text-slate-600">
           <span className="inline-block w-2 h-2 rounded-full bg-sky-400" />
           Learning
         </span>
-        <span className="flex items-center gap-1.5 text-xs text-slate-400">
+        <span className="flex items-center gap-1.5 text-xs text-slate-600">
           <span className="inline-block w-2 h-2 rounded-full" style={{ background: "#CA7DF9" }} />
           Mastered
         </span>

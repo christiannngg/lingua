@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Menu, Flame, Bell } from "lucide-react";
+import { Flame, Bell, TextAlignJustify } from "lucide-react";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 
 interface HeadNavProps {
@@ -11,20 +11,30 @@ interface HeadNavProps {
 export function HeadNav({ enrolledCodes }: HeadNavProps) {
   return (
     <header
-      className="flex h-14 w-full items-center justify-between px-6"
-      style={{ backgroundColor: "transparent" }}
+      className="flex h-14 w-full items-center justify-between px-6 border-solidc"
+      style={{
+        backgroundColor: "transparent",
+      }}
     >
       {/* Left: hamburger + logo */}
       <div className="flex items-center gap-3">
         <button
-          className="rounded-md p-1.5 transition-colors"
-          style={{ color: "var(--foreground)" }}
+          className="flex items-center justify-center transition-colors hover:bg-slate-50"
+          style={{
+            color: "#000000",
+            background: "white",
+            borderRadius: "20px",
+            border: "1px solid #f1f5f9",
+            width: "50px",
+            height: "33px",
+            flexShrink: 0,
+          }}
           aria-label="Toggle sidebar"
         >
-          <Menu size={24} />
+          <TextAlignJustify size={18} />
         </button>
         <Link href="/dashboard">
-          <span className="text-lg font-bold" style={{ color: "#CA7DF9" }}>
+          <span className="text-xl font-bold" style={{ color: "#CA7DF9" }}>
             Lingua
           </span>
         </Link>
@@ -32,10 +42,7 @@ export function HeadNav({ enrolledCodes }: HeadNavProps) {
 
       {/* Right: language switcher, streak, bell, avatar */}
       <div className="flex items-center gap-3">
-        {/* Language switcher — only shown when user has enrolled languages */}
-        {enrolledCodes.length > 0 && (
-          <LanguageSwitcher enrolledCodes={enrolledCodes} />
-        )}
+        {enrolledCodes.length > 0 && <LanguageSwitcher enrolledCodes={enrolledCodes} />}
 
         {/* Streak */}
         <button

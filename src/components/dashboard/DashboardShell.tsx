@@ -93,10 +93,10 @@ export function DashboardShell({
       {/* ── Header ── */}
       <motion.div variants={fadeUp} className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-3xl font-bold" style={{ color: "#020122" }}>
+          <h1 className="text-5xl font-bold" style={{ color: "#020122" }}>
             Welcome back, {firstName}!
           </h1>
-          <p className="text-slate-600 text-sm mt-1" style={{ color: "#020122" }}>
+          <p className="text-slate-600 text-xl mt-1 font-bold" style={{ color: "#020122" }}>
             Here&apos;s your progress overview.
           </p>
         </div>

@@ -16,34 +16,34 @@ const RATINGS: {
   {
     rating: Rating.Again,
     label: "Again",
-    sublabel: "< 1 day",
-    color: "#fca5a5",
-    bg: "rgba(239,68,68,0.1)",
-    border: "rgba(239,68,68,0.3)",
+    sublabel: "1m",
+    color: "#f87171",
+    bg: "rgba(239,68,68,0.07)",
+    border: "rgba(239,68,68,0.2)",
   },
   {
     rating: Rating.Hard,
     label: "Hard",
-    sublabel: "short",
-    color: "#fdba74",
-    bg: "rgba(249,115,22,0.1)",
-    border: "rgba(249,115,22,0.3)",
+    sublabel: "2d",
+    color: "#fb923c",
+    bg: "rgba(249,115,22,0.07)",
+    border: "rgba(249,115,22,0.2)",
   },
   {
     rating: Rating.Good,
     label: "Good",
-    sublabel: "normal",
-    color: "#86efac",
-    bg: "rgba(34,197,94,0.1)",
-    border: "rgba(34,197,94,0.3)",
+    sublabel: "4d",
+    color: "#4ade80",
+    bg: "rgba(34,197,94,0.07)",
+    border: "rgba(34,197,94,0.2)",
   },
   {
     rating: Rating.Easy,
     label: "Easy",
-    sublabel: "longer",
-    color: "#67e8f9",
-    bg: "rgba(6,182,212,0.1)",
-    border: "rgba(6,182,212,0.3)",
+    sublabel: "7d",
+    color: "#22d3ee",
+    bg: "rgba(6,182,212,0.07)",
+    border: "rgba(6,182,212,0.2)",
   },
 ];
 
@@ -55,23 +55,31 @@ export function RatingButtons({ onRate, disabled = false }: RatingButtonsProps) 
           key={rating}
           onClick={() => onRate(rating)}
           disabled={disabled}
-          className="flex flex-1 flex-col items-center gap-1 rounded-xl border py-3 transition-all duration-150 disabled:opacity-40"
-          style={{ borderColor: border, backgroundColor: bg }}
+          className="flex flex-1 flex-col items-center gap-1.5 rounded-xl border py-3.5 transition-all duration-150 disabled:opacity-40"
+          style={{
+            borderColor: border,
+            backgroundColor: bg,
+            boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+          }}
           onMouseEnter={(e) => {
             if (!disabled) {
-              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
-              (e.currentTarget as HTMLButtonElement).style.backgroundColor = bg.replace("0.1", "0.2");
+              const btn = e.currentTarget as HTMLButtonElement;
+              btn.style.transform = "translateY(-2px)";
+              btn.style.boxShadow = `0 4px 12px ${border}`;
+              btn.style.borderColor = color.replace(")", ", 0.5)").replace("rgb", "rgba");
             }
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
-            (e.currentTarget as HTMLButtonElement).style.backgroundColor = bg;
+            const btn = e.currentTarget as HTMLButtonElement;
+            btn.style.transform = "translateY(0)";
+            btn.style.boxShadow = "0 1px 3px rgba(0,0,0,0.04)";
+            btn.style.borderColor = border;
           }}
         >
           <span className="text-sm font-semibold" style={{ color }}>
             {label}
           </span>
-          <span className="text-xs" style={{ color, opacity: 0.7 }}>
+          <span className="text-xs font-medium" style={{ color, opacity: 0.6 }}>
             {sublabel}
           </span>
         </button>

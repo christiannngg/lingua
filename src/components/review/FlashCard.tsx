@@ -43,167 +43,195 @@ export function FlashCard({
   totalCards,
   sentence,
 }: FlashCardProps) {
-  return (
-    <div className="flex w-full max-w-xl flex-col gap-4">
+  const progressPct = (cardNumber / totalCards) * 100;
+  const remaining = totalCards - cardNumber;
 
-      {/* Progress indicator */}
-      <div
-        className="flex items-center justify-between text-xs"
-        style={{ color: "var(--muted-foreground)" }}
-      >
-        <span>{cardNumber} / {totalCards}</span>
+  return (
+    <div className="flex w-full max-w-xl flex-col gap-5">
+
+      {/* Progress bar */}
+      <div className="flex flex-col gap-1.5">
         <div
-          className="mx-4 h-1 flex-1 overflow-hidden rounded-full"
-          style={{ backgroundColor: "var(--border)" }}
+          className="h-1.5 w-full overflow-hidden rounded-full"
+          style={{ backgroundColor: "rgba(202,125,249,0.15)" }}
         >
           <div
             className="h-full rounded-full transition-all duration-500"
             style={{
-              width: `${(cardNumber / totalCards) * 100}%`,
-              backgroundColor: "var(--color-brand-500)",
+              width: `${progressPct}%`,
+              background: "linear-gradient(90deg, #CA7DF9, #a855f7)",
             }}
           />
         </div>
-        <span>{totalCards - cardNumber} left</span>
+        <div className="flex justify-between text-xs" style={{ color: "var(--muted-foreground)" }}>
+          <span className="font-medium">{remaining} cards remaining</span>
+          <span style={{ color: "var(--color-brand-500)" }} className="font-semibold">
+            {Math.round(progressPct)}% complete
+          </span>
+        </div>
       </div>
 
-      {/* Card face */}
+      {/* Card */}
       <div
-        className="relative w-full rounded-2xl border p-8"
+        className="w-full rounded-2xl border bg-white overflow-hidden"
         style={{
-          borderColor: "var(--border)",
-          backgroundColor: "var(--muted)",
-          minHeight: "280px",
+          borderColor: "rgba(202,125,249,0.2)",
+          boxShadow: "0 4px 24px rgba(202,125,249,0.08), 0 1px 3px rgba(0,0,0,0.06)",
         }}
       >
-        {/* Word + part of speech */}
-        <div className="flex flex-col items-center gap-2 text-center">
-          <div className="flex items-baseline gap-2">
+        {/* Card header — word + pos */}
+        <div className="px-10 pt-16 pb-8 text-center border-b" style={{ borderColor: "rgba(202,125,249,0.1)" }}>
+
+          {card.romanization && (
+            <p className="mb-2 text-sm font-medium" style={{ color: "var(--color-brand-500)", opacity: 0.7 }}>
+              {card.romanization}
+            </p>
+          )}
+
+          <div className="flex items-baseline justify-center gap-3">
             <span
-              className="text-4xl font-bold tracking-tight"
+              className="text-5xl font-bold tracking-tight"
               style={{ color: "var(--foreground)" }}
             >
               {card.lemma}
             </span>
             {card.partOfSpeech && (
-              <span className="text-sm" style={{ color: "var(--muted-foreground)" }}>
+              <span
+                className="text-sm font-medium"
+                style={{ color: "var(--muted-foreground)" }}
+              >
                 {formatPos(card.partOfSpeech)}
               </span>
             )}
           </div>
 
-          {/* Example sentence + regenerate button */}
-          {sentence ? (
-            <div className="mt-3 flex w-full max-w-sm items-start gap-2">
-              <p
-                className="flex-1 border-l-2 pl-3 text-left text-sm italic"
-                style={{
-                  borderColor: "var(--color-brand-500)",
-                  color: "var(--muted-foreground)",
-                }}
-              >
-                {sentence}
-              </p>
+          {/* Example sentence */}
+          <div className="mt-5 flex items-start justify-center gap-2">
+            {sentence ? (
+              <div className="flex items-start gap-2 max-w-md">
+                <p
+                  className="border-l-2 pl-3 text-left text-sm italic"
+                  style={{
+                    borderColor: "var(--color-brand-500)",
+                    color: "var(--muted-foreground)",
+                    lineHeight: "1.6",
+                  }}
+                >
+                  {sentence}
+                </p>
+                <button
+                  onClick={() => onRegenerate(card.id)}
+                  disabled={isRegenerating}
+                  title="Generate a new example sentence"
+                  className="mt-0.5 flex-shrink-0 rounded-md p-1 transition-all"
+                  style={{
+                    color: "var(--muted-foreground)",
+                    opacity: isRegenerating ? 0.35 : 0.5,
+                    cursor: isRegenerating ? "not-allowed" : "pointer",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isRegenerating)
+                      (e.currentTarget as HTMLButtonElement).style.opacity = "1";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isRegenerating)
+                      (e.currentTarget as HTMLButtonElement).style.opacity = "0.5";
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="13"
+                    height="13"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ animation: isRegenerating ? "spin 1s linear infinite" : "none" }}
+                  >
+                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                    <path d="M21 3v5h-5" />
+                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                    <path d="M8 16H3v5" />
+                  </svg>
+                </button>
+              </div>
+            ) : (
               <button
                 onClick={() => onRegenerate(card.id)}
                 disabled={isRegenerating}
-                title="Generate a new example sentence"
-                className="mt-0.5 flex-shrink-0 rounded-md p-1 transition-opacity"
+                className="text-xs transition-opacity"
                 style={{
-                  color: "var(--muted-foreground)",
-                  opacity: isRegenerating ? 0.4 : 0.6,
+                  color: "var(--color-brand-500)",
+                  opacity: isRegenerating ? 0.4 : 0.7,
+                  textDecoration: "underline",
+                  textUnderlineOffset: "3px",
                   cursor: isRegenerating ? "not-allowed" : "pointer",
                 }}
-                onMouseEnter={(e) => {
-                  if (!isRegenerating)
-                    (e.currentTarget as HTMLButtonElement).style.opacity = "1";
-                }}
-                onMouseLeave={(e) => {
-                  if (!isRegenerating)
-                    (e.currentTarget as HTMLButtonElement).style.opacity = "0.6";
-                }}
               >
-                {/* Inline SVG refresh icon — no icon library dependency */}
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="13"
-                  height="13"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  style={{
-                    animation: isRegenerating ? "spin 1s linear infinite" : "none",
-                  }}
-                >
-                  <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-                  <path d="M21 3v5h-5" />
-                  <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-                  <path d="M8 16H3v5" />
-                </svg>
+                {isRegenerating ? "Generating…" : "Generate example sentence"}
               </button>
-            </div>
-          ) : (
-            /* No sentence yet — show the regenerate button alone so user can generate one */
-            <button
-              onClick={() => onRegenerate(card.id)}
-              disabled={isRegenerating}
-              className="mt-3 text-xs underline-offset-2 transition-opacity"
-              style={{
-                color: "var(--muted-foreground)",
-                opacity: isRegenerating ? 0.4 : 0.6,
-                textDecoration: "underline",
-                cursor: isRegenerating ? "not-allowed" : "pointer",
-              }}
-            >
-              {isRegenerating ? "Generating…" : "Generate example sentence"}
-            </button>
-          )}
-        </div>
-
-        {/* Divider + translation reveal */}
-        {revealed ? (
-          <div
-            className="mt-6 border-t pt-6 text-center"
-            style={{ borderColor: "var(--border)" }}
-          >
-            <p
-              className="text-sm font-medium uppercase tracking-widest"
-              style={{ color: "var(--muted-foreground)", opacity: 0.5 }}
-            >
-              translation
-            </p>
-            <p
-              className="mt-1 text-2xl font-semibold"
-              style={{ color: "var(--foreground)" }}
-            >
-              {card.translation}
-            </p>
-            {card.reps > 0 && (
-              <p
-                className="mt-2 text-xs"
-                style={{ color: "var(--muted-foreground)", opacity: 0.5 }}
-              >
-                reviewed {card.reps} {card.reps === 1 ? "time" : "times"} ·{" "}
-                {card.lapses} {card.lapses === 1 ? "lapse" : "lapses"}
-              </p>
             )}
           </div>
+        </div>
+
+        {/* Card body — translation reveal */}
+        {revealed ? (
+          <div className="px-10 py-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div
+                className="rounded-xl p-4"
+                style={{ backgroundColor: "rgba(202,125,249,0.05)", border: "1px solid rgba(202,125,249,0.1)" }}
+              >
+                <p
+                  className="mb-1 text-xs font-semibold uppercase tracking-widest"
+                  style={{ color: "var(--muted-foreground)", opacity: 0.6 }}
+                >
+                  Translation
+                </p>
+                <p className="text-lg font-semibold" style={{ color: "var(--foreground)" }}>
+                  {card.translation}
+                </p>
+              </div>
+
+              <div
+                className="rounded-xl p-4"
+                style={{ backgroundColor: "rgba(202,125,249,0.05)", border: "1px solid rgba(202,125,249,0.1)" }}
+              >
+                <p
+                  className="mb-1 text-xs font-semibold uppercase tracking-widest"
+                  style={{ color: "var(--muted-foreground)", opacity: 0.6 }}
+                >
+                  {card.reps > 0 ? "Progress" : "First time"}
+                </p>
+                {card.reps > 0 ? (
+                  <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
+                    Reviewed <span className="font-semibold" style={{ color: "var(--foreground)" }}>{card.reps}×</span>
+                    {card.lapses > 0 && (
+                      <> · <span className="font-semibold" style={{ color: "#fca5a5" }}>{card.lapses} lapse{card.lapses !== 1 ? "s" : ""}</span></>
+                    )}
+                  </p>
+                ) : (
+                  <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
+                    Learning this word for the first time
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
         ) : (
-          <div className="mt-8 flex justify-center">
+          <div className="flex justify-center px-10 py-14">
             <button
               onClick={onReveal}
-              className="rounded-xl border px-8 py-3 text-sm font-medium transition-all duration-150"
+              className="rounded-xl px-10 py-3 text-sm font-semibold transition-all duration-150"
               style={{
-                borderColor: "var(--color-brand-500)",
+                border: "1.5px solid var(--color-brand-500)",
                 color: "var(--color-brand-500)",
                 backgroundColor: "transparent",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                  "var(--color-brand-100)";
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(202,125,249,0.08)";
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
@@ -215,17 +243,16 @@ export function FlashCard({
         )}
       </div>
 
-      {/* Rating buttons — only shown after reveal */}
+      {/* Rating buttons */}
       {revealed && (
         <div className="flex flex-col gap-2">
-          <p className="text-center text-xs" style={{ color: "var(--muted-foreground)" }}>
+          <p className="text-center text-xs font-medium" style={{ color: "var(--muted-foreground)" }}>
             How well did you remember it?
           </p>
           <RatingButtons onRate={onRate} disabled={submitting} />
         </div>
       )}
 
-      {/* Spin keyframe for the regenerate icon */}
       <style>{`
         @keyframes spin {
           from { transform: rotate(0deg); }

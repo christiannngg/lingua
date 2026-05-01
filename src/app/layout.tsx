@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 
 import "./globals.css";
-import HomeNav from "@/components/hero/HomeNav";
 
 export const metadata: Metadata = {
   title: {

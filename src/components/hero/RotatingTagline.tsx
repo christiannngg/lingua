@@ -141,10 +141,10 @@ export default function RotatingTagline() {
         }}
       >
         {/* Line 1 — leads the stagger */}
-        <div style={{ color: "#CA7DF9" }}>{renderSlot(curLine1, incLine1 ?? null, 0)}</div>
+        <div style={{ color: "#020122" }}>{renderSlot(curLine1, incLine1 ?? null, 0)}</div>
 
         {/* Line 2 — follows STAGGER_MS after line 1 */}
-        <div style={{ color: "#CA7DF9" }}>{renderSlot(curLine2, incLine2 ?? null, 1)}</div>
+        <div style={{ color: "#020122" }}>{renderSlot(curLine2, incLine2 ?? null, 1)}</div>
       </h1>
 
       {/* Progress bars + arrows */}

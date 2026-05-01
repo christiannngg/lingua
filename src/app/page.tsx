@@ -5,6 +5,7 @@ import { getUserLanguages } from "@/app/actions/languages";
 import HomeNav from "@/components/hero/HomeNav";
 import HomeHero from "@/components/hero/HomeHero";
 import LanguageStrip from "@/components/hero/LanguageStrip";
+import AppFeatures from "@/components/hero/AppFeatures";
 
 export default async function Home() {
   const session = await auth.api.getSession({
@@ -24,6 +25,7 @@ export default async function Home() {
         <HomeNav />
         <HomeHero />
         <LanguageStrip />
+        <AppFeatures/>
       </main>
     );
   }

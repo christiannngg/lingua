@@ -11,7 +11,6 @@ import { CardState, Rating } from "@/lib/fsrs/types";
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type ReviewCard = {
-  romanization: any;
   id: string;
   word: string;
   lemma: string;

@@ -6,7 +6,7 @@ export default function HomeNav() {
       style={{
         display: "flex",
         alignItems: "center",
-        justifyContent: "center"
+        justifyContent: "center",
       }}
     >
       <nav

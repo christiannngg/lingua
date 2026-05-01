@@ -23,7 +23,7 @@ export default async function Home() {
       >
         <HomeNav />
         <HomeHero />
-        {/* <LanguageStrip /> */}
+        <LanguageStrip />
       </main>
     );
   }

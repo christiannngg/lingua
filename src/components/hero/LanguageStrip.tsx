@@ -1,71 +1,54 @@
-const LANGUAGES = [
-  { flag: "🇪🇸", label: "Spanish" },
-  { flag: "🇮🇹", label: "Italian" },
-  { flag: "🇫🇷", label: "French" },
-];
+"use client";
+import { getAllLanguages } from "@/lib/languages.config";
+import * as Flags from "country-flag-icons/react/3x2";
+
+const languages = getAllLanguages();
+const items = [...languages, ...languages, ...languages, ...languages];
 
 export default function LanguageStrip() {
   return (
-    <div
-      style={{
-        maxWidth: "1060px",
-        margin: "0 auto",
-        padding: "0 48px 72px",
-        display: "flex",
-        alignItems: "center",
-        gap: "10px",
-        flexWrap: "wrap",
-      }}
-    >
-      <span
-        style={{
-          fontSize: "12px",
-          color: "#aaa9be",
-          fontWeight: 500,
-          textTransform: "uppercase",
-          letterSpacing: "0.07em",
-          marginRight: "4px",
-        }}
-      >
-        Now available in
-      </span>
+    <div style={{
+      width: "100%",
+      overflow: "hidden",
+      // padding: "0 0 72px",
+      maskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
+      WebkitMaskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
+    }}>
+      <style>{`
+        @keyframes marquee {
+          from { transform: translateX(0); }
+          to   { transform: translateX(-50%); }
+        }
+        .marquee-track {
+          display: flex;
+          width: max-content;
+          animation: marquee 25s linear infinite;
+          will-change: transform;
+          gap: 10px;
+        }
+        .marquee-track:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
 
-      {LANGUAGES.map((lang) => (
-        <div
-          key={lang.label}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-            background: "white",
-            border: "1px solid rgba(2,1,34,0.09)",
-            borderRadius: "99px",
-            padding: "5px 14px",
-            fontSize: "13px",
-            color: "#020122",
-            fontWeight: 400,
-          }}
-        >
-          <span>{lang.flag}</span>
-          {lang.label}
-        </div>
-      ))}
-
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "6px",
-          background: "white",
-          border: "1px dashed rgba(2,1,34,0.12)",
-          borderRadius: "99px",
-          padding: "5px 14px",
-          fontSize: "13px",
-          color: "#aaa9be",
-          fontWeight: 400,
-        }}
-      >
-        + More coming
+      <div className="marquee-track">
+        {items.map((lang, i) => {
+          const Flag = Flags[lang.flagCode as keyof typeof Flags];
+          return (
+            <div
+              key={`${lang.code}-${i}`}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "2px",
+              }}
+            >
+              {Flag && (
+                <Flag style={{ width: 175, height: 150}} />
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

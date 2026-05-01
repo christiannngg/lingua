@@ -82,11 +82,11 @@ export function FlashCard({
         {/* Card header — word + pos */}
         <div className="px-10 pt-16 pb-8 text-center border-b" style={{ borderColor: "rgba(202,125,249,0.1)" }}>
 
-          {card.romanization && (
+          {/* {card.romanization && (
             <p className="mb-2 text-sm font-medium" style={{ color: "var(--color-brand-500)", opacity: 0.7 }}>
               {card.romanization}
             </p>
-          )}
+          )} */}
 
           <div className="flex items-baseline justify-center gap-3">
             <span

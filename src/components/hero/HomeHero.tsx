@@ -66,7 +66,7 @@ export default function HomeHero() {
               margin: 0,
             }}>
               Every session builds on the last. Lingua tracks your vocabulary, catches your grammar
-              patterns, and recalls past conversations — so you&apos;re never starting from scratch.
+              patterns, and recalls past conversations so you&apos;re never starting from scratch.
             </p>
 
             <div style={{ display: "flex", gap: "12px" }}>

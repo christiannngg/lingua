@@ -1,4 +1,5 @@
 import Link from "next/link";
+import LinguaLogo from "../ui/LinguaLogo";
 
 export default function HomeNav() {
   return (
@@ -29,17 +30,7 @@ export default function HomeNav() {
           boxSizing: "border-box",
         }}
       >
-        {/* Logo */}
-        <div style={{ display: "flex", alignItems: "center", gap: "9px" }}>
-          <span style={{
-            fontSize: "1.5rem",
-            fontWeight: 700,
-            color: "#CA7DF9",
-            letterSpacing: "-0.3px",
-          }}>
-            Lingua
-          </span>
-        </div>
+        <LinguaLogo size={48} fontSize="24px" />
 
         {/* Actions */}
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>

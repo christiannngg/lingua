@@ -24,17 +24,17 @@ export const SPOTLIGHT_FEATURE: SpotlightFeature = {
   eyebrow: "Core Experience",
   title: "AI tutors that actually remember you",
   description:
-    "Most language apps reset every session. Lingua doesn't. Your AI conversation partner — Sofia, Marco, Camille, and more — recalls your past conversations, knows your interests, and picks up right where you left off. Real continuity. Real progress.",
+    "Most language apps reset every session. Lingua doesn't. Your AI conversation partner recalls your past conversations, knows your interests, and picks up right where you left off. Real continuity. Real progress.",
   bullets: [
     "Adapts to your CEFR level in real time",
     "Remembers context across all sessions",
-    "Never judges — always encourages",
+    "Always encourages & never judges",
   ],
   visual: {
     messages: [
-      { from: "ai", text: "Ciao! Last time we talked about your trip to Rome — did you end up going?" },
+      { from: "ai", text: "Ciao! Last time we talked about your trip to Rome. Did you end up going?" },
       { from: "user", text: "Sì! Ho visitato il Colosseo. Era incredibile." },
-      { from: "ai", text: "Perfetto! Your use of the past tense there was spot on. Let's build on that — how would you describe what you ate?" },
+      { from: "ai", text: "Perfetto! Your use of the past tense there was spot on. Let's build on that. How would you describe what you ate?" },
     ],
     badge: "Remembers your last 12 conversations",
   },
@@ -45,7 +45,7 @@ export const GRID_FEATURES: GridFeature[] = [
     icon: "◈",
     title: "Smart Vocabulary Tracking",
     description:
-      "Words from every conversation are automatically extracted, lemmatized, and added to your personal vocabulary bank — zero manual effort.",
+      "Words from every conversation are automatically extracted, lemmatized, and added to your personal vocabulary bank with zero manual effort.",
   },
   {
     icon: "⟳",
@@ -69,12 +69,12 @@ export const GRID_FEATURES: GridFeature[] = [
     icon: "▣",
     title: "Progress Dashboard",
     description:
-      "Activity heatmaps, vocabulary growth charts, a CEFR progress ring — your growth, visualized clearly.",
+      "Activity heatmaps, vocabulary growth charts, a CEFR progress ring to visualize your growth clearly.",
   },
   {
     icon: "◉",
     title: "9 Languages",
     description:
-      "Spanish, French, Italian, Portuguese, German, Japanese, Mandarin, Korean, Russian — all powered by the same intelligent engine.",
+      "Spanish, French, Italian, Portuguese, German, Japanese, Mandarin, Korean, Russian all powered by the same intelligent engine.",
   },
 ];

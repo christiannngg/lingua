@@ -1,5 +1,11 @@
+import { Brain } from "lucide-react";
 import { ChatBubble } from "./ChatBubble";
 import type { SpotlightFeature } from "./data";
+import IT from "country-flag-icons/react/3x2/IT";
+
+const brainIcon: Record<string, React.ReactNode> = {
+  "Smart Vocabulary Tracking": <Brain size={18} strokeWidth={1.5} color="#CA7DF9" />,
+};
 
 interface SpotlightCardProps {
   feature: SpotlightFeature;
@@ -28,7 +34,7 @@ export function SpotlightCard({ feature, visible, containerRef }: SpotlightCardP
   );
 }
 
-// ── Left panel: text content ──────────────────────────────────────────────────
+//  Left panel: text content
 
 function SpotlightText({ feature, visible }: { feature: SpotlightFeature; visible: boolean }) {
   return (
@@ -113,7 +119,7 @@ function SpotlightText({ feature, visible }: { feature: SpotlightFeature; visibl
   );
 }
 
-// ── Right panel: chat visual ──────────────────────────────────────────────────
+// Right panel: chat visual
 
 function SpotlightVisual({ feature, visible }: { feature: SpotlightFeature; visible: boolean }) {
   return (
@@ -161,18 +167,13 @@ function TutorHeader() {
     >
       <div
         style={{
-          width: "34px",
-          height: "34px",
-          borderRadius: "50%",
-          background: "linear-gradient(135deg, #CA7DF9, #9b4dd4)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "16px",
+          width: "25px",
+          height: "25px",
+          overflow: "hidden",
           flexShrink: 0,
         }}
       >
-        🇮🇹
+        <IT style={{ width: "100%", height: "100%", objectFit: "cover" }} />
       </div>
       <div>
         <div style={{ fontSize: "13px", fontWeight: 600, color: "#020122" }}>Sofia</div>
@@ -188,7 +189,6 @@ function TutorHeader() {
             boxShadow: "0 0 5px rgba(74,222,128,0.5)",
           }}
         />
-        <span style={{ fontSize: "11px", color: "#4ade80", fontWeight: 500 }}>Online</span>
       </div>
     </div>
   );
@@ -210,8 +210,8 @@ function MemoryBadge({ badge, visible }: { badge: string; visible: boolean }) {
         transition: "opacity 0.5s ease 1.2s",
       }}
     >
-      <span style={{ fontSize: "14px" }}>🧠</span>
-      <span style={{ fontSize: "12px", color: "#7a7896" }}>{badge}</span>
+      <Brain size={20} strokeWidth={1.5} color="#CA7DF9" />
+      <span style={{ fontSize: "12px", color: "#000000" }}>{badge}</span>
     </div>
   );
 }

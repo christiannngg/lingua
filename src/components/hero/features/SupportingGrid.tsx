@@ -1,5 +1,16 @@
 import type { GridFeature } from "./data";
 
+import { BookOpen, RefreshCw, Target, ScanSearch, BarChart2, Globe } from "lucide-react";
+
+const FEATURE_ICONS: Record<string, React.ReactNode> = {
+  "Smart Vocabulary Tracking": <BookOpen size={18} strokeWidth={1.5} color="#CA7DF9" />,
+  "Spaced Repetition Reviews": <RefreshCw size={18} strokeWidth={1.5} color="#CA7DF9" />,
+  "CEFR Assessment":           <Target    size={18} strokeWidth={1.5} color="#CA7DF9" />,
+  "Grammar Insights":          <ScanSearch size={18} strokeWidth={1.5} color="#CA7DF9" />,
+  "Progress Dashboard":        <BarChart2  size={18} strokeWidth={1.5} color="#CA7DF9" />,
+  "9 Languages":               <Globe     size={18} strokeWidth={1.5} color="#CA7DF9" />,
+};
+
 interface SupportingGridProps {
   features: GridFeature[];
   visible: boolean;
@@ -69,16 +80,18 @@ function FeatureCard({ feature, index, visible }: { feature: GridFeature; index:
         transform: visible ? "translateY(0)" : "translateY(20px)",
         transitionDelay: `${0.1 + index * 0.07}s`,
         transitionProperty: "opacity, transform, box-shadow",
-        transitionDuration: "0.5s, 0.5s, 0.2s",
+        transitionDuration: "0.5s, 0.25s, 0.2s",
         transitionTimingFunction: "ease",
       }}
       onMouseEnter={e => {
         const el = e.currentTarget as HTMLDivElement;
+        el.style.transitionDelay = "0s";
         el.style.boxShadow = "0 8px 32px rgba(202,125,249,0.1), 0 2px 8px rgba(2,1,34,0.05)";
         el.style.transform = "translateY(-2px)";
       }}
       onMouseLeave={e => {
         const el = e.currentTarget as HTMLDivElement;
+        el.style.transitionDelay = "0s";
         el.style.boxShadow = "0 1px 4px rgba(2,1,34,0.04)";
         el.style.transform = "translateY(0)";
       }}
@@ -97,7 +110,7 @@ function FeatureCard({ feature, index, visible }: { feature: GridFeature; index:
           color: "#CA7DF9",
         }}
       >
-        {feature.icon}
+        {FEATURE_ICONS[feature.title] ?? feature.icon}
       </div>
 
       <div>

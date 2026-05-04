@@ -56,7 +56,7 @@ function SectionHeader() {
           letterSpacing: "-0.04em",
         }}
       >
-        Not another flashcard app.
+        Enhance your language aquisition.
       </h2>
       <p
         style={{

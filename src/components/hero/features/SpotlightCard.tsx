@@ -3,10 +3,6 @@ import { ChatBubble } from "./ChatBubble";
 import type { SpotlightFeature } from "./data";
 import IT from "country-flag-icons/react/3x2/IT";
 
-const brainIcon: Record<string, React.ReactNode> = {
-  "Smart Vocabulary Tracking": <Brain size={18} strokeWidth={1.5} color="#CA7DF9" />,
-};
-
 interface SpotlightCardProps {
   feature: SpotlightFeature;
   visible: boolean;

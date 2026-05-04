@@ -22,7 +22,7 @@ export interface GridFeature {
 
 export const SPOTLIGHT_FEATURE: SpotlightFeature = {
   eyebrow: "Core Experience",
-  title: "AI tutors that actually remember you",
+  title: "AI tutors that remember you",
   description:
     "Most language apps reset every session. Lingua doesn't. Your AI conversation partner recalls your past conversations, knows your interests, and picks up right where you left off. Real continuity. Real progress.",
   bullets: [
@@ -42,37 +42,37 @@ export const SPOTLIGHT_FEATURE: SpotlightFeature = {
 
 export const GRID_FEATURES: GridFeature[] = [
   {
-    icon: "◈",
+    icon: "",
     title: "Smart Vocabulary Tracking",
     description:
       "Words from every conversation are automatically extracted, lemmatized, and added to your personal vocabulary bank with zero manual effort.",
   },
   {
-    icon: "⟳",
+    icon: "",
     title: "Spaced Repetition Reviews",
     description:
       "FSRS-5 scheduling means your reviews land right before you forget. Spend less time studying. Remember more.",
   },
   {
-    icon: "◎",
+    icon: "",
     title: "CEFR Assessment",
     description:
       "Start with a personalized placement test. Your level updates automatically as your conversations improve.",
   },
   {
-    icon: "⌇",
+    icon: "",
     title: "Grammar Insights",
     description:
       "Lingua quietly tracks grammar errors across sessions, surfacing your most common patterns so you know exactly what to fix.",
   },
   {
-    icon: "▣",
+    icon: "",
     title: "Progress Dashboard",
     description:
       "Activity heatmaps, vocabulary growth charts, a CEFR progress ring to visualize your growth clearly.",
   },
   {
-    icon: "◉",
+    icon: "",
     title: "9 Languages",
     description:
       "Spanish, French, Italian, Portuguese, German, Japanese, Mandarin, Korean, Russian all powered by the same intelligent engine.",

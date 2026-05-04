@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     template: "%s | Lingua",
   },
   description:
-    "An AI language partner that actually remembers you — conversational AI, semantic memory, and spaced repetition in one place.",
+    "An AI language partner that remembers you — conversational AI, semantic memory, and spaced repetition in one place.",
   keywords: ["language learning", "AI tutor", "Spanish", "Italian", "spaced repetition"],
 };
 

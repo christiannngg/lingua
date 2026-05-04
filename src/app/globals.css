@@ -28,3 +28,12 @@ body {
   padding: 0;
   overflow-x: hidden;
 }
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 999px #fff inset !important;
+  -webkit-text-fill-color: #020122 !important;
+  caret-color: #020122;
+}

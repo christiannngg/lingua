@@ -69,6 +69,7 @@ export default function SignUpPage() {
               placeholder="Enter your password"
               required
               minLength={8}
+              showToggle
             />
             <AuthSubmitButton
               pending={pending}

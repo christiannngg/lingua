@@ -48,6 +48,7 @@ export default function SignInPage() {
             placeholder="Enter your password"
             required
             minLength={8}
+            showToggle
           />
           <AuthSubmitButton pending={pending} label="Sign In" pendingLabel="Signing in…" />
         </form>

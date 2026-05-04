@@ -13,8 +13,8 @@ export function HeadNav({ enrolledCodes }: HeadNavProps) {
   const { toggle } = useSidebar();
 
   return (
-    <header
-      className="flex h-14 w-full items-center justify-between px-6 shrink-0"
+    <header 
+      className="flex h-14 w-full items-center justify-between pl-2 pr-4 shrink-0"
       style={{
         backgroundColor: "#FFFFFF",
         borderColor: "#f1f5f9",
@@ -22,7 +22,7 @@ export function HeadNav({ enrolledCodes }: HeadNavProps) {
       }}
     >
       {/* Left: hamburger + logo */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3" style={{ paddingLeft: "0px" }}>
         <button
           onClick={toggle}
           className="flex items-center justify-center transition-colors"
@@ -31,8 +31,8 @@ export function HeadNav({ enrolledCodes }: HeadNavProps) {
             background: "white",
             borderRadius: "50%",
             // border: "1px solid #f1f5f9",
-            width: "50px",
-            height: "33px",
+            width: "40px",
+            height: "40px",
             flexShrink: 0,
           }}
           onMouseEnter={(e) => {

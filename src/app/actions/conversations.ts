@@ -77,3 +77,17 @@ export async function deleteConversation(
     return { success: false, error: "Failed to delete conversation" };
   }
 }
+
+export async function getConversationsByLanguage(language: string) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Unauthenticated");
+
+  const userLanguage = await prisma.userLanguage.findUnique({
+    where: { userId_language: { userId: session.user.id, language } },
+    select: { id: true },
+  });
+
+  if (!userLanguage) return [];
+
+  return getConversations(userLanguage.id);
+}

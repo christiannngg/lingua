@@ -8,6 +8,8 @@ const DEFAULT_STATE = true; // expanded by default on first visit
 interface SidebarContextValue {
   isExpanded: boolean;
   toggle: () => void;
+  activeLanguage: string | null;
+  setActiveLanguage: (lang: string) => void;
 }
 
 const SidebarContext = createContext<SidebarContextValue | null>(null);
@@ -23,6 +25,22 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
       return DEFAULT_STATE;
     }
   });
+
+  const [activeLanguage, setActiveLanguageState] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      return localStorage.getItem("lingua:active-language");
+    } catch {
+      return null;
+    }
+  });
+
+  const setActiveLanguage = useCallback((lang: string) => {
+    setActiveLanguageState(lang);
+    try {
+      localStorage.setItem("lingua:active-language", lang);
+    } catch { }
+  }, []);
 
   // Hydration guard: re-read from localStorage on mount
   useEffect(() => {
@@ -49,7 +67,7 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <SidebarContext.Provider value={{ isExpanded, toggle }}>
+    <SidebarContext.Provider value={{ isExpanded, toggle, activeLanguage, setActiveLanguage }}>
       {children}
     </SidebarContext.Provider>
   );

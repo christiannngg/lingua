@@ -6,7 +6,6 @@ import { prisma } from "@/lib/db/prisma";
 import { AppShell } from "@/components/layout/AppShell";
 import { OfflineBanner } from "@/components/layout/OfflineBanner";
 import { getUserLanguages } from "@/app/actions/languages";
-import { getConversations } from "@/app/actions/conversations";
 import { isSupportedLanguage } from "@/lib/languages.config";
 
 const getCachedUserLanguages = cache(getUserLanguages);
@@ -40,15 +39,10 @@ export default async function ChatLayout({
   if (!userLanguage) redirect("/dashboard");
 
   const enrolledCodes = userLanguages.map((ul: UserLanguage) => ul.language);
-  const conversations = await getConversations(userLanguage.id);
 
   return (
     <>
-      <AppShell
-        enrolledCodes={enrolledCodes}
-        conversations={conversations}
-        chatLanguage={language}
-      >
+      <AppShell enrolledCodes={enrolledCodes}>
         {children}
       </AppShell>
       <OfflineBanner />

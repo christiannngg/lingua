@@ -7,6 +7,7 @@ import { getLanguageDisplayName } from "@/lib/languages.config";
 import { signOutAction } from "@/app/actions/auth";
 import { useActiveLanguage } from "@/hooks/useActiveLanguage";
 import { ConversationPanel } from "@/components/layout/ConversationPanel";
+import { useSidebar } from "@/components/layout/SidebarContext";
 import {
   LayoutDashboard,
   BookOpenText,
@@ -43,6 +44,7 @@ interface SideNavProps {
 export function SideNav({ languages, conversations, chatLanguage }: SideNavProps) {
   const pathname = usePathname();
   const activeLanguage = useActiveLanguage(languages);
+  const { isExpanded } = useSidebar();
   const isInChat = pathname.startsWith("/chat/");
 
   const chatHref = `/chat/${activeLanguage}`;
@@ -54,14 +56,18 @@ export function SideNav({ languages, conversations, chatLanguage }: SideNavProps
 
   return (
     <nav
-      className="flex h-100 w-56 shrink-0 flex-col rounded-2xl m-3 shadow-sm"
-      style={{ backgroundColor: "#FFFFFF", border: "1px solid #f1f5f9" }}
+      className="flex shrink-0 flex-col h-full overflow-hidden transition-[width] duration-200 ease-in-out"
+      style={{
+        width: isExpanded ? "224px" : "56px",
+        backgroundColor: "#FFFFFF",
+      }}
     >
-      {isInChat && conversations !== undefined && chatLanguage !== undefined ? (
+      {/* When in chat AND expanded, show ConversationPanel; otherwise show standard nav */}
+      {isInChat && conversations !== undefined && chatLanguage !== undefined && isExpanded ? (
         <ConversationPanel conversations={conversations} language={chatLanguage} />
       ) : (
-        <div className="flex h-full flex-col gap-1 p-4">
-          <ul className="flex flex-col gap-0.5">
+        <div className="flex h-full flex-col gap-1 py-4 overflow-hidden">
+          <ul className="flex flex-col gap-0.5 px-2">
             {allNavItems.map((item) => {
               const isActive =
                 item.href === "/dashboard"
@@ -72,10 +78,12 @@ export function SideNav({ languages, conversations, chatLanguage }: SideNavProps
                 <li key={item.label}>
                   <Link
                     href={item.href as never}
+                    title={!isExpanded ? item.label : undefined}
                     className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
                     style={{
                       backgroundColor: isActive ? "#F3E8FF" : "transparent",
                       color: isActive ? "#7c3aed" : "#64748b",
+                      justifyContent: isExpanded ? "flex-start" : "center",
                     }}
                     onMouseEnter={(e) => {
                       if (!isActive) {
@@ -85,23 +93,29 @@ export function SideNav({ languages, conversations, chatLanguage }: SideNavProps
                     }}
                     onMouseLeave={(e) => {
                       if (!isActive) {
-                        (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
-                          "transparent";
+                        (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "transparent";
                         (e.currentTarget as HTMLAnchorElement).style.color = "#64748b";
                       }
                     }}
                   >
-                    <item.icon size={18} aria-hidden="true" strokeWidth={isActive ? 2.5 : 1.75} />
-                    {item.label}
+                    <item.icon
+                      size={18}
+                      aria-hidden="true"
+                      strokeWidth={isActive ? 2.5 : 1.75}
+                      style={{ flexShrink: 0 }}
+                    />
+                    {isExpanded && (
+                      <span className="truncate">{item.label}</span>
+                    )}
                   </Link>
                 </li>
               );
             })}
           </ul>
 
-          {/* Languages widget */}
-          {languages.length > 0 && (
-            <div className="mt-auto rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm">
+          {/* Languages widget — only shown when expanded */}
+          {isExpanded && languages.length > 0 && (
+            <div className="mt-auto mx-2 rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm">
               <p className="mb-2.5 text-xs font-semibold text-slate-400 uppercase tracking-widest">
                 Learning
               </p>
@@ -114,12 +128,32 @@ export function SideNav({ languages, conversations, chatLanguage }: SideNavProps
             </div>
           )}
 
+          {/* Collapsed: language flags stacked, no labels */}
+          {!isExpanded && languages.length > 0 && (
+            <div className="mt-auto flex flex-col items-center gap-1.5 pb-2 px-2">
+              {languages.map((lang) => (
+                <LanguageFlag
+                  key={lang}
+                  language={lang}
+                  className="w-5 h-auto rounded-sm"
+                />
+              ))}
+            </div>
+          )}
+
           {/* Logout */}
-          <form action={signOutAction} className={languages.length > 0 ? "mt-3" : "mt-auto"}>
+          <form
+            action={signOutAction}
+            className={`px-2 ${isExpanded && languages.length === 0 ? "mt-auto" : ""} ${!isExpanded ? "" : "mt-2"}`}
+          >
             <button
               type="submit"
+              title={!isExpanded ? "Log out" : undefined}
               className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
-              style={{ color: "#94a3b8" }}
+              style={{
+                color: "#94a3b8",
+                justifyContent: isExpanded ? "flex-start" : "center",
+              }}
               onMouseEnter={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#faf5ff";
                 (e.currentTarget as HTMLButtonElement).style.color = "#7c3aed";
@@ -129,8 +163,8 @@ export function SideNav({ languages, conversations, chatLanguage }: SideNavProps
                 (e.currentTarget as HTMLButtonElement).style.color = "#94a3b8";
               }}
             >
-              <LogOut size={18} aria-hidden="true" strokeWidth={1.75} />
-              Log out
+              <LogOut size={18} aria-hidden="true" strokeWidth={1.75} style={{ flexShrink: 0 }} />
+              {isExpanded && "Log out"}
             </button>
           </form>
         </div>

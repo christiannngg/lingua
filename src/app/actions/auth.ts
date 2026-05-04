@@ -40,7 +40,7 @@ export async function signInAction(formData: FormData): Promise<AuthActionResult
     return { success: false, error: "Invalid email or password" };
   }
 
-  redirect("/onboarding" as never);
+  redirect("/dashboard" as never);
 }
 
 export async function signOutAction(): Promise<void> {

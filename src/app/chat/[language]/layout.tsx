@@ -3,8 +3,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db/prisma";
-import { SideNav } from "@/components/layout/SideNav";
-import { HeadNav } from "@/components/layout/HeadNav";
+import { AppShell } from "@/components/layout/AppShell";
 import { OfflineBanner } from "@/components/layout/OfflineBanner";
 import { getUserLanguages } from "@/app/actions/languages";
 import { getConversations } from "@/app/actions/conversations";
@@ -44,17 +43,15 @@ export default async function ChatLayout({
   const conversations = await getConversations(userLanguage.id);
 
   return (
-    <div className="flex flex-col h-screen">
-      <HeadNav enrolledCodes={enrolledCodes} />
-      <div className="flex flex-1 overflow-hidden">
-        <SideNav
-          languages={enrolledCodes}
-          conversations={conversations}
-          chatLanguage={language}
-        />
-        <div className="flex-1 overflow-auto">{children}</div>
-      </div>
+    <>
+      <AppShell
+        enrolledCodes={enrolledCodes}
+        conversations={conversations}
+        chatLanguage={language}
+      >
+        {children}
+      </AppShell>
       <OfflineBanner />
-    </div>
+    </>
   );
 }

@@ -3,31 +3,45 @@
 import Link from "next/link";
 import { Flame, Bell, TextAlignJustify } from "lucide-react";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
+import { useSidebar } from "@/components/layout/SidebarContext";
 
 interface HeadNavProps {
   enrolledCodes: string[];
 }
 
 export function HeadNav({ enrolledCodes }: HeadNavProps) {
+  const { toggle } = useSidebar();
+
   return (
     <header
-      className="flex h-14 w-full items-center justify-between px-6 border-solid"
+      className="flex h-14 w-full items-center justify-between px-6 shrink-0"
       style={{
-        backgroundColor: "transparent",
+        backgroundColor: "#FFFFFF",
+        borderColor: "#f1f5f9",
+        zIndex: 10,
       }}
     >
       {/* Left: hamburger + logo */}
       <div className="flex items-center gap-3">
         <button
-          className="flex items-center justify-center transition-colors hover:bg-slate-50"
+          onClick={toggle}
+          className="flex items-center justify-center transition-colors"
           style={{
-            color: "#000000",
+            color: "#64748b",
             background: "white",
-            borderRadius: "20px",
-            border: "1px solid #f1f5f9",
+            borderRadius: "50%",
+            // border: "1px solid #f1f5f9",
             width: "50px",
             height: "33px",
             flexShrink: 0,
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#faf5ff";
+            (e.currentTarget as HTMLButtonElement).style.color = "#7c3aed";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.backgroundColor = "white";
+            (e.currentTarget as HTMLButtonElement).style.color = "#64748b";
           }}
           aria-label="Toggle sidebar"
         >

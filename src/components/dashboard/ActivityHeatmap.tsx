@@ -10,27 +10,16 @@ type Props = {
 };
 
 const MONTH_NAMES = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
 
 const DAY_ROW_LABELS: Record<number, string> = { 1: "Mon", 3: "Wed", 5: "Fri" };
 
 function cellColor(count: number, isFuture: boolean, isBeforeSignup: boolean): string {
-  if (isFuture) return "#eef0f3";
-  if (isBeforeSignup) return "#f1f5f9";
+  if (isFuture || isBeforeSignup) return "#e2e8f0";
   if (count === 0) return "#e2e8f0";
-  if (count === 1) return "#ede9fe";
+  if (count === 1) return "#e1c0f6";
   if (count <= 3) return "#CA7DF9";
   return "#7c3aed";
 }
@@ -38,32 +27,17 @@ function cellColor(count: number, isFuture: boolean, isBeforeSignup: boolean): s
 // "2026-03-05" → "March 5th"
 function formatTooltipDate(dateStr: string): string {
   const [, m, d] = dateStr.split("-").map(Number) as [number, number, number];
-  const monthName =
-    [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ][(m ?? 1) - 1] ?? "";
+  const monthName = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+  ][(m ?? 1) - 1] ?? "";
   const day = d ?? 1;
   const suffix =
-    day >= 11 && day <= 13
-      ? "th"
-      : day % 10 === 1
-        ? "st"
-        : day % 10 === 2
-          ? "nd"
-          : day % 10 === 3
-            ? "rd"
-            : "th";
+    day >= 11 && day <= 13 ? "th"
+    : day % 10 === 1 ? "st"
+    : day % 10 === 2 ? "nd"
+    : day % 10 === 3 ? "rd"
+    : "th";
   return `${monthName} ${day}${suffix}`;
 }
 
@@ -150,7 +124,7 @@ export function ActivityHeatmap({ data, year }: Props) {
                 style={{
                   height: CELL,
                   fontSize: 10,
-                  color: "#94a3b8",
+                  color: "#000000",
                   lineHeight: `${CELL}px`,
                   textAlign: "right",
                   paddingRight: 4,
@@ -171,7 +145,7 @@ export function ActivityHeatmap({ data, year }: Props) {
                     position: "absolute",
                     left: col * STEP,
                     fontSize: 11,
-                    color: "#94a3b8",
+                    color: "#000000",
                     whiteSpace: "nowrap",
                   }}
                 >
@@ -222,8 +196,8 @@ export function ActivityHeatmap({ data, year }: Props) {
 
       {/* Legend */}
       <div className="flex items-center gap-1.5 mt-3">
-        <span style={{ fontSize: 11, color: "#94a3b8", marginRight: 2 }}>Less</span>
-        {(["#e2e8f0", "#ede9fe", "#CA7DF9", "#7c3aed"] as const).map((color) => (
+        <span style={{ fontSize: 11, color: "#ae9eb8", marginRight: 2 }}>Less</span>
+        {(["#e2e8f0", "#e1c0f6", "#CA7DF9", "#af2eff"] as const).map((color) => (
           <div
             key={color}
             style={{
@@ -235,13 +209,13 @@ export function ActivityHeatmap({ data, year }: Props) {
             }}
           />
         ))}
-        <span style={{ fontSize: 11, color: "#94a3b8", marginLeft: 2 }}>More</span>
+        <span style={{ fontSize: 11, color: "#ae9eb8", marginLeft: 2 }}>More</span>
       </div>
 
       {/* Tooltip */}
       {tooltip && (
         <div
-          className="fixed z-50 pointer-events-none bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 shadow-lg"
+          className="absolute z-50 pointer-events-none bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 shadow-lg"
           style={{
             left: tooltip.x,
             top: tooltip.y - 8,
@@ -254,7 +228,7 @@ export function ActivityHeatmap({ data, year }: Props) {
             <>
               <p className="text-slate-600" style={{ color: "#020122" }}>
                 {" "}
-                {tooltip.count} conversation{tooltip.count !== 1 ? "s" : ""}on{" "}
+                {tooltip.count} conversation{tooltip.count !== 1 ? "s" : ""} on {" "}
                 {formatTooltipDate(tooltip.date)}
               </p>
             </>

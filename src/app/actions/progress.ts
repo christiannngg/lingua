@@ -406,28 +406,24 @@ export type ActivityDay = {
   isFuture: boolean; // true only for dates after today
   isBeforeSignup: boolean; // true for dates before the user created their account
 };
-
 export async function getActivityHeatmap(language: string): Promise<ActivityDay[]> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Unauthenticated");
 
-  const [user, userLanguage] = await Promise.all([
-    prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { createdAt: true },
-    }),
-    prisma.userLanguage.findUnique({
-      where: { userId_language: { userId: session.user.id, language } },
-      select: { id: true },
-    }),
-  ]);
+  const userLanguage = await prisma.userLanguage.findUnique({
+    where: { userId_language: { userId: session.user.id, language } },
+    select: { id: true, createdAt: true },
+  });
 
   if (!userLanguage) return [];
 
   const now = new Date();
   const yearStart = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
   const yearEnd = new Date(Date.UTC(now.getUTCFullYear(), 11, 31));
-  const activeStart = user && user.createdAt > yearStart ? user.createdAt : yearStart;
+
+  // Use language enrollment date, not account creation date.
+  // A user may have signed up months before adding this language.
+  const activeStart = userLanguage.createdAt > yearStart ? userLanguage.createdAt : yearStart;
 
   const conversations = await prisma.conversation.findMany({
     where: {

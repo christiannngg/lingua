@@ -9,13 +9,12 @@ import { signOutAction } from "@/app/actions/auth";
 import { useActiveLanguage } from "@/hooks/useActiveLanguage";
 import { useSidebar } from "@/components/layout/SidebarContext";
 import { getConversationsByLanguage } from "@/app/actions/conversations";
-import { MessageSquare as MessageSquareIcon } from "lucide-react";
 import {
   LayoutDashboard,
   BookOpenText,
-  Languages,
+  BookA,
   Settings,
-  MessageSquare,
+  MessagesSquare,
   LucideIcon,
   LogOut,
 } from "lucide-react";
@@ -27,7 +26,7 @@ const STATIC_NAV_ITEMS: {
 }[] = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/dashboard/review", label: "Review", icon: BookOpenText },
-    { href: "/dashboard/vocabulary", label: "Vocabulary", icon: Languages },
+    { href: "/dashboard/vocabulary", label: "Vocabulary", icon: BookA },
     { href: "/settings", label: "Settings", icon: Settings },
   ];
 
@@ -64,7 +63,7 @@ export function SideNav({ languages }: SideNavProps) {
 
   const allNavItems = [
     ...STATIC_NAV_ITEMS,
-    { href: chatHref, label: "Chat", icon: MessageSquare } as const,
+    { href: chatHref, label: "Chat", icon: MessagesSquare } as const,
   ];
 
   return (
@@ -92,13 +91,13 @@ export function SideNav({ languages }: SideNavProps) {
                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
                   style={{
                     backgroundColor: isActive ? "#F3E8FF" : "transparent",
-                    color: isActive ? "#7c3aed" : "#64748b",
+                    color: isActive ? "#CA7DF9" : "#64748b",
                     justifyContent: isExpanded ? "flex-start" : "center",
                   }}
                   onMouseEnter={(e) => {
                     if (!isActive) {
                       (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "#faf5ff";
-                      (e.currentTarget as HTMLAnchorElement).style.color = "#7c3aed";
+                      (e.currentTarget as HTMLAnchorElement).style.color = "#CA7DF9";
                     }
                   }}
                   onMouseLeave={(e) => {
@@ -114,7 +113,7 @@ export function SideNav({ languages }: SideNavProps) {
                     strokeWidth={isActive ? 2.5 : 1.75}
                     style={{ flexShrink: 0 }}
                   />
-                  {isExpanded && <span className="truncate">{item.label}</span>}
+                  {isExpanded && <span className="truncate" >{item.label}</span>}
                 </Link>
               </li>
             );
@@ -124,8 +123,8 @@ export function SideNav({ languages }: SideNavProps) {
         {/* Conversations section — expanded only */}
         {isExpanded && conversations.length > 0 && (
           <div className="mx-2 mt-2">
-            <p className="mb-1.5 px-1 text-xs font-semibold text-slate-400 uppercase tracking-widest">
-              Recent
+            <p className=" px-3 text-xs text-slate-500">
+              Recents
             </p>
             <ul className="flex flex-col gap-0.5">
               {conversations.slice(0, 8).map((conv) => (
@@ -143,7 +142,6 @@ export function SideNav({ languages }: SideNavProps) {
                       (e.currentTarget as HTMLAnchorElement).style.color = "#64748b";
                     }}
                   >
-                    <MessageSquareIcon size={12} strokeWidth={1.75} style={{ flexShrink: 0 }} />
                     <span className="truncate">{conv.title ?? "New conversation"}</span>
                   </Link>
                 </li>

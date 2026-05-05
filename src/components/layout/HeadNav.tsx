@@ -4,13 +4,18 @@ import Link from "next/link";
 import { Flame, Bell, TextAlignJustify } from "lucide-react";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { useSidebar } from "@/components/layout/SidebarContext";
+import LinguaLogo from "../ui/LinguaLogo";
 
 interface HeadNavProps {
   enrolledCodes: string[];
+  streakCount?: number
 }
 
-export function HeadNav({ enrolledCodes }: HeadNavProps) {
+export function HeadNav({ enrolledCodes, streakCount = 0 }: HeadNavProps) {
   const { toggle } = useSidebar();
+
+  const hasStreak = streakCount > 0;
+  const isHotStreak = streakCount >= 7;
 
   return (
     <header 
@@ -48,9 +53,7 @@ export function HeadNav({ enrolledCodes }: HeadNavProps) {
           <TextAlignJustify size={18} />
         </button>
         <Link href="/dashboard">
-          <span className="text-xl font-bold" style={{ color: "#CA7DF9" }}>
-            Lingua
-          </span>
+           <LinguaLogo size={28} fontSize="20px" />
         </Link>
       </div>
 
@@ -64,8 +67,13 @@ export function HeadNav({ enrolledCodes }: HeadNavProps) {
           style={{ color: "#FF6B35" }}
           aria-label="Streak"
         >
-          <Flame size={18} fill="#FF6B35" />
-          <span>0</span>
+          <Flame
+            size={18}
+            fill={hasStreak ? "#FF6B35" : "none"}
+            stroke={hasStreak ? "#FF6B35" : "#94a3b8"}
+            strokeWidth={hasStreak ? 0 : 2}
+          />
+          <span>{streakCount}</span>
         </button>
 
         {/* Notification bell */}
@@ -74,7 +82,7 @@ export function HeadNav({ enrolledCodes }: HeadNavProps) {
           style={{ color: "var(--foreground)" }}
           aria-label="Notifications"
         >
-          <Bell size={24} />
+          <Bell size={24} color="black" />
         </button>
 
         {/* Avatar */}

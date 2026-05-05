@@ -60,7 +60,7 @@ export function LanguageSwitcher({ enrolledCodes }: Props) {
         className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors"
         style={{
           backgroundColor: open ? "#FFFFFF14" : "transparent",
-          color: "var(--foreground)",
+          color: "black",
           border: "1px solid var(--border)",
         }}
         aria-haspopup="listbox"
@@ -103,7 +103,7 @@ export function LanguageSwitcher({ enrolledCodes }: Props) {
                 className="flex w-full items-center gap-3 px-3 py-2 text-sm transition-colors"
                 style={{
                   backgroundColor: isActive ? "rgba(202, 125, 249, 0.10)" : "transparent",
-                  color: isActive ? "#7c3aed" : "#020122",
+                  color: isActive ? "#CA7DF9" : "#020122",
                   fontWeight: isActive ? 600 : 400,
                 }}
                 onMouseEnter={(e) => {

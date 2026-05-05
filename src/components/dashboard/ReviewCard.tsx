@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAnimate, animate } from "framer-motion";
 import { LanguageFlag } from "@/components/ui/LanguageFlag";
 import type { SupportedLanguage } from "@/lib/languages.config";
+import { useActiveLanguage } from "@/hooks/useActiveLanguage";
+import { BookOpenText } from "lucide-react";
 
 type Props = {
   dueCount: number;
@@ -15,8 +17,9 @@ export function ReviewCard({ dueCount, languages }: Props) {
   const router = useRouter();
   const [scope, animateScope] = useAnimate();
   const countRef = useRef<HTMLSpanElement>(null);
+  const activeLanguage = useActiveLanguage(languages);
 
-  // ── Count-up animation on mount ──────────────────────────────────────────
+  //  Count-up animation on mount 
   useEffect(() => {
     if (dueCount === 0 || !countRef.current) return;
 
@@ -33,7 +36,7 @@ export function ReviewCard({ dueCount, languages }: Props) {
     return () => controls.stop();
   }, [dueCount]);
 
-  // ── Card entrance ────────────────────────────────────────────────────────
+  //  Card entrance 
   useEffect(() => {
     animateScope(
       scope.current,
@@ -50,13 +53,9 @@ export function ReviewCard({ dueCount, languages }: Props) {
       {/* Icon */}
       <div
         className="w-12 h-12 rounded-xl flex items-center justify-center"
-        style={{ background: "#F3E8FF" }}
+        style={{ background: "#CA7DF9" }}
       >
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-          <rect x="3" y="5" width="16" height="12" rx="2" fill="#CA7DF9" />
-          <rect x="6" y="2" width="10" height="12" rx="2" fill="#a855f7" />
-          <rect x="9" y="0" width="4" height="12" rx="2" fill="#7c3aed" />
-        </svg>
+        <BookOpenText size={22} color="#ffffff"/>
       </div>
 
       {/* Text */}
@@ -83,9 +82,7 @@ export function ReviewCard({ dueCount, languages }: Props) {
       {/* Language flags */}
       {languages.length > 0 && (
         <div className="flex items-center gap-1">
-          {languages.slice(0, 5).map((lang) => (
-            <LanguageFlag key={lang} language={lang} />
-          ))}
+           <LanguageFlag language={activeLanguage} className="w-5 h-auto rounded-sm" />
         </div>
       )}
 
@@ -97,10 +94,11 @@ export function ReviewCard({ dueCount, languages }: Props) {
         style={{
           background: dueCount > 0 ? "#020122" : "#e2e8f0",
           color: dueCount > 0 ? "white" : "#94a3b8",
+          cursor: "pointer"
         }}
         onMouseEnter={(e) => {
           if (dueCount > 0)
-            (e.currentTarget as HTMLButtonElement).style.background = "#1e1b4b";
+            (e.currentTarget as HTMLButtonElement).style.background = "#CA7DF9";
         }}
         onMouseLeave={(e) => {
           if (dueCount > 0)

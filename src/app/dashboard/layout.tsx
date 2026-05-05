@@ -2,6 +2,7 @@ import { cache } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { getUserLanguages } from "@/app/actions/languages";
 import { OfflineBanner } from "@/components/layout/OfflineBanner";
+import { getGlobalStreak } from "../actions/progress";
 
 const getCachedUserLanguages = cache(getUserLanguages);
 
@@ -12,12 +13,15 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const userLanguages = await getCachedUserLanguages();
+  const [userLanguages, streakData] = await Promise.all([
+    getCachedUserLanguages(),
+    getGlobalStreak(),
+  ]);
   const enrolledCodes = userLanguages.map((ul: UserLanguage) => ul.language);
 
   return (
     <>
-      <AppShell enrolledCodes={enrolledCodes}>
+      <AppShell enrolledCodes={enrolledCodes} streakCount={streakData.currentStreak}>
         {children}
       </AppShell>
       <OfflineBanner />

@@ -523,3 +523,93 @@ export async function getMasteryProgress(language: string): Promise<MasteryProgr
     nextMilestone,
   };
 }
+
+export type StreakData = {
+  currentStreak: number;
+  longestStreak: number;
+};
+
+export async function getGlobalStreak(): Promise<StreakData> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) return { currentStreak: 0, longestStreak: 0 };
+
+  // Get all userLanguage IDs for this user
+  const userLanguages = await prisma.userLanguage.findMany({
+    where: { userId: session.user.id },
+    select: { id: true },
+  });
+
+  if (userLanguages.length === 0) return { currentStreak: 0, longestStreak: 0 };
+
+  const userLanguageIds = userLanguages.map((ul) => ul.id);
+
+  // Fetch all conversation dates across all languages, past 365 days
+  const since = new Date();
+  since.setUTCDate(since.getUTCDate() - 365);
+
+  const conversations = await prisma.conversation.findMany({
+    where: {
+      userLanguageId: { in: userLanguageIds },
+      createdAt: { gte: since },
+    },
+    select: { createdAt: true },
+  });
+
+  // Build a Set of active date strings in UTC ("2026-05-04")
+  const activeDates = new Set<string>();
+  for (const c of conversations) {
+    activeDates.add(c.createdAt.toISOString().slice(0, 10));
+  }
+
+  // Walk backwards from today to compute currentStreak
+  const today = new Date();
+  let currentStreak = 0;
+  const cursor = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+
+  while (true) {
+    const dateStr = cursor.toISOString().slice(0, 10);
+    if (activeDates.has(dateStr)) {
+      currentStreak++;
+      cursor.setUTCDate(cursor.getUTCDate() - 1);
+    } else {
+      // Allow a 1-day grace: if today has no activity yet, check yesterday
+      // before breaking — so a streak doesn't reset at midnight
+      if (currentStreak === 0) {
+        cursor.setUTCDate(cursor.getUTCDate() - 1);
+        const yesterdayStr = cursor.toISOString().slice(0, 10);
+        if (activeDates.has(yesterdayStr)) {
+          // yesterday was active — streak is still alive, count from yesterday
+          currentStreak++;
+          cursor.setUTCDate(cursor.getUTCDate() - 1);
+          continue;
+        }
+      }
+      break;
+    }
+  }
+
+  // Compute longestStreak by scanning all active dates in order
+  const sortedDates = [...activeDates].sort();
+  let longestStreak = 0;
+  let runLength = 0;
+  let prevDate: string | null = null;
+
+  for (const dateStr of sortedDates) {
+    if (prevDate === null) {
+      runLength = 1;
+    } else {
+      const prev = new Date(prevDate);
+      const curr = new Date(dateStr);
+      const diffDays = (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
+      if (diffDays === 1) {
+        runLength++;
+      } else {
+        runLength = 1;
+      }
+    }
+    if (runLength > longestStreak) longestStreak = runLength;
+    prevDate = dateStr;
+  }
+
+  return { currentStreak, longestStreak };
+}

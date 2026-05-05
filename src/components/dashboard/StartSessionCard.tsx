@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import type { SupportedLanguage } from "@/lib/languages.config";
+import Image from "next/image";
+import LinguaTongue from '../../../public/logo-no-bg.png'
 
 type Props = {
   language: SupportedLanguage;
@@ -22,20 +24,20 @@ export function StartSessionCard({ language }: Props) {
         .start-session-card {
           background: linear-gradient(
             135deg,
-            #5b21b6 0%,
-            #7c3aed 25%,
-            #a855f7 50%,
-            #CA7DF9 75%,
-            #7c3aed 100%
+            #d8a7f6 0%,
+            #d193f8 25%,
+            #CA7DF9 50%,
+            #c775f9 75%,
+            #c268fa 100%
           );
           background-size: 300% 300%;
           animation: gradientFlow 10s ease-in-out infinite;
         }
 
         @keyframes gradientShift {
-          0%   { opacity: 0.6; transform: scale(1)    rotate(0deg); }
+          0%   { opacity: 1; transform: scale(1)    rotate(0deg); }
           50%  { opacity: 1;   transform: scale(1.08) rotate(6deg); }
-          100% { opacity: 0.6; transform: scale(1)    rotate(0deg); }
+          100% { opacity: 1; transform: scale(1)    rotate(0deg); }
         }
         .start-session-orb {
           animation: gradientShift 6s ease-in-out infinite;
@@ -51,18 +53,17 @@ export function StartSessionCard({ language }: Props) {
         }
       `}</style>
 
-      {/* Decorative animated orb */}
+      {/* Decorative animatded orb */}
       <div
         className="start-session-orb absolute right-6 top-1/2 -translate-y-1/2 rounded-full flex items-center justify-center"
-        style={{ width: 140, height: 140, background: "rgba(255,255,255,0.10)" }}
+        style={{ width: 140, height: 140, background: "rgb(255, 255, 255)" }}
       >
-        <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
-          <path
-            d="M28 8L34 22H48L36.5 30.5L40.5 46L28 37L15.5 46L19.5 30.5L8 22H22L28 8Z"
-            fill="white"
-            fillOpacity="0.9"
-          />
-        </svg>
+        <Image
+          src={LinguaTongue}
+          alt="Lingua logo"
+          width={100}
+          height={100}
+        />
       </div>
 
       {/* Content */}
@@ -74,7 +75,7 @@ export function StartSessionCard({ language }: Props) {
           transition={{ delay: 0.3, duration: 0.4 }}
         >
           <span className="online-dot w-1.5 h-1.5 rounded-full bg-emerald-300" />
-          <span className="text-white/90 text-xs font-medium tracking-wide">AI TUTOR ONLINE</span>
+          <span className="text-white/90 text-xs font-medium tracking-wide">AI TUTOR</span>
         </motion.div>
 
         <motion.h2
@@ -89,10 +90,11 @@ export function StartSessionCard({ language }: Props) {
         </motion.h2>
 
         <motion.p
-          className="text-white/75 text-sm leading-relaxed"
+          className="text-white text-sm leading-relaxed"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.45, duration: 0.4 }}
+        
         >
           Your AI tutor is ready to practice real-world scenarios with you.
         </motion.p>
@@ -107,12 +109,12 @@ export function StartSessionCard({ language }: Props) {
         <motion.button
           onClick={() => router.push(`/chat/${language}` as never)}
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-white rounded-xl font-semibold text-sm"
-          style={{ color: "#7c3aed" }}
-          whileHover={{ scale: 1.03, backgroundColor: "rgba(255,255,255,0.92)" }}
+          style={{ color: "#000000" }}
+          whileHover={{ scale: 1.03, backgroundColor: "rgba(255,255,255,0.92)", cursor: "pointer" }}
           whileTap={{ scale: 0.97 }}
           transition={{ type: "spring", stiffness: 400, damping: 20 }}
         >
-          Start Session
+          Chat now
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path
               d="M2.5 7H11.5M11.5 7L7.5 3M11.5 7L7.5 11"

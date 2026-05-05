@@ -22,7 +22,7 @@ import type {
   MasteryProgress,
 } from "@/app/actions/progress";
 
-// ── Animation primitives ─────────────────────────────────────────────────────
+// Animation primitives 
 
 const container = {
   hidden: {},

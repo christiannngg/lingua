@@ -20,6 +20,7 @@ export type CefrDataPoint = {
   cefrLevel: string;
   numericLevel: number;
   isLevelUp: boolean;
+  isLevelDown: boolean;
 };
 
 export type VocabGrowthPoint = {
@@ -103,12 +104,14 @@ export async function getCefrHistory(language: string): Promise<CefrDataPoint[]>
     const prev = index > 0 ? arr[index - 1] : null;
     const prevNumeric = prev ? (CEFR_TO_NUMERIC[prev.cefrLevel] ?? 1) : null;
     const isLevelUp = prevNumeric !== null && numericLevel > prevNumeric;
+    const isLevelDown = prevNumeric !== null && numericLevel < prevNumeric;
 
     return {
       date: entry.takenAt.toISOString().slice(0, 10),
       cefrLevel: entry.cefrLevel,
       numericLevel,
       isLevelUp,
+      isLevelDown
     };
   });
 

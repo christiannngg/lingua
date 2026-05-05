@@ -42,5 +42,7 @@ Focus on progress made, not gaps. Write in second person ("you"). Never use bull
       ? (response.content[0] as { type: "text"; text: string }).text
       : "";
 
+  if (!text.trim()) throw new Error("[generateWeeklySummary] Empty response from model");
+
   return text.trim();
 }

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { generateWeeklySummary } from "@/lib/ai/weekly-summary";
+import { weeklySummaryLimiter } from "@/ratelimit";
 
 const CEFR_TO_NUMERIC: Record<string, number> = {
   A1: 1,
@@ -242,9 +243,14 @@ export async function getGrammarHeatmap(language: string): Promise<GrammarConcep
   return [...active, ...mastered];
 }
 
-export async function getWeeklySummary(language: string): Promise<WeeklySummaryResult | null> {
+export async function getWeeklySummary(language: string, forceRefresh = false): Promise<WeeklySummaryResult | null> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Unauthenticated");
+
+  if (forceRefresh) {
+    const { success } = await weeklySummaryLimiter.limit(session.user.id);
+    if (!success) throw new Error("Rate limit exceeded. Try again later.");
+  }
 
   const userLanguage = await prisma.userLanguage.findUnique({
     where: {
@@ -262,7 +268,7 @@ export async function getWeeklySummary(language: string): Promise<WeeklySummaryR
     where: { userLanguageId: userLanguage.id },
   });
 
-  if (cached && cached.generatedAt > sevenDaysAgo) {
+  if (!forceRefresh && cached && cached.generatedAt > sevenDaysAgo) {
     return {
       content: cached.content,
       generatedAt: cached.generatedAt.toISOString().slice(0, 10),

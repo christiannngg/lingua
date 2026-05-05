@@ -13,11 +13,18 @@ type Props = {
 export function WeeklySummary({ initial, language }: Props) {
   const [summary, setSummary] = useState<WeeklySummaryResult | null>(initial);
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
   function handleRefresh() {
+    setError(null);
     startTransition(async () => {
-      const fresh = await getWeeklySummary(language);
-      setSummary(fresh);
+      try {
+        const fresh = await getWeeklySummary(language, true);
+        setSummary(fresh);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Something went wrong.";
+        setError(message);
+      }
     });
   }
 
@@ -32,7 +39,7 @@ export function WeeklySummary({ initial, language }: Props) {
         <p className="text-slate-600 text-sm leading-relaxed">
           No activity this week yet.
           <br />
-          <span className="text-slate-600">Start a conversation to generate your summary.</span>
+          <span className="text-slate-400">Start a conversation to generate your summary.</span>
         </p>
       </motion.div>
     );
@@ -42,7 +49,7 @@ export function WeeklySummary({ initial, language }: Props) {
     <div className="p-5 space-y-3">
       <AnimatePresence mode="wait">
         <motion.p
-          key={summary.content}
+          key={isPending ? "pending" : summary.content}
           className="text-slate-600 text-sm leading-relaxed"
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
@@ -58,15 +65,25 @@ export function WeeklySummary({ initial, language }: Props) {
       </AnimatePresence>
 
       <div className="flex items-center justify-between pt-1">
-        <span className="text-slate-600 text-xs">Generated {summary.generatedAt}</span>
+        <span className="text-slate-400 text-xs" suppressHydrationWarning>
+          Generated{" "}
+          {new Date(summary.generatedAt).toLocaleDateString(undefined, {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          })}
+        </span>
         <button
           onClick={handleRefresh}
           disabled={isPending}
-          className="text-xs text-slate-600 hover:text-slate-600 transition-colors disabled:opacity-40"
+          className="text-xs text-slate-400 hover:text-[#CA7DF9] transition-colors disabled:opacity-40 cursor-pointer"
         >
           {isPending ? "Regenerating..." : "↻ Regenerate"}
         </button>
       </div>
+      {error && (
+        <p className="text-xs text-red-400 pt-1">{error}</p>
+      )}
     </div>
   );
 }

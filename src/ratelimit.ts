@@ -91,3 +91,10 @@ export const reembedLimiter = new Ratelimit({
   prefix: "lingua:rl:reembed",
   analytics: false,
 });
+
+export const weeklySummaryLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(3, "3600 s"),
+  prefix: "lingua:rl:weekly-summary",
+  analytics: false,
+});

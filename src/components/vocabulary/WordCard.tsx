@@ -1,13 +1,14 @@
 import type { VocabularyItemWithMastery, MasteryLabel } from "@/app/actions/vocabulary";
+import { MASTERY_COLORS } from "@/lib/mastery-colors";
 
 // ─── Mastery badge styles ────────────────────────────────────────────────────
 
 const MASTERY_STYLES: Record<MasteryLabel, { bg: string; text: string; dot: string }> = {
-  New:        { bg: "rgba(99,102,241,0.12)",  text: "#a5b4fc", dot: "#6366f1" },
-  Learning:   { bg: "rgba(234,179,8,0.12)",   text: "#fde047", dot: "#eab308" },
-  Review:     { bg: "rgba(34,197,94,0.12)",   text: "#86efac", dot: "#22c55e" },
-  Relearning: { bg: "rgba(249,115,22,0.12)",  text: "#fdba74", dot: "#f97316" },
-  Mastered:   { bg: "rgba(6,182,212,0.12)",   text: "#67e8f9", dot: "#06b6d4" },
+  New:        { bg: MASTERY_COLORS.New.bg,        text: "#a5b4fc", dot: MASTERY_COLORS.New.dot        },
+  Learning:   { bg: MASTERY_COLORS.Learning.bg,   text: "#fde047", dot: MASTERY_COLORS.Learning.dot   },
+  Review:     { bg: MASTERY_COLORS.Review.bg,     text: "#86efac", dot: MASTERY_COLORS.Review.dot     },
+  Relearning: { bg: MASTERY_COLORS.Relearning.bg, text: "#fdba74", dot: MASTERY_COLORS.Relearning.dot },
+  Mastered:   { bg: MASTERY_COLORS.Mastered.bg,   text: "#67e8f9", dot: MASTERY_COLORS.Mastered.dot   },
 };
 
 const PART_OF_SPEECH_ABBR: Record<string, string> = {

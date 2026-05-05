@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { MASTERY_COLORS } from "@/lib/mastery-colors";
 import type { WordOfTheDay } from "@/app/actions/progress";
 
 type Props = {
@@ -20,13 +21,11 @@ const POS_LABELS: Record<string, string> = {
   determiner: "det.",
 };
 
-// Stability → a human-readable retention label
-function retentionLabel(stability: number): { label: string; color: string } {
-  if (stability === 0)  return { label: "New",      color: "#94a3b8" };
-  if (stability < 2)    return { label: "Fragile",   color: "#f97316" };
-  if (stability < 7)    return { label: "Learning",  color: "#eab308" };
-  if (stability < 21)   return { label: "Familiar",  color: "#38bdf8" };
-  return                       { label: "Strong",    color: "#22c55e" };
+function retentionLabel(stability: number): { label: string; color: string; bg: string } {
+  if (stability === 0) return { label: "New",        color: MASTERY_COLORS.New.dot,        bg: MASTERY_COLORS.New.bg        };
+  if (stability < 7)   return { label: "Learning",   color: MASTERY_COLORS.Learning.dot,   bg: MASTERY_COLORS.Learning.bg   };
+  if (stability < 21)  return { label: "Review",     color: MASTERY_COLORS.Review.dot,     bg: MASTERY_COLORS.Review.bg     };
+  return                      { label: "Mastered",   color: MASTERY_COLORS.Mastered.dot,   bg: MASTERY_COLORS.Mastered.bg   };
 }
 
 export function WordOfTheDayCard({ word }: Props) {
@@ -58,12 +57,10 @@ export function WordOfTheDayCard({ word }: Props) {
       {/* Header row */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          {/* Label */}
           <p className="text-xs font-semibold text-slate-600 uppercase tracking-widest mb-2">
-            Focus Word
+            Word of the day
           </p>
 
-          {/* Word + POS */}
           <div className="flex items-baseline gap-2">
             <motion.span
               className="text-3xl font-bold tracking-tight"
@@ -75,11 +72,10 @@ export function WordOfTheDayCard({ word }: Props) {
               {word.word}
             </motion.span>
             {pos && (
-              <span className="text-xs text-slate-600 font-medium italic">{pos}</span>
+              <span className="text-xl text-slate-600 font-medium">{pos}</span>
             )}
           </div>
 
-          {/* Translation */}
           <motion.p
             className="text-base text-slate-600 mt-0.5"
             initial={{ opacity: 0 }}
@@ -93,10 +89,7 @@ export function WordOfTheDayCard({ word }: Props) {
         {/* Retention badge */}
         <div
           className="shrink-0 px-2.5 py-1 rounded-full text-xs font-semibold"
-          style={{
-            background: `${retention.color}18`,
-            color: retention.color,
-          }}
+          style={{ background: retention.bg, color: retention.color }}
         >
           {retention.label}
         </div>
@@ -111,7 +104,7 @@ export function WordOfTheDayCard({ word }: Props) {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.25, duration: 0.4 }}
         >
-          <p className="text-sm text-slate-600 leading-relaxed italic">
+          <p className="text-md text-slate-600 italic">
             "{word.exampleSentence}"
           </p>
         </motion.div>

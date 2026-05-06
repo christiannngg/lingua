@@ -11,6 +11,7 @@ import { WeeklySummary } from "@/components/progress/WeeklySummary";
 import { CefrHistoryChart } from "@/components/progress/CefrHistoryChart";
 import { VocabularyGrowthChart } from "@/components/progress/VocabularyGrowthChart";
 import { GrammarHeatmap } from "@/components/progress/GrammarHeatmap";
+import { useUser } from "@/components/layout/UserContext";
 import type { SupportedLanguage } from "@/lib/languages.config";
 import type {
   CefrDataPoint,
@@ -51,7 +52,6 @@ const fadeIn = {
 // ── Types ────────────────────────────────────────────────────────────────────
 
 type Props = {
-  firstName: string;
   languageName: string;
   cefrLevel: string;
   activeLanguage: SupportedLanguage;
@@ -69,7 +69,6 @@ type Props = {
 // ── Component ────────────────────────────────────────────────────────────────
 
 export function DashboardShell({
-  firstName,
   languageName,
   cefrLevel,
   activeLanguage,
@@ -83,6 +82,7 @@ export function DashboardShell({
   grammarData,
   weeklySummary,
 }: Props) {
+  const { firstName } = useUser();
   return (
     <motion.main
       className="max-w-5xl mx-auto px-6 py-8 space-y-8"

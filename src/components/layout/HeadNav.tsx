@@ -5,20 +5,23 @@ import { Flame, Bell, TextAlignJustify } from "lucide-react";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { useSidebar } from "@/components/layout/SidebarContext";
 import LinguaLogo from "../ui/LinguaLogo";
+import { useUser } from "./UserContext";
 
 interface HeadNavProps {
   enrolledCodes: string[];
   streakCount?: number
+  userFirstName?: string;
 }
 
-export function HeadNav({ enrolledCodes, streakCount = 0 }: HeadNavProps) {
+export function HeadNav({ enrolledCodes, streakCount = 0, userFirstName = "" }: HeadNavProps) {
   const { toggle } = useSidebar();
+   const { avatarLetter } = useUser();
 
   const hasStreak = streakCount > 0;
   const isHotStreak = streakCount >= 7;
 
   return (
-    <header 
+    <header
       className="flex h-14 w-full items-center justify-between pl-2 pr-4 shrink-0"
       style={{
         backgroundColor: "#FFFFFF",
@@ -53,7 +56,7 @@ export function HeadNav({ enrolledCodes, streakCount = 0 }: HeadNavProps) {
           <TextAlignJustify size={18} />
         </button>
         <Link href="/dashboard">
-           <LinguaLogo size={28} fontSize="20px" />
+          <LinguaLogo size={28} fontSize="20px" />
         </Link>
       </div>
 
@@ -90,7 +93,9 @@ export function HeadNav({ enrolledCodes, streakCount = 0 }: HeadNavProps) {
           className="flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold"
           style={{ backgroundColor: "#CA7DF9", color: "#FFFFFF" }}
           aria-label="Profile"
-        />
+        >
+          {avatarLetter}
+        </button>
       </div>
     </header>
   );

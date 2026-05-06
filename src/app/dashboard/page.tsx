@@ -68,7 +68,6 @@ export default async function DashboardPage() {
 
   return (
     <DashboardShell
-      firstName={session.user.name?.split(" ")[0] ?? "there"}
       languageName={getLanguageDisplayName(activeLanguage.language)}
       cefrLevel={activeLanguage.cefrLevel}
       activeLanguage={activeLanguage.language as SupportedLanguage}

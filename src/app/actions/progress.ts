@@ -133,29 +133,44 @@ export async function getVocabularyGrowth(language: string): Promise<VocabGrowth
 
   const items = await prisma.vocabularyItem.findMany({
     where: { userLanguageId: userLanguage.id },
-    select: { createdAt: true, state: true, reps: true },
+    select: { createdAt: true, masteredAt: true, state: true, reps: true },
     orderBy: { createdAt: "asc" },
   });
 
   if (items.length === 0) return [];
 
+  // Build a unified set of all weeks that appear in either encounter or mastery dates.
+  // Each week bucket tracks words encountered (learning) and words mastered (mastered)
+  // that week — on separate timelines, so a word can appear in different weeks for each.
   const weekMap = new Map<string, { learning: number; mastered: number }>();
 
-  for (const item of items) {
-    const week = getWeekStart(item.createdAt);
+  function ensureBucket(week: string) {
     if (!weekMap.has(week)) {
       weekMap.set(week, { learning: 0, mastered: 0 });
     }
-    const bucket = weekMap.get(week)!;
-    if (isMastered(item.state, item.reps)) {
-      bucket.mastered++;
-    } else {
-      bucket.learning++;
+    return weekMap.get(week)!;
+  }
+
+  for (const item of items) {
+    // Every word gets counted as "encountered" in its creation week, regardless of
+    // current mastery state. This represents the raw vocabulary growth line.
+    const encounterWeek = getWeekStart(item.createdAt);
+    ensureBucket(encounterWeek).learning++;
+
+    // If mastered, also record a mastery event in the week mastery was achieved.
+    // masteredAt is the precise timestamp (or a lastReview-based estimate for
+    // backfilled rows). Words without masteredAt are still in progress.
+    if (item.masteredAt !== null) {
+      const masteryWeek = getWeekStart(item.masteredAt);
+      ensureBucket(masteryWeek).mastered++;
     }
   }
 
   const sortedWeeks = [...weekMap.keys()].sort();
 
+  // Cumulative pass — both series grow monotonically.
+  // "learning" = total words ever encountered up to this week
+  // "mastered" = total words ever mastered up to this week
   let cumulativeLearning = 0;
   let cumulativeMastered = 0;
 

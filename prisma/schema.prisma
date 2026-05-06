@@ -167,6 +167,7 @@ model VocabularyItem {
   lapses      Int       @default(0)
   lastReview  DateTime?
   nextReview  DateTime?
+  masteredAt DateTime? 
 
   createdAt DateTime @default(now())
 
@@ -176,6 +177,7 @@ model VocabularyItem {
   @@unique([userLanguageId, lemma])
   @@index([userLanguageId])
   @@index([nextReview])   // daily review queue queries filter by this
+  @@index([masteredAt])
   @@map("vocabulary_items")
 }
 

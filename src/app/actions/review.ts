@@ -91,6 +91,14 @@ function isValidRating(value: unknown): value is Rating {
   );
 }
 
+/**
+ * Returns true if state + reps satisfy the mastered threshold.
+ * Mirrors isMastered() in progress.ts — kept local to avoid a cross-action import.
+ */
+function isMasteredState(state: string, reps: number): boolean {
+  return state === "REVIEW" && reps >= 5;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Public Server Actions
 // ─────────────────────────────────────────────────────────────────────────────
@@ -172,6 +180,7 @@ export async function submitReview(
   vocabularyItemId: string,
   rating: Rating
 ): Promise<SubmitReviewResult> {
+  
   try {
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session) throw new Error("Unauthenticated");
@@ -212,6 +221,10 @@ export async function submitReview(
     const now = new Date();
     const { card: updatedSchedule } = schedule(cardSchedule, rating, now);
 
+    const wasAlreadyMastered = isMasteredState(item.state, item.reps);
+    const isNowMastered = isMasteredState(updatedSchedule.state, updatedSchedule.reps);
+    const justBecameMastered = !wasAlreadyMastered && isNowMastered;
+
     // Persist the updated FSRS state
     const updated = await prisma.vocabularyItem.update({
       where: { id: vocabularyItemId },
@@ -223,6 +236,7 @@ export async function submitReview(
         lapses:     updatedSchedule.lapses,
         lastReview: updatedSchedule.lastReview,
         nextReview: updatedSchedule.nextReview,
+        ...(justBecameMastered && { masteredAt: now }),
       },
       select: {
         id: true,

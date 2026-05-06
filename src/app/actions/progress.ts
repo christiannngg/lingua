@@ -56,14 +56,17 @@ export type WeeklySummaryResult = {
 const MASTERED_REPS_THRESHOLD = 5;
 
 // Concepts with no errors in the last 30 days are considered mastered
-const MASTERED_DAYS_THRESHOLD = 30;
+const DORMANT_DAYS_THRESHOLD = 30;
 
 // Exponential decay half-life in days for recency weighting
 const DECAY_HALF_LIFE = 14;
 
-function isMastered(state: string, reps: number): boolean {
-  return state === "REVIEW" && reps >= MASTERED_REPS_THRESHOLD;
-}
+// Fetch errors up to 4× the half-life back so computeDecayScore has a complete
+// picture. e^(-56/14) = e^(-4) ≈ 1.8% — negligible contribution beyond this.
+const DECAY_FETCH_WINDOW_DAYS = DECAY_HALF_LIFE * 4; // 56
+
+// Hard ceiling on grammarError rows fetched to protect against runaway queries
+const ERROR_FETCH_LIMIT = 500;
 
 function getWeekStart(date: Date): string {
   const d = new Date(date);
@@ -192,16 +195,15 @@ export async function getGrammarHeatmap(language: string): Promise<GrammarConcep
   if (!session) throw new Error("Unauthenticated");
 
   const userLanguage = await prisma.userLanguage.findUnique({
-    where: {
-      userId_language: { userId: session.user.id, language },
-    },
+    where: { userId_language: { userId: session.user.id, language } },
     select: { id: true },
   });
 
   if (!userLanguage) return [];
 
   const now = new Date();
-  const thirtyDaysAgo = new Date(now.getTime() - MASTERED_DAYS_THRESHOLD * 24 * 60 * 60 * 1000);
+  const dormantCutoff = new Date(now.getTime() - DORMANT_DAYS_THRESHOLD * 24 * 60 * 60 * 1000);
+  const decayCutoff   = new Date(now.getTime() - DECAY_FETCH_WINDOW_DAYS * 24 * 60 * 60 * 1000);
 
   const masteries = await prisma.userGrammarMastery.findMany({
     where: { userLanguageId: userLanguage.id },
@@ -213,9 +215,10 @@ export async function getGrammarHeatmap(language: string): Promise<GrammarConcep
   const recentErrors = await prisma.grammarError.findMany({
     where: {
       userLanguageId: userLanguage.id,
-      createdAt: { gte: thirtyDaysAgo },
+      createdAt: { gte: decayCutoff },
     },
     orderBy: { createdAt: "desc" },
+    take: ERROR_FETCH_LIMIT,
     select: {
       grammarConceptId: true,
       userSentence: true,
@@ -235,30 +238,30 @@ export async function getGrammarHeatmap(language: string): Promise<GrammarConcep
 
   const rows: GrammarConceptRow[] = masteries.map((mastery) => {
     const conceptErrors = errorsByConceptId.get(mastery.grammarConceptId) ?? [];
-    const recentScore = computeDecayScore(conceptErrors, now);
-    const isMasteredConcept = mastery.lastSeenAt < thirtyDaysAgo;
+    const recentScore   = computeDecayScore(conceptErrors, now);
+    const isDormant     = mastery.lastSeenAt < dormantCutoff;
 
     return {
-      conceptId: mastery.grammarConceptId,
-      name: mastery.grammarConcept.name,
-      description: mastery.grammarConcept.description,
-      errorCount: mastery.errorCount,
+      conceptId:    mastery.grammarConceptId,
+      name:         mastery.grammarConcept.name,
+      description:  mastery.grammarConcept.description,
+      errorCount:   mastery.errorCount,
       recentScore,
-      lastSeenAt: mastery.lastSeenAt.toISOString().slice(0, 10),
-      isMastered: isMasteredConcept,
+      lastSeenAt:   mastery.lastSeenAt.toISOString().slice(0, 10),
+      isMastered:   isDormant,
       recentErrors: conceptErrors.slice(0, 5).map((e) => ({
         userSentence: e.userSentence,
-        correction: e.correction,
-        explanation: e.explanation,
-        date: e.createdAt.toISOString().slice(0, 10),
+        correction:   e.correction,
+        explanation:  e.explanation,
+        date:         e.createdAt.toISOString().slice(0, 10),
       })),
     };
   });
 
-  const active = rows.filter((r) => !r.isMastered).sort((a, b) => b.recentScore - a.recentScore);
-  const mastered = rows.filter((r) => r.isMastered).sort((a, b) => b.errorCount - a.errorCount);
+  const active   = rows.filter((r) => !r.isMastered).sort((a, b) => b.recentScore - a.recentScore);
+  const dormant  = rows.filter((r) =>  r.isMastered).sort((a, b) => b.errorCount - a.errorCount);
 
-  return [...active, ...mastered];
+  return [...active, ...dormant];
 }
 
 export async function getWeeklySummary(language: string, forceRefresh = false): Promise<WeeklySummaryResult | null> {

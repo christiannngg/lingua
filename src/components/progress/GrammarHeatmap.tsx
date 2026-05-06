@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ChevronDown, Clock } from "lucide-react"; // Fix 5: Lucide icon instead of Unicode ▾
 import type { GrammarConceptRow } from "@/app/actions/progress";
 
 type Props = {
@@ -10,10 +11,11 @@ type Props = {
 function ErrorDetail({ error }: { error: GrammarConceptRow["recentErrors"][number] }) {
   return (
     <div className="border-l-2 border-slate-200 pl-3 py-1 space-y-1">
+      {/* Fix 6: break-words prevents long sentences from overflowing on mobile */}
       <div className="flex flex-wrap gap-2 text-xs">
-        <span className="text-red-500 line-through">{error.userSentence}</span>
-        <span className="text-slate-600">{"->"}</span>
-        <span className="text-emerald-600">{error.correction}</span>
+        <span className="text-red-500 line-through break-words">{error.userSentence}</span>
+        <span className="text-slate-600">{"→"}</span> 
+        <span className="text-emerald-600 break-words">{error.correction}</span>
       </div>
       <p className="text-slate-600 text-xs">{error.explanation}</p>
       <p className="text-slate-300 text-xs">{error.date}</p>
@@ -40,12 +42,16 @@ function ConceptRow({
         ? "bg-amber-400"
         : "bg-sky-400";
 
+  const hasErrors = concept.recentErrors.length > 0;
+
   return (
     <div>
       <button
         onClick={() => setExpanded((v) => !v)}
-        className="w-full text-left py-3 px-5 rounded-lg hover:bg-slate-50 transition-colors"
-        disabled={concept.recentErrors.length === 0}
+        className="w-full text-left py-3 px-5 rounded-lg transition-colors
+          hover:bg-slate-50
+          disabled:cursor-default disabled:hover:bg-transparent"
+        disabled={!hasErrors}
       >
         <div className="flex items-center justify-between gap-4">
           <div className="flex-1 min-w-0">
@@ -67,26 +73,25 @@ function ConceptRow({
                 style={{ width: `${barWidth}%` }}
               />
             </div>
-            {concept.recentErrors.length > 0 && (
-              <span
-                className={`text-slate-600 text-xs transition-transform duration-200 ${
+            {hasErrors && (
+              <ChevronDown
+                size={14}
+                className={`text-slate-400 transition-transform duration-200 ${
                   expanded ? "rotate-180" : ""
                 }`}
-              >
-                ▾
-              </span>
+              />
             )}
           </div>
         </div>
       </button>
 
-      {expanded && concept.recentErrors.length > 0 && (
+      {expanded && hasErrors && (
         <div className="mx-5 mb-3 space-y-3">
           <p className="text-xs text-slate-600 uppercase tracking-wider font-medium mb-2">
             Recent errors
           </p>
           {concept.recentErrors.map((error, i) => (
-            <ErrorDetail key={i} error={error} />
+            <ErrorDetail key={`${concept.conceptId}-${i}`} error={error} />
           ))}
         </div>
       )}
@@ -140,7 +145,9 @@ export function GrammarHeatmap({ data }: Props) {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-slate-600">{concept.errorCount} total</span>
-                  <span className="text-emerald-500 text-xs font-medium">✓</span>
+                  <span className="text-slate-400 text-xs" title="No errors in 30+ days">
+                    <Clock size={14}/>
+                  </span>
                 </div>
               </div>
             ))}

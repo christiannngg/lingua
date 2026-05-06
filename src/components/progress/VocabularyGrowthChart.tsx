@@ -69,8 +69,8 @@ function VocabularyGrowthChartInner({ data, gradLearningId, gradMasteredId }: In
               <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
             </linearGradient>
           </defs>
-          <XAxis dataKey="week" tick={{ fill: "#94a3b8", fontSize: 11 }} tickLine={false} axisLine={false} dy={8} />
-          <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} tickLine={false} axisLine={false} width={32} allowDecimals={false} />
+          <XAxis dataKey="week" tick={{ fill: "#000000", fontSize: 11 }} tickLine={false} axisLine={false} dy={8} tickFormatter={formatDateLabel} />
+          <YAxis tick={{ fill: "#000000", fontSize: 11 }} tickLine={false} axisLine={false} width={32} allowDecimals={false} />
           <Tooltip content={<CustomTooltip />} />
           <Area
             type="monotone"
@@ -151,4 +151,16 @@ export function VocabularyGrowthChart({ data }: Props) {
       gradMasteredId={gradMasteredId}
     />
   );
+}
+
+function formatDateLabel(isoDate: string): string {
+  // Parse as UTC to avoid timezone-shift edge cases
+  const [year, month, day] = isoDate.split("-").map(Number);
+  const d = new Date(Date.UTC(year ?? 2000, (month ?? 1) - 1, day ?? 1));
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
 }

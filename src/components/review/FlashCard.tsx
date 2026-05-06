@@ -63,7 +63,7 @@ export function FlashCard({
             }}
           />
         </div>
-        <div className="flex justify-between text-xs" style={{ color: "var(--muted-foreground)" }}>
+        <div className="flex justify-between text-xs" style={{ color: "black" }}>
           <span className="font-medium">{remaining} cards remaining</span>
           <span style={{ color: "var(--color-brand-500)" }} className="font-semibold">
             {Math.round(progressPct)}% complete
@@ -80,25 +80,20 @@ export function FlashCard({
         }}
       >
         {/* Card header — word + pos */}
-        <div className="px-10 pt-16 pb-8 text-center border-b" style={{ borderColor: "rgba(202,125,249,0.1)" }}>
+        <div className="px-10 pt-16 pb-8 text-center border-b" style={{ borderColor: "rgba(202,125,249,0.1)", color: "black" }}>
 
-          {/* {card.romanization && (
-            <p className="mb-2 text-sm font-medium" style={{ color: "var(--color-brand-500)", opacity: 0.7 }}>
-              {card.romanization}
-            </p>
-          )} */}
 
           <div className="flex items-baseline justify-center gap-3">
             <span
               className="text-5xl font-bold tracking-tight"
-              style={{ color: "var(--foreground)" }}
+              style={{ color: "black" }}
             >
               {card.lemma}
             </span>
             {card.partOfSpeech && (
               <span
                 className="text-sm font-medium"
-                style={{ color: "var(--muted-foreground)" }}
+                style={{ color: "black" }}
               >
                 {formatPos(card.partOfSpeech)}
               </span>
@@ -113,7 +108,7 @@ export function FlashCard({
                   className="border-l-2 pl-3 text-left text-sm italic"
                   style={{
                     borderColor: "var(--color-brand-500)",
-                    color: "var(--muted-foreground)",
+                    color: "black",
                     lineHeight: "1.6",
                   }}
                 >
@@ -125,7 +120,7 @@ export function FlashCard({
                   title="Generate a new example sentence"
                   className="mt-0.5 flex-shrink-0 rounded-md p-1 transition-all"
                   style={{
-                    color: "var(--muted-foreground)",
+                    color: "black",
                     opacity: isRegenerating ? 0.35 : 0.5,
                     cursor: isRegenerating ? "not-allowed" : "pointer",
                   }}
@@ -185,12 +180,12 @@ export function FlashCard({
                 style={{ backgroundColor: "rgba(202,125,249,0.05)", border: "1px solid rgba(202,125,249,0.1)" }}
               >
                 <p
-                  className="mb-1 text-xs font-semibold uppercase tracking-widest"
-                  style={{ color: "var(--muted-foreground)", opacity: 0.6 }}
+                  className="mb-1 text-sm font-semibold"
+                  style={{ color: "black" }}
                 >
                   Translation
                 </p>
-                <p className="text-lg font-semibold" style={{ color: "var(--foreground)" }}>
+                <p className="text-lg font-semibold" style={{ color: "black" }}>
                   {card.translation}
                 </p>
               </div>
@@ -200,20 +195,20 @@ export function FlashCard({
                 style={{ backgroundColor: "rgba(202,125,249,0.05)", border: "1px solid rgba(202,125,249,0.1)" }}
               >
                 <p
-                  className="mb-1 text-xs font-semibold uppercase tracking-widest"
-                  style={{ color: "var(--muted-foreground)", opacity: 0.6 }}
+                  className="mb-1 text-sm font-semibold"
+                  style={{ color: "black" }}
                 >
                   {card.reps > 0 ? "Progress" : "First time"}
                 </p>
                 {card.reps > 0 ? (
-                  <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
+                  <p className="text-lg font-semibold" style={{ color: "black" }}>
                     Reviewed <span className="font-semibold" style={{ color: "var(--foreground)" }}>{card.reps}×</span>
                     {card.lapses > 0 && (
                       <> · <span className="font-semibold" style={{ color: "#fca5a5" }}>{card.lapses} lapse{card.lapses !== 1 ? "s" : ""}</span></>
                     )}
                   </p>
                 ) : (
-                  <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
+                  <p className="text-sm" style={{ color: "black" }}>
                     Learning this word for the first time
                   </p>
                 )}
@@ -246,7 +241,7 @@ export function FlashCard({
       {/* Rating buttons */}
       {revealed && (
         <div className="flex flex-col gap-2">
-          <p className="text-center text-xs font-medium" style={{ color: "var(--muted-foreground)" }}>
+          <p className="text-center text-xs font-medium" style={{ color: "black" }}>
             How well did you remember it?
           </p>
           <RatingButtons onRate={onRate} disabled={submitting} />

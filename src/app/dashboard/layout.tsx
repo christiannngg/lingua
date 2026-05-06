@@ -22,7 +22,6 @@ export default async function DashboardLayout({
   ]);
   const enrolledCodes = userLanguages.map((ul: UserLanguage) => ul.language);
   const firstName = session?.user.name?.split(" ")[0] ?? "";
-
   return (
     <>
       <AppShell enrolledCodes={enrolledCodes} streakCount={streakData.currentStreak} firstName={firstName}>

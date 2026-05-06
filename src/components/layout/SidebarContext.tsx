@@ -15,43 +15,30 @@ interface SidebarContextValue {
 const SidebarContext = createContext<SidebarContextValue | null>(null);
 
 export function SidebarProvider({ children }: { children: ReactNode }) {
-  // Initialize from localStorage synchronously to avoid flash
-  const [isExpanded, setIsExpanded] = useState<boolean>(() => {
-    if (typeof window === "undefined") return DEFAULT_STATE;
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      return stored !== null ? stored === "true" : DEFAULT_STATE;
-    } catch {
-      return DEFAULT_STATE;
-    }
-  });
+  const [isExpanded, setIsExpanded] = useState<boolean>(DEFAULT_STATE);
+  const [activeLanguage, setActiveLanguageState] = useState<string | null>(null);
 
-  const [activeLanguage, setActiveLanguageState] = useState<string | null>(() => {
-    if (typeof window === "undefined") return null;
+  useEffect(() => {
     try {
-      return localStorage.getItem("lingua:active-language");
+      const storedExpanded = localStorage.getItem(STORAGE_KEY);
+      if (storedExpanded !== null) {
+        setIsExpanded(storedExpanded === "true");
+      }
+
+      const storedLang = localStorage.getItem("lingua:active-language");
+      if (storedLang !== null) {
+        setActiveLanguageState(storedLang);
+      }
     } catch {
-      return null;
+      // localStorage unavailable (private browsing, etc.) — keep defaults
     }
-  });
+  }, []);
 
   const setActiveLanguage = useCallback((lang: string) => {
     setActiveLanguageState(lang);
     try {
       localStorage.setItem("lingua:active-language", lang);
     } catch { }
-  }, []);
-
-  // Hydration guard: re-read from localStorage on mount
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored !== null) {
-        setIsExpanded(stored === "true");
-      }
-    } catch {
-      // localStorage unavailable (e.g. SSR, private mode) — keep default
-    }
   }, []);
 
   const toggle = useCallback(() => {

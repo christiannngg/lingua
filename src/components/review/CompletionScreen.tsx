@@ -31,10 +31,10 @@ function formatNextReview(date: Date | null): string {
 }
 
 const RATING_DISPLAY = [
-  { rating: Rating.Again, label: "Again", emoji: "↺", color: "#f87171" },
-  { rating: Rating.Hard,  label: "Hard",  emoji: "😐", color: "#fb923c" },
-  { rating: Rating.Good,  label: "Good",  emoji: "🙂", color: "#4ade80" },
-  { rating: Rating.Easy,  label: "Easy",  emoji: "🚀", color: "#22d3ee" },
+  { rating: Rating.Again, label: "Again", color: "#f87171" },
+  { rating: Rating.Hard,  label: "Hard",  color: "#fb923c" },
+  { rating: Rating.Good,  label: "Good",  color: "#4ade80" },
+  { rating: Rating.Easy,  label: "Easy",  color: "#22d3ee" },
 ];
 
 export function CompletionScreen({
@@ -65,7 +65,7 @@ export function CompletionScreen({
         <h2 className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>
           Session complete!
         </h2>
-        <p className="flex items-center justify-center gap-1.5 text-sm" style={{ color: "var(--muted-foreground)" }}>
+        <p className="flex items-center justify-center gap-1.5 text-sm" style={{ color: "black" }}>
           You reviewed <strong style={{ color: "var(--foreground)" }}>{totalReviewed} {totalReviewed === 1 ? "word" : "words"}</strong> in
           <LanguageFlag language={language} className="w-4 h-auto rounded-sm" />
           {getLanguageDisplayName(language)}
@@ -85,20 +85,19 @@ export function CompletionScreen({
           <span className="text-5xl font-bold" style={{ color: "#4ade80" }}>
             {goodRate}%
           </span>
-          <span className="text-xs font-medium" style={{ color: "var(--muted-foreground)" }}>
+          <span className="text-xs font-medium" style={{ color: "black" }}>
             Good + Easy rate
           </span>
         </div>
 
         {/* Rating breakdown */}
         <div className="flex justify-around">
-          {RATING_DISPLAY.map(({ rating, label, emoji, color }) => (
+          {RATING_DISPLAY.map(({ rating, label, color }) => (
             <div key={rating} className="flex flex-col items-center gap-1">
-              <span className="text-lg leading-none">{emoji}</span>
               <span className="text-xl font-bold" style={{ color }}>
                 {ratingSummary[rating]}
               </span>
-              <span className="text-xs font-medium" style={{ color: "var(--muted-foreground)" }}>
+              <span className="text-xs font-medium" style={{ color: "black" }}>
                 {label}
               </span>
             </div>
@@ -110,7 +109,7 @@ export function CompletionScreen({
           className="mt-5 rounded-xl p-3.5 text-center"
           style={{ backgroundColor: "rgba(202,125,249,0.06)", border: "1px solid rgba(202,125,249,0.12)" }}
         >
-          <p className="text-xs font-medium" style={{ color: "var(--muted-foreground)" }}>
+          <p className="text-xs font-medium" style={{ color: "black" }}>
             Next review due
           </p>
           <p className="mt-0.5 text-sm font-semibold" style={{ color: "var(--foreground)" }}>
@@ -138,7 +137,7 @@ export function CompletionScreen({
           style={{
             borderColor: "rgba(202,125,249,0.2)",
             backgroundColor: "white",
-            color: "var(--muted-foreground)",
+            color: "black",
           }}
           onMouseEnter={(e) => {
             (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(202,125,249,0.4)";

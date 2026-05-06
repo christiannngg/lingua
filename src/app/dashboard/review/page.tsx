@@ -3,6 +3,7 @@ import { getUserLanguages } from "@/app/actions/languages";
 import { getUserLanguageByCode } from "@/app/actions/vocabulary";
 import { getReviewQueue } from "@/app/actions/review";
 import { ReviewClient } from "@/components/review/ReviewClient";
+export const dynamic = "force-dynamic";
 
 interface ReviewPageProps {
   searchParams: Promise<{ lang?: string }>;

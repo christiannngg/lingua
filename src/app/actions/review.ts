@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { schedule, createNewCard } from "@/lib/fsrs/fsrs";
 import { CardState, Rating } from "@/lib/fsrs/types";
+import { isMasteredState, isValidRating, toCardSchedule } from "@/lib/fsrs/schedule-helpers";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -47,57 +48,6 @@ export type SubmitReviewResult = {
   success: false;
   error: string;
 };
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Map a raw DB VocabularyItem's FSRS fields into a CardSchedule
- * that lib/fsrs/fsrs.ts can consume.
- */
-function toCardSchedule(item: {
-  state: string;
-  stability: number;
-  difficulty: number;
-  reps: number;
-  lapses: number;
-  lastReview: Date | null;
-  nextReview: Date | null;
-}) {
-  // If the card has never been reviewed, treat it as a fresh card
-  if (item.state === CardState.New && item.reps === 0) {
-    return createNewCard();
-  }
-
-  return {
-    state: item.state as CardState,
-    stability: item.stability,
-    difficulty: item.difficulty,
-    reps: item.reps,
-    lapses: item.lapses,
-    lastReview: item.lastReview,
-    nextReview: item.nextReview,
-  };
-}
-
-/**
- * Validate that a rating value from the client is a valid FSRS Rating.
- */
-function isValidRating(value: unknown): value is Rating {
-  return (
-    typeof value === "number" &&
-    [Rating.Again, Rating.Hard, Rating.Good, Rating.Easy].includes(value as Rating)
-  );
-}
-
-/**
- * Returns true if state + reps satisfy the mastered threshold.
- * Mirrors isMastered() in progress.ts — kept local to avoid a cross-action import.
- */
-function isMasteredState(state: string, reps: number): boolean {
-  return state === "REVIEW" && reps >= 5;
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Public Server Actions

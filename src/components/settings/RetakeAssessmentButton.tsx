@@ -32,33 +32,26 @@ export function RetakeAssessmentButton({ language }: Props) {
 
   if (isPending) {
     return (
-      <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>
-        Starting…
-      </span>
+      <span className="text-xs text-slate-400 italic">Starting…</span>
     );
   }
 
   if (confirming) {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>
-          Re-take assessment?
-        </span>
+        <span className="text-xs text-slate-500 whitespace-nowrap">Re-take assessment?</span>
         <button
           onClick={handleConfirm}
-          className="rounded px-2 py-1 text-xs font-medium transition-colors"
-          style={{ color: "#f87171" }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#2d1b1b")}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+          className="rounded-lg px-3 py-1.5 text-xs font-medium text-white transition-colors"
+          style={{ backgroundColor: "#CA7DF9" }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#b76de8")}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#CA7DF9")}
         >
           Confirm
         </button>
         <button
           onClick={handleCancel}
-          className="rounded px-2 py-1 text-xs font-medium transition-colors"
-          style={{ color: "var(--muted-foreground)" }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--muted)")}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+          className="rounded-lg px-3 py-1.5 text-xs font-medium bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100 transition-colors"
         >
           Cancel
         </button>
@@ -69,8 +62,7 @@ export function RetakeAssessmentButton({ language }: Props) {
   return (
     <button
       onClick={handleFirstClick}
-      className="rounded-lg border px-4 py-2 text-sm font-medium transition-colors hover:bg-white hover:text-black"
-      style={{ borderColor: "var(--border)" }}
+      className="rounded-lg px-4 py-2 text-sm font-medium border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition-colors cursor-pointer"
     >
       Re-take Assessment
     </button>

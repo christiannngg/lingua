@@ -135,7 +135,7 @@ export function SideNav({ languages }: SideNavProps) {
                     style={{ color: "#64748b" }}
                     onMouseEnter={(e) => {
                       (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "#faf5ff";
-                      (e.currentTarget as HTMLAnchorElement).style.color = "#7c3aed";
+                      (e.currentTarget as HTMLAnchorElement).style.color = "#CA7DF9";
                     }}
                     onMouseLeave={(e) => {
                       (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "transparent";

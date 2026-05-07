@@ -17,9 +17,7 @@ export function RemoveLanguageButton({ language, isOnly }: Props) {
 
   if (isOnly) {
     return (
-      <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>
-        Can&apos;t remove your only language
-      </span>
+      <span className="text-xs text-slate-400 italic">Can&apos;t remove your only language</span>
     );
   }
 
@@ -51,39 +49,28 @@ export function RemoveLanguageButton({ language, isOnly }: Props) {
 
   if (isPending) {
     return (
-      <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>
-        Removing…
-      </span>
+      <span className="text-xs text-slate-400 italic">Removing…</span>
     );
   }
 
   if (confirming) {
     return (
-      <div className="flex flex-col items-end gap-1">
+      <div className="flex flex-col items-end gap-1.5">
         <div className="flex items-center gap-2">
-          <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>
-            Remove this language?
-          </span>
           <button
             onClick={handleConfirm}
-            className="rounded px-2 py-1 text-xs font-medium transition-colors"
-            style={{ color: "#f87171" }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#2d1b1b")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+            className="rounded-lg px-3 py-1.5 text-xs font-medium bg-red-50 text-red-500 border border-red-200 hover:bg-red-100 transition-colors cursor-pointer"
           >
             Remove
           </button>
           <button
             onClick={handleCancel}
-            className="rounded px-2 py-1 text-xs font-medium transition-colors"
-            style={{ color: "var(--muted-foreground)" }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--muted)")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+            className="rounded-lg px-3 py-1.5 text-xs font-medium bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer"
           >
             Cancel
           </button>
         </div>
-        {error && <p className="text-xs text-red-400">{error}</p>}
+        {error && <p className="text-xs text-red-500">{error}</p>}
       </div>
     );
   }
@@ -92,12 +79,11 @@ export function RemoveLanguageButton({ language, isOnly }: Props) {
     <div className="flex flex-col items-end gap-1">
       <button
         onClick={handleFirstClick}
-        className="rounded-lg border px-4 py-2 text-sm font-medium transition-colors hover:bg-red-950 hover:border-red-800 hover:text-red-400"
-        style={{ borderColor: "var(--border)" }}
+        className="rounded-lg px-4 py-2 text-sm font-medium text-slate-500 border border-slate-200 hover:border-red-200 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
       >
         Remove
       </button>
-      {error && <p className="text-xs text-red-400">{error}</p>}
+      {error && <p className="text-xs text-red-500">{error}</p>}
     </div>
   );
 }

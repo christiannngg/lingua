@@ -62,6 +62,7 @@ export function LanguageSwitcher({ enrolledCodes }: Props) {
           backgroundColor: open ? "#FFFFFF14" : "transparent",
           color: "black",
           border: "1px solid var(--border)",
+          cursor: "pointer"
         }}
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -105,6 +106,7 @@ export function LanguageSwitcher({ enrolledCodes }: Props) {
                   backgroundColor: isActive ? "rgba(202, 125, 249, 0.10)" : "transparent",
                   color: isActive ? "#CA7DF9" : "#020122",
                   fontWeight: isActive ? 600 : 400,
+                  cursor: "pointer"
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive)
@@ -139,7 +141,7 @@ export function LanguageSwitcher({ enrolledCodes }: Props) {
               router.push("/onboarding");
             }}
             className="flex w-full items-center gap-3 px-3 py-2 text-sm transition-colors"
-            style={{ color: "#94a3b8" }}
+            style={{ color: "#94a3b8", cursor: "pointer" }}
             onMouseEnter={(e) => {
               (e.currentTarget as HTMLButtonElement).style.backgroundColor =
                 "rgba(202, 125, 249, 0.06)";

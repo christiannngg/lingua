@@ -15,7 +15,7 @@ interface UserProviderProps {
 }
 
 export function UserProvider({ children, firstName }: UserProviderProps) {
-  const avatarLetter = firstName.charAt(0).toUpperCase() || "?";
+  const avatarLetter = firstName?.charAt(0).toUpperCase() || "?";
 
   return (
     <UserContext.Provider value={{ firstName, avatarLetter }}>

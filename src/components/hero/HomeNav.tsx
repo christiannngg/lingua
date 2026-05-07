@@ -8,14 +8,12 @@ export default function HomeNav() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        // position: "sticky",
         top: 0,
         zIndex: 10,
         width: "100%",
         background: "rgba(247, 247, 255, 0.75)",
         backdropFilter: "blur(7px)",
         WebkitBackdropFilter: "blur(12px)",
-        // borderBottom: "1px solid rgba(2, 1, 34, 0.06)",
       }}
     >
 
@@ -41,7 +39,6 @@ export default function HomeNav() {
               fontWeight: 500,
               color: "white",
               background: "#CA7DF9",
-              // border: "1px solid rgba(2,1,34,0.12)",
               padding: "6px 18px",
               borderRadius: "20px",
               textDecoration: "none",

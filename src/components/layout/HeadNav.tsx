@@ -18,7 +18,6 @@ export function HeadNav({ enrolledCodes, streakCount = 0, userFirstName = "" }: 
    const { avatarLetter } = useUser();
 
   const hasStreak = streakCount > 0;
-  const isHotStreak = streakCount >= 7;
 
   return (
     <header
@@ -38,10 +37,10 @@ export function HeadNav({ enrolledCodes, streakCount = 0, userFirstName = "" }: 
             color: "#64748b",
             background: "white",
             borderRadius: "50%",
-            // border: "1px solid #f1f5f9",
             width: "40px",
             height: "40px",
             flexShrink: 0,
+            cursor: "pointer",
           }}
           onMouseEnter={(e) => {
             (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#faf5ff";

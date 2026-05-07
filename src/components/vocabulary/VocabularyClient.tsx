@@ -10,6 +10,7 @@ import type {
 import { WordCard } from "./WordCard";
 import { LanguageFlag } from "@/components/ui/LanguageFlag";
 import { getLanguageDisplayName } from "@/lib/languages.config";
+import { BadgeAlert, Languages, Search } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -39,11 +40,11 @@ function StatCard({ label, count }: { label: MasteryLabel; count: number }) {
           className="h-2 w-2 rounded-full"
           style={{ backgroundColor: color }}
         />
-        <span className="text-xs font-medium" style={{ color: "var(--muted-foreground)" }}>
+        <span className="text-xs font-medium" style={{ color: "black" }}>
           {label}
         </span>
       </div>
-      <span className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>
+      <span className="text-2xl font-bold" style={{ color: "black" }}>
         {count}
       </span>
     </div>
@@ -57,10 +58,10 @@ function EmptyState({ activeTab, search }: { activeTab: TabValue; search: string
     return (
       <div className="flex flex-col items-center gap-2 py-16 text-center">
         <span className="text-3xl">🔍</span>
-        <p className="font-medium" style={{ color: "var(--foreground)" }}>
+        <p className="font-medium" style={{ color: "black" }}>
           No words match &quot;{search}&quot;
         </p>
-        <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
+        <p className="text-sm" style={{ color: "black" }}>
           Try a different search term
         </p>
       </div>
@@ -70,11 +71,11 @@ function EmptyState({ activeTab, search }: { activeTab: TabValue; search: string
   if (activeTab !== "All") {
     return (
       <div className="flex flex-col items-center gap-2 py-16 text-center">
-        <span className="text-3xl">✨</span>
-        <p className="font-medium" style={{ color: "var(--foreground)" }}>
+        <Languages size={48} color="black"/>
+        <p className="font-medium" style={{ color: "black" }}>
           No {activeTab} words yet
         </p>
-        <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
+        <p className="text-sm" style={{ color: "black" }}>
           Keep chatting — words will appear here as you learn
         </p>
       </div>
@@ -83,11 +84,11 @@ function EmptyState({ activeTab, search }: { activeTab: TabValue; search: string
 
   return (
     <div className="flex flex-col items-center gap-2 py-16 text-center">
-      <span className="text-3xl">💬</span>
-      <p className="font-medium" style={{ color: "var(--foreground)" }}>
+      <BadgeAlert size={48} color="black"/>
+      <p className="font-medium" style={{ color: "black" }}>
         No vocabulary yet
       </p>
-      <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
+      <p className="text-sm" style={{ color: "black" }}>
         Start a conversation with your language partner to build your word list
       </p>
     </div>
@@ -150,10 +151,10 @@ export function VocabularyClient({
         style={{ borderColor: "var(--border)" }}
       >
         <div>
-          <h1 className="text-xl font-bold" style={{ color: "var(--foreground)" }}>
+          <h1 className="text-xl font-bold" style={{ color: "black" }}>
             Vocabulary
           </h1>
-          <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
+          <p className="text-sm" style={{ color: "black" }}>
             {data.counts.total} {data.counts.total === 1 ? "word" : "words"} · CEFR {data.cefrLevel}
           </p>
         </div>
@@ -169,7 +170,8 @@ export function VocabularyClient({
                 style={{
                   borderColor: lang === currentLang ? "var(--color-brand-500)" : "var(--border)",
                   backgroundColor: lang === currentLang ? "var(--color-brand-100)" : "transparent",
-                  color: lang === currentLang ? "var(--color-brand-700)" : "var(--muted-foreground)",
+                  color: lang === currentLang ? "black" : "black",
+                  cursor: "pointer"
                 }}
               >
                 <LanguageFlag language={lang} className="w-4 h-auto rounded-sm" />
@@ -208,9 +210,9 @@ export function VocabularyClient({
           <div className="relative max-w-xs">
             <span
               className="absolute left-3 top-1/2 -translate-y-1/2 text-sm"
-              style={{ color: "var(--muted-foreground)" }}
+              style={{ color: "black" }}
             >
-              🔍
+              <Search size={14}/>
             </span>
             <input
               type="text"
@@ -221,7 +223,7 @@ export function VocabularyClient({
               style={{
                 borderColor: "var(--border)",
                 backgroundColor: "var(--muted)",
-                color: "var(--foreground)",
+                color: "black",
               }}
             />
           </div>
@@ -229,7 +231,7 @@ export function VocabularyClient({
           {/* Tabs */}
           <div
             className="flex gap-1 overflow-x-auto rounded-lg border p-1"
-            style={{ borderColor: "var(--border)", backgroundColor: "var(--muted)" }}
+            style={{ borderColor: "black", backgroundColor: "var(--muted)" }}
           >
             {TABS.map((tab) => {
               const count = tabCount(tab);
@@ -241,7 +243,8 @@ export function VocabularyClient({
                   className="shrink-0 rounded-md px-3 py-1 text-xs font-medium transition-colors"
                   style={{
                     backgroundColor: isActive ? "var(--color-brand-500)" : "transparent",
-                    color: isActive ? "white" : "var(--muted-foreground)",
+                    color: isActive ? "white" : "black",
+                    cursor: "pointer"
                   }}
                 >
                   {tab}
@@ -249,7 +252,7 @@ export function VocabularyClient({
                     className="ml-1.5 rounded-full px-1.5 py-0.5 text-xs"
                     style={{
                       backgroundColor: isActive ? "rgba(255,255,255,0.2)" : "var(--border)",
-                      color: isActive ? "white" : "var(--muted-foreground)",
+                      color: isActive ? "white" : "black",
                     }}
                   >
                     {count}

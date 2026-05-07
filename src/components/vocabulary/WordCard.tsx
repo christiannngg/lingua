@@ -21,11 +21,6 @@ function formatPartOfSpeech(pos: string): string {
   return PART_OF_SPEECH_ABBR[pos.toLowerCase()] ?? pos;
 }
 
-function formatConversationLabel(conv: { title: string | null; createdAt: Date } | null): string {
-  if (!conv) return "Unknown conversation";
-  if (conv.title) return conv.title;
-  return `Conversation from ${conv.createdAt.toISOString().slice(0, 10)}`;
-}
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -38,9 +33,9 @@ export function WordCard({ item }: WordCardProps) {
 
   return (
     <div
-      className="group relative flex flex-col gap-2 rounded-xl border p-4 transition-all duration-200"
+      className="group relative flex flex-col gap-2 rounded-xl border p-4 transition-all duration-200 cursor-pointer"
       style={{
-        borderColor: "var(--border)",
+        borderColor: "black",
         backgroundColor: "var(--muted)",
       }}
       onMouseEnter={(e) => {
@@ -48,7 +43,7 @@ export function WordCard({ item }: WordCardProps) {
         (e.currentTarget as HTMLDivElement).style.backgroundColor = style.bg;
       }}
       onMouseLeave={(e) => {
-        (e.currentTarget as HTMLDivElement).style.borderColor = "var(--border)";
+        (e.currentTarget as HTMLDivElement).style.borderColor = "black";
         (e.currentTarget as HTMLDivElement).style.backgroundColor = "var(--muted)";
       }}
     >
@@ -57,12 +52,12 @@ export function WordCard({ item }: WordCardProps) {
         <div className="flex items-baseline gap-2">
           <span
             className="text-base font-semibold"
-            style={{ color: "var(--foreground)" }}
+            style={{ color: "black" }}
           >
             {item.lemma}
           </span>
           {item.partOfSpeech && (
-            <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>
+            <span className="text-xs" style={{ color: "black" }}>
               {formatPartOfSpeech(item.partOfSpeech)}
             </span>
           )}
@@ -71,7 +66,7 @@ export function WordCard({ item }: WordCardProps) {
         {/* Mastery badge */}
         <span
           className="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium"
-          style={{ backgroundColor: style.bg, color: style.text }}
+          style={{ backgroundColor: style.bg, color: "black" }}
         >
           <span
             className="mr-1 inline-block h-1.5 w-1.5 rounded-full align-middle"
@@ -82,7 +77,7 @@ export function WordCard({ item }: WordCardProps) {
       </div>
 
       {/* Translation */}
-      <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
+      <p className="text-sm" style={{ color: "black" }}>
         {item.translation}
       </p>
 
@@ -92,7 +87,7 @@ export function WordCard({ item }: WordCardProps) {
           className="border-l-2 pl-3 text-xs italic"
           style={{
             borderColor: style.dot,
-            color: "var(--muted-foreground)",
+            color: "black",
             opacity: 0.8,
           }}
         >
@@ -103,11 +98,8 @@ export function WordCard({ item }: WordCardProps) {
       {/* Footer: source conversation + reps */}
       <div
         className="mt-auto flex items-center justify-between pt-1 text-xs"
-        style={{ color: "var(--muted-foreground)", opacity: 0.6 }}
+        style={{ color: "black", opacity: 0.6 }}
       >
-        {/* <span className="truncate" title={formatConversationLabel(item.sourceConversation)}>
-          📖 {formatConversationLabel(item.sourceConversation)}
-        </span> */}
         {item.reps > 0 && (
           <span className="shrink-0 pl-2">
             {item.reps} {item.reps === 1 ? "review" : "reviews"}

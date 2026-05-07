@@ -1,6 +1,7 @@
 import { Rating } from "@/lib/fsrs/types";
 import { LanguageFlag } from "@/components/ui/LanguageFlag";
 import { getLanguageDisplayName } from "@/lib/languages.config";
+import { PartyPopper } from "lucide-react";
 
 interface RatingSummary {
   [Rating.Again]: number;
@@ -60,7 +61,7 @@ export function CompletionScreen({
             border: "1px solid rgba(202,125,249,0.2)",
           }}
         >
-          🎉
+          <PartyPopper size={38} color="black"/>
         </div>
         <h2 className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>
           Session complete!
@@ -112,7 +113,7 @@ export function CompletionScreen({
           <p className="text-xs font-medium" style={{ color: "black" }}>
             Next review due
           </p>
-          <p className="mt-0.5 text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+          <p className="mt-0.5 text-sm font-semibold" style={{ color: "black" }}>
             {formatNextReview(nextReviewDate)}
           </p>
         </div>
@@ -124,9 +125,8 @@ export function CompletionScreen({
           href="/dashboard/vocabulary"
           className="block w-full rounded-xl py-3 text-center text-sm font-semibold transition-all duration-150"
           style={{
-            background: "linear-gradient(135deg, #CA7DF9, #a855f7)",
+            background: " #CA7DF9",
             color: "white",
-            boxShadow: "0 4px 14px rgba(202,125,249,0.35)",
           }}
         >
           View vocabulary
@@ -138,6 +138,7 @@ export function CompletionScreen({
             borderColor: "rgba(202,125,249,0.2)",
             backgroundColor: "white",
             color: "black",
+            cursor: "pointer"
           }}
           onMouseEnter={(e) => {
             (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(202,125,249,0.4)";

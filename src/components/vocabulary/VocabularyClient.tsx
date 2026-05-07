@@ -168,12 +168,13 @@ export function VocabularyClient({
                 <button
                   key={lang}
                   onClick={() => router.push(`/dashboard/vocabulary?lang=${lang}` as never)}
-                  className="flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors"
+                  className="flex items-center gap-2 rounded-sm p-1 transition-all duration-200 cursor-pointer bg-white border border-slate-100 shadow-sm"
                   style={{
-                    borderColor: lang === currentLang ? "var(--color-brand-500)" : "var(--border)",
-                    backgroundColor: lang === currentLang ? "var(--color-brand-100)" : "transparent",
-                    color: lang === currentLang ? "black" : "black",
-                    cursor: "pointer"
+                    borderColor: lang === currentLang ? "var(--color-brand-500)" : "rgba(202,125,249,0.2)",
+                    backgroundColor: lang === currentLang ? "rgba(202,125,249,0.1)" : "white",
+                    color: lang === currentLang ? "var(--color-brand-500)" : "black",
+                    boxShadow: lang === currentLang ? "0 0 0 1px var(--color-brand-500)" : "none",
+                    cursor: "pointer",
                   }}
                 >
                   <LanguageFlag language={lang} className="w-4 h-auto rounded-sm" />
@@ -211,7 +212,7 @@ export function VocabularyClient({
           {/* Search + tab bar */}
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             {/* Search input */}
-            <div className="relative max-w-xs">
+            <div className="relative max-w-xs rounded-xl transition-all duration-200 bg-white border border-slate-100 shadow-sm">
               <span
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-sm"
                 style={{ color: "black" }}
@@ -223,7 +224,7 @@ export function VocabularyClient({
                 placeholder="Search words..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full rounded-lg border py-2 pl-9 pr-3 text-sm outline-none transition-colors focus:border-[var(--color-brand-500)]"
+                className="w-full rounded-lg py-2 pl-9 pr-3 text-sm outline-none transition-colors"
                 style={{
                   borderColor: "var(--border)",
                   backgroundColor: "var(--muted)",
@@ -234,8 +235,7 @@ export function VocabularyClient({
 
             {/* Tabs */}
             <div
-              className="flex gap-1 overflow-x-auto rounded-lg border p-1"
-              style={{ borderColor: "black", backgroundColor: "var(--muted)" }}
+              className="flex gap-1 overflow-x-auto p-1 rounded-xl transition-all duration-200 bg-white border border-slate-100 shadow-sm"
             >
               {TABS.map((tab) => {
                 const count = tabCount(tab);
@@ -244,7 +244,7 @@ export function VocabularyClient({
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className="shrink-0 rounded-md px-3 py-1 text-xs font-medium transition-colors"
+                    className="shrink-0 rounded-xl px-3 py-1 text-xs font-medium transition-colors"
                     style={{
                       backgroundColor: isActive ? "var(--color-brand-500)" : "transparent",
                       color: isActive ? "white" : "black",

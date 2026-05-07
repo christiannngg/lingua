@@ -7,7 +7,6 @@ import { AppShell } from "@/components/layout/AppShell";
 import { OfflineBanner } from "@/components/layout/OfflineBanner";
 import { getUserLanguages } from "@/app/actions/languages";
 import { isSupportedLanguage } from "@/lib/languages.config";
-import { useUser } from "@/components/layout/UserContext";
 
 const getCachedUserLanguages = cache(getUserLanguages);
 
@@ -23,11 +22,11 @@ export default async function ChatLayout({
   params,
 }: ChatLayoutProps) {
   const { language } = await params;
-   const { firstName } = useUser();
 
   if (!isSupportedLanguage(language)) redirect("/dashboard");
 
   const session = await auth.api.getSession({ headers: await headers() });
+  const firstName = session?.user.name?.split(" ")[0] ?? "";
   if (!session) redirect("/sign-in");
 
   const [userLanguages, userLanguage] = await Promise.all([

@@ -79,13 +79,13 @@ export function HeadNav({ enrolledCodes, streakCount = 0, userFirstName = "" }: 
         </button>
 
         {/* Notification bell */}
-        <button
+        {/* <button
           className="rounded-md p-1.5 transition-colors"
           style={{ color: "var(--foreground)" }}
           aria-label="Notifications"
         >
           <Bell size={24} color="black" />
-        </button>
+        </button> */}
 
         {/* Avatar */}
         <button

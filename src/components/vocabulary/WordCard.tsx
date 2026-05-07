@@ -33,19 +33,7 @@ export function WordCard({ item }: WordCardProps) {
 
   return (
     <div
-      className="group relative flex flex-col gap-2 rounded-xl border p-4 transition-all duration-200 cursor-pointer"
-      style={{
-        borderColor: "black",
-        backgroundColor: "var(--muted)",
-      }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLDivElement).style.borderColor = style.dot;
-        (e.currentTarget as HTMLDivElement).style.backgroundColor = style.bg;
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLDivElement).style.borderColor = "black";
-        (e.currentTarget as HTMLDivElement).style.backgroundColor = "var(--muted)";
-      }}
+      className="group relative flex flex-col gap-2 rounded-xl p-4 transition-all duration-200 cursor-pointer bg-white border border-slate-100 shadow-sm"
     >
       {/* Header row: word + mastery badge */}
       <div className="flex items-start justify-between gap-2">

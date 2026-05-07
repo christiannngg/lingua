@@ -55,6 +55,7 @@ export function RatingButtons({ onRate, disabled = false }: RatingButtonsProps) 
             borderColor: border,
             backgroundColor: bg,
             boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+            cursor: "pointer"
           }}
           onMouseEnter={(e) => {
             if (!disabled) {

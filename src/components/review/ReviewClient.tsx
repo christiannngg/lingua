@@ -281,7 +281,7 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
                   <button
                     key={lang}
                     onClick={() => router.push(`/dashboard/review?lang=${lang}` as never)}
-                    className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-all duration-150"
+                      className="flex items-center gap-2 rounded-sm p-1 transition-all duration-200 cursor-pointer bg-white border border-slate-100 shadow-sm"
                     style={{
                       borderColor: isActive ? "var(--color-brand-500)" : "rgba(202,125,249,0.2)",
                       backgroundColor: isActive ? "rgba(202,125,249,0.1)" : "white",

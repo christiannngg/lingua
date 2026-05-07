@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { LanguageFlag } from "@/components/ui/LanguageFlag";
 import { getLanguageDisplayName } from "@/lib/languages.config";
 import { signOutAction } from "@/app/actions/auth";
-import { useActiveLanguage } from "@/hooks/useActiveLanguage";
 import { useSidebar } from "@/components/layout/SidebarContext";
 import { getConversationsByLanguage } from "@/app/actions/conversations";
 import {
@@ -43,13 +42,10 @@ interface SideNavProps {
 
 export function SideNav({ languages }: SideNavProps) {
   const pathname = usePathname();
-  const activeLanguage = useActiveLanguage(languages);
-  const { isExpanded, setActiveLanguage } = useSidebar();
+  const { isExpanded, activeLanguage: contextLang } = useSidebar();
+  const activeLanguage = contextLang ?? languages[0] ?? "es";
   const [conversations, setConversations] = useState<Conversation[]>([]);
 
-  useEffect(() => {
-    if (activeLanguage) setActiveLanguage(activeLanguage);
-  }, [activeLanguage, setActiveLanguage]);
 
   // Fetch conversations for the active language
   useEffect(() => {

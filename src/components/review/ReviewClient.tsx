@@ -15,6 +15,7 @@ import { CompletionScreen } from "./CompletionScreen";
 import { LanguageFlag } from "@/components/ui/LanguageFlag";
 import { getLanguageDisplayName } from "@/lib/languages.config";
 import { CheckCircleIcon } from "lucide-react";
+import { AnimatedPage, AnimatedSection } from "../layout/AnimatedPage";
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -255,111 +256,115 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
   // ── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex h-full flex-col">
+    <AnimatedPage className="flex h-full flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-8 py-4">
-        <div>
-          <h1 className="text-3xl font-bold" style={{ color: "black" }}>
-            Review
-          </h1>
-          <p className="flex items-center gap-1.5 text-sm" style={{ color: "black" }}>
-            <LanguageFlag language={currentLang} className="w-4 h-auto rounded-sm" />
-            {getLanguageDisplayName(currentLang)}
-            <span style={{ opacity: 0.4 }}>·</span>
-            CEFR {queue.cefrLevel}
-          </p>
-        </div>
-
-        {/* Language switcher */}
-        {languages.length > 1 && (
-          <div className="flex gap-2">
-            {languages.map((lang) => {
-              const isActive = lang === currentLang;
-              return (
-                <button
-                  key={lang}
-                  onClick={() => router.push(`/dashboard/review?lang=${lang}` as never)}
-                  className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-all duration-150"
-                  style={{
-                    borderColor: isActive ? "var(--color-brand-500)" : "rgba(202,125,249,0.2)",
-                    backgroundColor: isActive ? "rgba(202,125,249,0.1)" : "white",
-                    color: isActive ? "var(--color-brand-500)" : "black",
-                    boxShadow: isActive ? "0 0 0 1px var(--color-brand-500)" : "none",
-                    cursor: "pointer",
-                  }}
-                >
-                  <LanguageFlag language={lang} className="w-4 h-auto rounded-sm" />
-                  {getLanguageDisplayName(lang)}
-                </button>
-              );
-            })}
+      <AnimatedSection>
+        <div className="flex items-center justify-between px-8 py-4">
+          <div>
+            <h1 className="text-3xl font-bold" style={{ color: "black" }}>
+              Review
+            </h1>
+            <p className="flex items-center gap-1.5 text-sm" style={{ color: "black" }}>
+              <LanguageFlag language={currentLang} className="w-4 h-auto rounded-sm" />
+              {getLanguageDisplayName(currentLang)}
+              <span style={{ opacity: 0.4 }}>·</span>
+              CEFR {queue.cefrLevel}
+            </p>
           </div>
-        )}
-      </div>
+
+          {/* Language switcher */}
+          {languages.length > 1 && (
+            <div className="flex gap-2">
+              {languages.map((lang) => {
+                const isActive = lang === currentLang;
+                return (
+                  <button
+                    key={lang}
+                    onClick={() => router.push(`/dashboard/review?lang=${lang}` as never)}
+                    className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-all duration-150"
+                    style={{
+                      borderColor: isActive ? "var(--color-brand-500)" : "rgba(202,125,249,0.2)",
+                      backgroundColor: isActive ? "rgba(202,125,249,0.1)" : "white",
+                      color: isActive ? "var(--color-brand-500)" : "black",
+                      boxShadow: isActive ? "0 0 0 1px var(--color-brand-500)" : "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <LanguageFlag language={lang} className="w-4 h-auto rounded-sm" />
+                    {getLanguageDisplayName(lang)}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </AnimatedSection>
 
       {/* Main content area */}
-      <div className="flex flex-1 items-center justify-center px-6 py-10">
+      <AnimatedSection>
+        <div className="flex flex-1 items-center justify-center px-6 py-10">
 
-        {/* Empty state */}
-        {isEmpty && !done && (
-          <div className="flex flex-col items-center gap-4 text-center">
-            <div
-              className="flex h-20 w-20 items-center justify-center rounded-full"
-              style={{
-                background: "linear-gradient(135deg, rgba(202,125,249,0.15), rgba(168,85,247,0.1))",
-                border: "1px solid rgba(202,125,249,0.2)",
-              }}
-            >
-              <CheckCircleIcon size={32} style={{ color: "var(--color-brand-500)" }} />
+          {/* Empty state */}
+          {isEmpty && !done && (
+            <div className="flex flex-col items-center gap-4 text-center mt-50">
+              <div
+                className="flex h-20 w-20 items-center justify-center rounded-full"
+                style={{
+                  background: "linear-gradient(135deg, rgba(202,125,249,0.15), rgba(168,85,247,0.1))",
+                  border: "1px solid rgba(202,125,249,0.2)",
+                }}
+              >
+                <CheckCircleIcon size={32} style={{ color: "var(--color-brand-500)" }} />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold" style={{ color: "black" }}>
+                  All caught up!
+                </h2>
+                <p className="mt-1 max-w-xs text-sm" style={{ color: "black" }}>
+                  No words are due for review right now. Keep chatting to build your vocabulary.
+                </p>
+              </div>
+              <a
+                href="/dashboard/vocabulary"
+                className="mt-1 rounded-xl px-7 py-2.5 text-sm font-semibold transition-all duration-150"
+                style={{
+                  background: "#CA7DF9",
+                  color: "white",
+                }}
+              >
+                View vocabulary
+              </a>
             </div>
-            <div>
-              <h2 className="text-xl font-bold" style={{ color: "black" }}>
-                All caught up!
-              </h2>
-              <p className="mt-1 max-w-xs text-sm" style={{ color: "black" }}>
-                No words are due for review right now. Keep chatting to build your vocabulary.
-              </p>
-            </div>
-            <a
-              href="/dashboard/vocabulary"
-              className="mt-1 rounded-xl px-7 py-2.5 text-sm font-semibold transition-all duration-150"
-              style={{
-                background: "#CA7DF9",
-                color: "white",
-              }}
-            >
-              View vocabulary
-            </a>
-          </div>
-        )}
+          )}
 
-        {/* Completion screen */}
-        {done && (
-          <CompletionScreen
-            totalReviewed={sessionTotal}
-            ratingSummary={ratingSummary}
-            nextReviewDate={earliestNextReview}
-            onReviewAgain={handleReviewAgain}
-            language={currentLang}
-          />
-        )}
+          {/* Completion screen */}
+          {done && (
+            <CompletionScreen
+              totalReviewed={sessionTotal}
+              ratingSummary={ratingSummary}
+              nextReviewDate={earliestNextReview}
+              onReviewAgain={handleReviewAgain}
+              language={currentLang}
+            />
+          )}
 
-        {/* Active card */}
-        {!isEmpty && !done && currentCard && (
-          <FlashCard
-            card={currentCard}
-            revealed={revealed}
-            onReveal={handleReveal}
-            onRate={handleRate}
-            onRegenerate={handleRegenerate}
-            submitting={isCurrentCardSubmitting}
-            isRegenerating={regeneratingIds.has(currentCard.id)}
-            cardNumber={cardNumber}
-            totalCards={sessionTotal}
-            sentence={cardSentences[currentCard.id] ?? null}
-          />
-        )}
-      </div>
-    </div>
+          {/* Active card */}
+          {!isEmpty && !done && currentCard && (
+            <FlashCard
+              card={currentCard}
+              revealed={revealed}
+              onReveal={handleReveal}
+              onRate={handleRate}
+              onRegenerate={handleRegenerate}
+              submitting={isCurrentCardSubmitting}
+              isRegenerating={regeneratingIds.has(currentCard.id)}
+              cardNumber={cardNumber}
+              totalCards={sessionTotal}
+              sentence={cardSentences[currentCard.id] ?? null}
+            />
+          )}
+        </div>
+      </AnimatedSection>
+    </AnimatedPage>
   );
 }

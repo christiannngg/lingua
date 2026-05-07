@@ -9,6 +9,7 @@ import { RetakeAssessmentButton } from "@/components/settings/RetakeAssessmentBu
 import { LanguageFlag } from "@/components/ui/LanguageFlag";
 import { getLanguageDisplayName } from "@/lib/languages.config";
 import Link from "next/link";
+import { AnimatedPage, AnimatedSection } from "@/components/layout/AnimatedPage";
 
 export default async function SettingsPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -25,95 +26,101 @@ export default async function SettingsPage() {
   const isOnly = userLanguages.length === 1;
 
   return (
-    <main className="max-w-2xl mx-auto px-6 py-10" style={{ color: "#020122" }}>
+    <AnimatedPage className="max-w-2xl mx-auto px-6 py-10">
       {/* ── Page header ── */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold" style={{ color: "#020122" }}>
-          Settings
-        </h1>
-        <p className="text-slate-500 mt-1">Manage your languages and conversation memory.</p>
-      </div>
+      <AnimatedSection>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold" style={{ color: "#020122" }}>
+            Settings
+          </h1>
+          <p className="text-slate-500 mt-1">Manage your languages and conversation memory.</p>
+        </div>
+      </AnimatedSection>
 
       {/* ── Active languages ── */}
-      <section className="mb-10">
-        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">
-          Your Languages
-        </h2>
+      <AnimatedSection>
+        <section className="mb-10">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">
+            Your Languages
+          </h2>
 
-        <div className="flex flex-col gap-3">
-          {userLanguages.map((ul) => (
-            <div
-              key={ul.id}
-              className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5"
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <LanguageFlag language={ul.language} className="w-9 h-7 rounded-md shrink-0 shadow-sm" />
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-base" style={{ color: "#020122" }}>
-                    {getLanguageDisplayName(ul.language)}
-                  </p>
-                  <p className="text-sm text-slate-500 mt-0.5">
-                    Current level:{" "}
-                    {ul.cefrLevel ? (
-                      <span
-                        className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold ml-1"
-                        style={{ backgroundColor: "#f3e8ff", color: "#CA7DF9" }}
-                      >
-                        {ul.cefrLevel}
-                      </span>
-                    ) : (
-                      <span className="text-slate-400 ml-1">Not assessed</span>
-                    )}
-                  </p>
+          <div className="flex flex-col gap-3">
+            {userLanguages.map((ul) => (
+              <div
+                key={ul.id}
+                className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <LanguageFlag language={ul.language} className="w-9 h-7 rounded-md shrink-0 shadow-sm" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-base" style={{ color: "#020122" }}>
+                      {getLanguageDisplayName(ul.language)}
+                    </p>
+                    <p className="text-sm text-slate-500 mt-0.5">
+                      Current level:{" "}
+                      {ul.cefrLevel ? (
+                        <span
+                          className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold ml-1"
+                          style={{ backgroundColor: "#f3e8ff", color: "#CA7DF9" }}
+                        >
+                          {ul.cefrLevel}
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 ml-1">Not assessed</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-100">
+                  <RetakeAssessmentButton language={ul.language} />
+                  <RemoveLanguageButton language={ul.language} isOnly={isOnly} />
                 </div>
               </div>
-
-              <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-100">
-                <RetakeAssessmentButton language={ul.language} />
-                <RemoveLanguageButton language={ul.language} isOnly={isOnly} />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {hasUnadded && (
-          <div className="mt-3">
-            <Link
-              href="/onboarding"
-              className="flex items-center justify-center gap-2 w-full bg-white rounded-2xl border border-slate-100 shadow-sm px-4 py-3 text-sm font-medium text-slate-500 hover:border-slate-200 hover:text-slate-700 transition-colors"
-            >
-              <span className="text-lg leading-none" style={{ color: "#CA7DF9" }}>+</span>
-              Add a language
-            </Link>
-          </div>
-        )}
-      </section>
-
-      {/* ── Memory ── */}
-      <section>
-        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-1">
-          Conversation Memory
-        </h2>
-        <p className="text-sm text-slate-500 mb-4">
-          These summaries help your tutors recall past conversations. Removing one won&apos;t
-          delete your chat history — it only stops that context from influencing future sessions.
-        </p>
-
-        {memories.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-center">
-            <p className="text-sm text-slate-400">
-              No memories yet. Finish a conversation and start a new one to generate your first
-              memory.
-            </p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {memories.map((memory) => (
-              <MemoryCard key={memory.id} memory={memory} />
             ))}
           </div>
-        )}
-      </section>
-    </main>
+
+          {hasUnadded && (
+            <div className="mt-3">
+              <Link
+                href="/onboarding"
+                className="flex items-center justify-center gap-2 w-full bg-white rounded-2xl border border-slate-100 shadow-sm px-4 py-3 text-sm font-medium text-slate-500 hover:border-slate-200 hover:text-slate-700 transition-colors"
+              >
+                <span className="text-lg leading-none" style={{ color: "#CA7DF9" }}>+</span>
+                Add a language
+              </Link>
+            </div>
+          )}
+        </section>
+      </AnimatedSection>
+
+      {/* ── Memory ── */}
+      <AnimatedSection>
+        <section>
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-1">
+            Conversation Memory
+          </h2>
+          <p className="text-sm text-slate-500 mb-4">
+            These summaries help your tutors recall past conversations. Removing one won&apos;t
+            delete your chat history — it only stops that context from influencing future sessions.
+          </p>
+
+          {memories.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-center">
+              <p className="text-sm text-slate-400">
+                No memories yet. Finish a conversation and start a new one to generate your first
+                memory.
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {memories.map((memory) => (
+                <MemoryCard key={memory.id} memory={memory} />
+              ))}
+            </div>
+          )}
+        </section>
+      </AnimatedSection>
+    </AnimatedPage>
   );
 }

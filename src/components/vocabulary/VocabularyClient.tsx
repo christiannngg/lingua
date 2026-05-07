@@ -11,6 +11,7 @@ import { WordCard } from "./WordCard";
 import { LanguageFlag } from "@/components/ui/LanguageFlag";
 import { getLanguageDisplayName } from "@/lib/languages.config";
 import { BadgeAlert, Languages, Search } from "lucide-react";
+import { AnimatedPage, AnimatedSection } from "../layout/AnimatedPage";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -21,11 +22,11 @@ const TABS: TabValue[] = ["All", "New", "Learning", "Review", "Relearning", "Mas
 // ─── Stat card ───────────────────────────────────────────────────────────────
 
 const MASTERY_COLORS: Record<MasteryLabel, string> = {
-  New:        "#6366f1",
-  Learning:   "#eab308",
-  Review:     "#22c55e",
+  New: "#6366f1",
+  Learning: "#eab308",
+  Review: "#22c55e",
   Relearning: "#f97316",
-  Mastered:   "#06b6d4",
+  Mastered: "#06b6d4",
 };
 
 function StatCard({ label, count }: { label: MasteryLabel; count: number }) {
@@ -71,7 +72,7 @@ function EmptyState({ activeTab, search }: { activeTab: TabValue; search: string
   if (activeTab !== "All") {
     return (
       <div className="flex flex-col items-center gap-2 py-16 text-center">
-        <Languages size={48} color="black"/>
+        <Languages size={48} color="black" />
         <p className="font-medium" style={{ color: "black" }}>
           No {activeTab} words yet
         </p>
@@ -84,7 +85,7 @@ function EmptyState({ activeTab, search }: { activeTab: TabValue; search: string
 
   return (
     <div className="flex flex-col items-center gap-2 py-16 text-center">
-      <BadgeAlert size={48} color="black"/>
+      <BadgeAlert size={48} color="black" />
       <p className="font-medium" style={{ color: "black" }}>
         No vocabulary yet
       </p>
@@ -144,136 +145,140 @@ export function VocabularyClient({
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex h-full flex-col">
+    <AnimatedPage className="flex h-full flex-col">
       {/* ── Page header ───────────────────────────────────────────────────── */}
-      <div
-        className="flex items-center justify-between border-b px-6 py-5"
-        style={{ borderColor: "var(--border)" }}
-      >
-        <div>
-          <h1 className="text-xl font-bold" style={{ color: "black" }}>
-            Vocabulary
-          </h1>
-          <p className="text-sm" style={{ color: "black" }}>
-            {data.counts.total} {data.counts.total === 1 ? "word" : "words"} · CEFR {data.cefrLevel}
-          </p>
-        </div>
-
-        {/* Language switcher — only shown when user has multiple languages */}
-        {languages.length > 1 && (
-          <div className="flex gap-2">
-            {languages.map((lang) => (
-              <button
-                key={lang}
-                onClick={() => router.push(`/dashboard/vocabulary?lang=${lang}` as never)}
-                className="flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors"
-                style={{
-                  borderColor: lang === currentLang ? "var(--color-brand-500)" : "var(--border)",
-                  backgroundColor: lang === currentLang ? "var(--color-brand-100)" : "transparent",
-                  color: lang === currentLang ? "black" : "black",
-                  cursor: "pointer"
-                }}
-              >
-                <LanguageFlag language={lang} className="w-4 h-auto rounded-sm" />
-                {getLanguageDisplayName(lang)}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* ── Scrollable content area ───────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto px-6 py-6">
-
-        {/* Stat cards */}
-        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {(["New", "Learning", "Review", "Relearning", "Mastered"] as MasteryLabel[]).map(
-            (label) => (
-              <StatCard
-                key={label}
-                label={label}
-                count={
-                  label === "New"        ? data.counts.new :
-                  label === "Learning"   ? data.counts.learning :
-                  label === "Review"     ? data.counts.review :
-                  label === "Relearning" ? data.counts.relearning :
-                  data.counts.mastered
-                }
-              />
-            )
-          )}
-        </div>
-
-        {/* Search + tab bar */}
-        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          {/* Search input */}
-          <div className="relative max-w-xs">
-            <span
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-sm"
-              style={{ color: "black" }}
-            >
-              <Search size={14}/>
-            </span>
-            <input
-              type="text"
-              placeholder="Search words..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-lg border py-2 pl-9 pr-3 text-sm outline-none transition-colors focus:border-[var(--color-brand-500)]"
-              style={{
-                borderColor: "var(--border)",
-                backgroundColor: "var(--muted)",
-                color: "black",
-              }}
-            />
+      <AnimatedSection>
+        <div
+          className="flex items-center justify-between border-b px-6 py-5"
+          style={{ borderColor: "var(--border)" }}
+        >
+          <div>
+            <h1 className="text-xl font-bold" style={{ color: "black" }}>
+              Vocabulary
+            </h1>
+            <p className="text-sm" style={{ color: "black" }}>
+              {data.counts.total} {data.counts.total === 1 ? "word" : "words"} · CEFR {data.cefrLevel}
+            </p>
           </div>
 
-          {/* Tabs */}
-          <div
-            className="flex gap-1 overflow-x-auto rounded-lg border p-1"
-            style={{ borderColor: "black", backgroundColor: "var(--muted)" }}
-          >
-            {TABS.map((tab) => {
-              const count = tabCount(tab);
-              const isActive = tab === activeTab;
-              return (
+          {/* Language switcher — only shown when user has multiple languages */}
+          {languages.length > 1 && (
+            <div className="flex gap-2">
+              {languages.map((lang) => (
                 <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className="shrink-0 rounded-md px-3 py-1 text-xs font-medium transition-colors"
+                  key={lang}
+                  onClick={() => router.push(`/dashboard/vocabulary?lang=${lang}` as never)}
+                  className="flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors"
                   style={{
-                    backgroundColor: isActive ? "var(--color-brand-500)" : "transparent",
-                    color: isActive ? "white" : "black",
+                    borderColor: lang === currentLang ? "var(--color-brand-500)" : "var(--border)",
+                    backgroundColor: lang === currentLang ? "var(--color-brand-100)" : "transparent",
+                    color: lang === currentLang ? "black" : "black",
                     cursor: "pointer"
                   }}
                 >
-                  {tab}
-                  <span
-                    className="ml-1.5 rounded-full px-1.5 py-0.5 text-xs"
+                  <LanguageFlag language={lang} className="w-4 h-auto rounded-sm" />
+                  {getLanguageDisplayName(lang)}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </AnimatedSection>
+
+      {/* ── Scrollable content area ───────────────────────────────────────── */}
+      <AnimatedSection>
+        <div className="flex-1 overflow-y-auto px-6 py-6">
+
+          {/* Stat cards */}
+          <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {(["New", "Learning", "Review", "Relearning", "Mastered"] as MasteryLabel[]).map(
+              (label) => (
+                <StatCard
+                  key={label}
+                  label={label}
+                  count={
+                    label === "New" ? data.counts.new :
+                      label === "Learning" ? data.counts.learning :
+                        label === "Review" ? data.counts.review :
+                          label === "Relearning" ? data.counts.relearning :
+                            data.counts.mastered
+                  }
+                />
+              )
+            )}
+          </div>
+
+          {/* Search + tab bar */}
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            {/* Search input */}
+            <div className="relative max-w-xs">
+              <span
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-sm"
+                style={{ color: "black" }}
+              >
+                <Search size={14} />
+              </span>
+              <input
+                type="text"
+                placeholder="Search words..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full rounded-lg border py-2 pl-9 pr-3 text-sm outline-none transition-colors focus:border-[var(--color-brand-500)]"
+                style={{
+                  borderColor: "var(--border)",
+                  backgroundColor: "var(--muted)",
+                  color: "black",
+                }}
+              />
+            </div>
+
+            {/* Tabs */}
+            <div
+              className="flex gap-1 overflow-x-auto rounded-lg border p-1"
+              style={{ borderColor: "black", backgroundColor: "var(--muted)" }}
+            >
+              {TABS.map((tab) => {
+                const count = tabCount(tab);
+                const isActive = tab === activeTab;
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className="shrink-0 rounded-md px-3 py-1 text-xs font-medium transition-colors"
                     style={{
-                      backgroundColor: isActive ? "rgba(255,255,255,0.2)" : "var(--border)",
+                      backgroundColor: isActive ? "var(--color-brand-500)" : "transparent",
                       color: isActive ? "white" : "black",
+                      cursor: "pointer"
                     }}
                   >
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
+                    {tab}
+                    <span
+                      className="ml-1.5 rounded-full px-1.5 py-0.5 text-xs"
+                      style={{
+                        backgroundColor: isActive ? "rgba(255,255,255,0.2)" : "var(--border)",
+                        color: isActive ? "white" : "black",
+                      }}
+                    >
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
 
-        {/* Word grid */}
-        {filteredItems.length === 0 ? (
-          <EmptyState activeTab={activeTab} search={search} />
-        ) : (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredItems.map((item) => (
-              <WordCard key={item.id} item={item} />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+          {/* Word grid */}
+          {filteredItems.length === 0 ? (
+            <EmptyState activeTab={activeTab} search={search} />
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {filteredItems.map((item) => (
+                <WordCard key={item.id} item={item} />
+              ))}
+            </div>
+          )}
+        </div>
+      </AnimatedSection>
+    </AnimatedPage>
   );
 }

@@ -5,7 +5,7 @@ import { z } from "zod/v4";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/db/prisma";
-import { buildConversationSystemPrompt, buildMemoryMessage } from "@/lib/ai/conversation-prompt";
+import { buildConversationSystemPrompt, buildMemoryMessage, buildGreeting } from "@/lib/ai/conversation-prompt";
 import { extractAndSaveVocabulary } from "@/lib/ai/extract-vocabulary";
 import { extractAndSaveGrammar } from "@/lib/ai/extract-grammar";
 import { embedConversation } from "@/lib/embeddings";
@@ -78,15 +78,22 @@ export async function POST(req: NextRequest) {
     }
 
     const cefrLevel = (userLanguage.cefrLevel ?? "A1") as "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
-
+    const isNewConversation = !conversationId;
     let convId = conversationId;
     let memorySnippets: string | null = null;
+
+    
 
     if (!convId) {
       const conversation = await prisma.conversation.create({
         data: { userLanguageId },
       });
       convId = conversation.id;
+
+      const greetingText = buildGreeting(language);
+      await prisma.message.create({
+        data: { conversationId: convId, role: "assistant", content: greetingText },
+      });
 
       const firstUserMessage = messages.at(-1);
       const firstUserText = firstUserMessage
@@ -123,11 +130,13 @@ export async function POST(req: NextRequest) {
         content: extractText(m.parts as MessagePart[]),
       }))
       .filter((m) => m.content.length > 0);
-
+    
     const modelMessages: { role: "user" | "assistant"; content: string }[] = [
       ...(memorySnippets ? [buildMemoryMessage(memorySnippets)] : []),
+      ...(isNewConversation ? [{ role: "assistant" as const, content: buildGreeting(language) }] : []),
       ...conversationMessages,
     ];
+
 
     const result = streamText({
       model: anthropic("claude-haiku-4-5-20251001"),

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db/prisma";
 import { getConversationMessages } from "@/app/actions/conversations";
 import { ChatInterfaceLoader } from "@/components/conversation/ChatInterfaceLoader";
 import { isSupportedLanguage, type SupportedLanguage } from "@/lib/languages.config";
+import { buildGreeting } from "@/lib/ai/conversation-prompt";
 
 interface ChatPageProps {
   params: Promise<{ language: string }>;
@@ -38,6 +39,8 @@ export default async function ChatPage({ params, searchParams }: ChatPageProps) 
     parts: [{ type: "text" as const, text: m.content }],
   }));
 
+  const greetingText = !conv ? buildGreeting(language as SupportedLanguage) : null;
+
   return (
     <div style={{ display: "flex", height: "100%",}}>
       <ChatInterfaceLoader
@@ -47,6 +50,7 @@ export default async function ChatPage({ params, searchParams }: ChatPageProps) 
         userLanguageId={lang.id}
         initialMessages={initialMessages}
         initialConversationId={conv ?? null}
+        greetingText={greetingText}
       />
     </div>
   );

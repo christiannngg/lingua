@@ -17,6 +17,7 @@ interface ChatInterfaceProps {
   userLanguageId: string;
   initialConversationId?: string | null;
   initialMessages?: UIMessage[];
+  greetingText?: string | null;
 }
 
 const TIMEOUT_MS = 30_000;
@@ -35,6 +36,7 @@ export function ChatInterface({
   userLanguageId,
   initialConversationId = null,
   initialMessages = [],
+  greetingText = null,
 }: ChatInterfaceProps) {
   const personaName = getPersonaName(language);
   const languageDisplayName = getLanguageDisplayName(language);
@@ -48,20 +50,21 @@ export function ChatInterface({
 
   const [errorKind, setErrorKind] = useState<"timeout" | "generic" | null>(null);
 
-  const welcomeMessage: UIMessage = {
-    id: "welcome",
-    role: "assistant",
-    parts: [
-      {
-        type: "text",
-        text: `${language === "es" ? "¡Hola" : "Ciao"}! ${language === "es" ? "Soy Sofia. ¿De qué quieres hablar hoy?" : "Sono Marco. Di cosa vuoi parlare oggi?"}`,
-      },
-    ],
-    metadata: undefined,
-  };
+  const greetingUIMessage: UIMessage | null = greetingText
+    ? {
+        id: "greeting-display",
+        role: "assistant",
+        parts: [{ type: "text", text: greetingText }],
+        metadata: undefined,
+      }
+    : null;
 
   const startingMessages: UIMessage[] =
-    initialMessages.length > 0 ? initialMessages : [welcomeMessage];
+    initialMessages.length > 0
+      ? initialMessages
+      : greetingUIMessage
+      ? [greetingUIMessage]
+      : [];
 
   const { messages, sendMessage, status } = useChat({
     messages: startingMessages,

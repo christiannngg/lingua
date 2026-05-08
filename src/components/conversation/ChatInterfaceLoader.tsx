@@ -44,6 +44,7 @@ interface ChatInterfaceLoaderProps {
   userLanguageId: string;
   initialMessages: UIMessage[];
   initialConversationId: string | null;
+  greetingText: string | null;
 }
 
 export function ChatInterfaceLoader(props: ChatInterfaceLoaderProps) {

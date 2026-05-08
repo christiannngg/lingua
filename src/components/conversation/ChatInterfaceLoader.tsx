@@ -12,29 +12,29 @@ const ChatInterface = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div
-        style={{
-          width: "100%",
-          flex: 1,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: "#0d0d1a",
-        }}
-      >
-        <div
-          style={{
-            width: "2rem",
-            height: "2rem",
-            borderRadius: "9999px",
-            border: "2px solid #6366f1",
-            borderTopColor: "transparent",
-            animation: "spin 0.7s linear infinite",
-          }}
-        />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </div>
-    ),
+  <div
+    style={{
+      width: "100%",
+      flex: 1,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "var(--background)",
+    }}
+  >
+    <div
+      style={{
+        width: "2rem",
+        height: "2rem",
+        borderRadius: "9999px",
+        border: "2px solid #CA7DF9",
+        borderTopColor: "transparent",
+        animation: "spin 0.7s linear infinite",
+      }}
+    />
+    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+  </div>
+),
   },
 );
 

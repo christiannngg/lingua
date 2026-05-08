@@ -27,16 +27,14 @@ export function ChatInput({ onSubmit, isLoading, placeholder }: ChatInputProps) 
       handleSend();
     }
   }
-
   return (
     <div
       style={{
         display: "flex",
         alignItems: "flex-end",
         gap: "0.5rem",
-        borderTop: "1px solid #2d2d44",
-        backgroundColor: "#13131f",
-        padding: "1rem",
+        backgroundColor: "#FFFFFF",
+        padding: "0.875rem 1rem",
       }}
     >
       <textarea
@@ -51,16 +49,19 @@ export function ChatInput({ onSubmit, isLoading, placeholder }: ChatInputProps) 
           resize: "none",
           maxHeight: "120px",
           borderRadius: "0.75rem",
-          border: "1px solid #2d2d44",
-          backgroundColor: "#1e1e2e",
-          color: "#e2e8f0",
+          border: "1px solid #e2e8f0",
+          backgroundColor: "#F7F7FF",
+          color: "#020122",
           fontSize: "0.9375rem",
           padding: "0.625rem 1rem",
           outline: "none",
           opacity: isLoading ? 0.5 : 1,
           fontFamily: "inherit",
           lineHeight: "1.5",
+          transition: "border-color 0.15s",
         }}
+        onFocus={(e) => { (e.target as HTMLTextAreaElement).style.borderColor = "#CA7DF9"; }}
+        onBlur={(e) => { (e.target as HTMLTextAreaElement).style.borderColor = "#e2e8f0"; }}
       />
       <button
         onClick={handleSend}
@@ -70,7 +71,7 @@ export function ChatInput({ onSubmit, isLoading, placeholder }: ChatInputProps) 
           width: "2.5rem",
           height: "2.5rem",
           borderRadius: "0.75rem",
-          backgroundColor: "#6366f1",
+          backgroundColor: "#CA7DF9",
           color: "white",
           border: "none",
           cursor: isLoading || !value.trim() ? "not-allowed" : "pointer",
@@ -95,9 +96,7 @@ export function ChatInput({ onSubmit, isLoading, placeholder }: ChatInputProps) 
             }}
           />
         ) : (
-          <div>
-            <ArrowUp size={24}></ArrowUp>
-          </div>
+          <ArrowUp size={18} />
         )}
       </button>
     </div>

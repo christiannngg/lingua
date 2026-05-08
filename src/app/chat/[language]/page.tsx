@@ -39,8 +39,9 @@ export default async function ChatPage({ params, searchParams }: ChatPageProps) 
   }));
 
   return (
-    <div style={{ display: "flex", height: "100%", backgroundColor: "#0d0d1a" }}>
+    <div style={{ display: "flex", height: "100%",}}>
       <ChatInterfaceLoader
+        key={conv ?? "new"}
         language={language as SupportedLanguage}
         cefrLevel={lang.cefrLevel ?? "A1"}
         userLanguageId={lang.id}

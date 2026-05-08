@@ -5,7 +5,6 @@ interface MessageBubbleProps {
   message: UIMessage;
   personaName: string;
 }
-
 export function MessageBubble({ message, personaName }: MessageBubbleProps) {
   const isUser = message.role === "user";
 
@@ -15,24 +14,25 @@ export function MessageBubble({ message, personaName }: MessageBubbleProps) {
         display: "flex",
         justifyContent: isUser ? "flex-end" : "flex-start",
         marginBottom: "0.75rem",
+        alignItems: "flex-end",
+        gap: "0.5rem",
       }}
     >
       {!isUser && (
         <div
           style={{
-            width: "2rem",
-            height: "2rem",
+            width: "1.875rem",
+            height: "1.875rem",
             borderRadius: "9999px",
-            background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+            backgroundColor: "#F3E8FF",
+            border: "1px solid #e9d5ff",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            color: "white",
+            color: "#CA7DF9",
             fontSize: "0.75rem",
-            fontWeight: 600,
-            marginRight: "0.5rem",
+            fontWeight: 700,
             flexShrink: 0,
-            alignSelf: "flex-end",
           }}
         >
           {personaName[0]}
@@ -44,11 +44,12 @@ export function MessageBubble({ message, personaName }: MessageBubbleProps) {
           maxWidth: "70%",
           padding: "0.625rem 1rem",
           borderRadius: isUser ? "1rem 1rem 0.25rem 1rem" : "1rem 1rem 1rem 0.25rem",
-          backgroundColor: isUser ? "#CA7DF9" : "#ffffff",
-          color: isUser ? "white" : "#2d2d44",
+          backgroundColor: isUser ? "#CA7DF9" : "#FFFFFF",
+          color: isUser ? "white" : "#020122",
           fontSize: "0.9375rem",
           lineHeight: "1.6",
-          border: isUser ? "none" : "1px solid #2d2d44",
+          border: isUser ? "none" : "1px solid #f1f5f9",
+          boxShadow: isUser ? "none" : "0 1px 3px rgba(0,0,0,0.04)",
         }}
       >
         {message.parts

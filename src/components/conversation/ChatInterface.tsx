@@ -143,53 +143,11 @@ export function ChatInterface({
         flexDirection: "column",
         width: "100%",
         height: "100%",
-        backgroundColor: "var(--background)"
+        backgroundColor: "var(--background)",
       }}
     >
-      {/* Header */}
-      {/* <div
-        style={{
-          padding: "1rem 1.25rem",
-          borderBottom: "1px solid #2d2d44",
-          backgroundColor: "var(--background)",
-          display: "flex",
-          alignItems: "center",
-          gap: "0.75rem",
-        }}
-      >
-        <div
-          style={{
-            width: "2.5rem",
-            height: "2.5rem",
-            borderRadius: "9999px",
-            background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "white",
-            fontWeight: 700,
-            fontSize: "1rem",
-          }}
-        >
-          {personaName[0]}
-        </div>
-        <div>
-          <p style={{ margin: 0, fontWeight: 600, color: "black", fontSize: "0.9375rem" }}>
-            {personaName}
-          </p>
-          <p style={{ margin: 0, fontSize: "0.75rem", color: "#6366f1" }}>
-            {languageDisplayName} · {cefrLevel}
-          </p>
-        </div>
-        {isLoading && (
-          <span style={{ marginLeft: "auto", fontSize: "0.75rem", color: "#64748b" }}>
-            {personaName} is typing…
-          </span>
-        )}
-      </div> */}
-
       {/* Messages */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "1.25rem" }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: "1.5rem 1.25rem" }}>
         {messages.map((message: UIMessage) => (
           <MessageBubble key={message.id} message={message} personaName={personaName} />
         ))}
@@ -202,11 +160,12 @@ export function ChatInterface({
               justifyContent: "space-between",
               padding: "0.75rem 1rem",
               marginTop: "0.5rem",
-              backgroundColor: "var(--background)",
-              borderRadius: "0.5rem",
+              backgroundColor: "#fff7ed",
+              border: "1px solid #fed7aa",
+              borderRadius: "0.75rem",
             }}
           >
-            <span style={{ fontSize: "0.875rem", color: "#94a3b8" }}>
+            <span style={{ fontSize: "0.875rem", color: "#92400e" }}>
               {personaName} took too long to respond.
             </span>
             <button
@@ -215,7 +174,7 @@ export function ChatInterface({
                 marginLeft: "1rem",
                 padding: "0.375rem 0.875rem",
                 borderRadius: "0.5rem",
-                backgroundColor: "#6366f1",
+                backgroundColor: "#CA7DF9",
                 color: "white",
                 fontSize: "0.8125rem",
                 fontWeight: 600,
@@ -234,11 +193,11 @@ export function ChatInterface({
             style={{
               textAlign: "center",
               padding: "0.75rem",
-              color: "#f87171",
+              color: "#dc2626",
               fontSize: "0.875rem",
-              backgroundColor: "#1e1e2e",
-              borderRadius: "0.5rem",
-              border: "1px solid #7f1d1d",
+              backgroundColor: "#fef2f2",
+              borderRadius: "0.75rem",
+              border: "1px solid #fecaca",
               marginTop: "0.5rem",
             }}
           >

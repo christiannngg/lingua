@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { LanguageFlag } from "@/components/ui/LanguageFlag";
 import { getLanguageDisplayName } from "@/lib/languages.config";
@@ -46,6 +46,9 @@ export function SideNav({ languages }: SideNavProps) {
   const activeLanguage = contextLang ?? languages[0] ?? "es";
   const [conversations, setConversations] = useState<Conversation[]>([]);
 
+  const searchParams = useSearchParams();
+  const activeConvId = searchParams.get("conv");
+
 
   // Fetch conversations for the active language
   useEffect(() => {
@@ -77,7 +80,9 @@ export function SideNav({ languages }: SideNavProps) {
             const isActive =
               item.href === "/dashboard"
                 ? pathname === "/dashboard"
-                : pathname === item.href || pathname.startsWith(item.href + "/");
+                : item.href === chatHref
+                  ? (pathname === chatHref || pathname.startsWith(chatHref + "/")) && !activeConvId
+                  : pathname === item.href || pathname.startsWith(item.href + "/");
 
             return (
               <li key={item.label}>
@@ -119,29 +124,39 @@ export function SideNav({ languages }: SideNavProps) {
         {/* Conversations section — expanded only */}
         {isExpanded && conversations.length > 0 && (
           <div className="mx-2 mt-2">
-            <p className=" px-3 text-xs text-slate-500">
+            <p className="px-3 text-xs text-slate-500">
               Recents
             </p>
             <ul className="flex flex-col gap-0.5">
-              {conversations.slice(0, 8).map((conv) => (
-                <li key={conv.id}>
-                  <Link
-                    href={`/chat/${activeLanguage}?conv=${conv.id}` as never}
-                    className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs transition-colors truncate"
-                    style={{ color: "#64748b" }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "#faf5ff";
-                      (e.currentTarget as HTMLAnchorElement).style.color = "#CA7DF9";
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "transparent";
-                      (e.currentTarget as HTMLAnchorElement).style.color = "#64748b";
-                    }}
-                  >
-                    <span className="truncate">{conv.title ?? "New conversation"}</span>
-                  </Link>
-                </li>
-              ))}
+              {conversations.slice(0, 8).map((conv) => {
+                const isActiveConv = conv.id === activeConvId;
+                return (
+                  <li key={conv.id}>
+                    <Link
+                      href={`/chat/${activeLanguage}?conv=${conv.id}` as never}
+                      className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs transition-colors truncate"
+                      style={{
+                        backgroundColor: isActiveConv ? "#F3E8FF" : "transparent",
+                        color: isActiveConv ? "#CA7DF9" : "#64748b",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isActiveConv) {
+                          (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "#faf5ff";
+                          (e.currentTarget as HTMLAnchorElement).style.color = "#CA7DF9";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isActiveConv) {
+                          (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "transparent";
+                          (e.currentTarget as HTMLAnchorElement).style.color = "#64748b";
+                        }
+                      }}
+                    >
+                      <span className="truncate">{conv.title ?? "New conversation"}</span>
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}

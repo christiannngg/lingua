@@ -51,7 +51,7 @@ export default async function SettingsPage() {
                 className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5"
               >
                 <div className="flex items-center gap-3 mb-4">
-                  <LanguageFlag language={ul.language} className="w-9 h-7 rounded-md shrink-0 shadow-sm" />
+                  <LanguageFlag language={ul.language} className="w-9 h-7 rounded-sm shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-base" style={{ color: "#020122" }}>
                       {getLanguageDisplayName(ul.language)}

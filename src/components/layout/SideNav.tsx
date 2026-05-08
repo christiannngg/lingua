@@ -17,6 +17,7 @@ import {
   LucideIcon,
   LogOut,
 } from "lucide-react";
+import { ConversationItem } from "../conversation/ConversationItem";
 
 const STATIC_NAV_ITEMS: {
   href: "/dashboard" | "/dashboard/review" | "/dashboard/vocabulary" | "/settings";
@@ -124,39 +125,19 @@ export function SideNav({ languages }: SideNavProps) {
         {/* Conversations section — expanded only */}
         {isExpanded && conversations.length > 0 && (
           <div className="mx-2 mt-2">
-            <p className="px-3 text-xs text-slate-500">
-              Recents
-            </p>
+            <p className="px-3 text-xs text-slate-500">Recents</p>
             <ul className="flex flex-col gap-0.5">
-              {conversations.slice(0, 8).map((conv) => {
-                const isActiveConv = conv.id === activeConvId;
-                return (
-                  <li key={conv.id}>
-                    <Link
-                      href={`/chat/${activeLanguage}?conv=${conv.id}` as never}
-                      className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs transition-colors truncate"
-                      style={{
-                        backgroundColor: isActiveConv ? "#F3E8FF" : "transparent",
-                        color: isActiveConv ? "#CA7DF9" : "#64748b",
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isActiveConv) {
-                          (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "#faf5ff";
-                          (e.currentTarget as HTMLAnchorElement).style.color = "#CA7DF9";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isActiveConv) {
-                          (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "transparent";
-                          (e.currentTarget as HTMLAnchorElement).style.color = "#64748b";
-                        }
-                      }}
-                    >
-                      <span className="truncate">{conv.title ?? "New conversation"}</span>
-                    </Link>
-                  </li>
-                );
-              })}
+              {conversations.slice(0, 8).map((conv) => (
+                <li key={conv.id}>
+                  <ConversationItem
+                    id={conv.id}
+                    title={conv.title}
+                    language={activeLanguage}
+                    isActive={conv.id === activeConvId}
+                    activeConvId={activeConvId}
+                  />
+                </li>
+              ))}
             </ul>
           </div>
         )}

@@ -14,6 +14,7 @@ import { redirect } from "next/navigation";
 import { getLanguageDisplayName } from "@/lib/languages.config";
 import type { SupportedLanguage } from "@/lib/languages.config";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
+import { CardState } from "@/lib/fsrs";
 
 export default async function DashboardPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -42,11 +43,14 @@ export default async function DashboardPage() {
   const enrolledCodes = userLanguages.map((ul) => ul.language as SupportedLanguage);
 
   const dueCount = await prisma.vocabularyItem.count({
-    where: {
-      userLanguageId: { in: userLanguages.map((ul) => ul.id) },
-      nextReview: { lte: new Date() },
-    },
-  });
+  where: {
+    userLanguageId: { in: userLanguages.map((ul) => ul.id) },
+    OR: [
+      { state: CardState.New },
+      { nextReview: { lte: new Date() } },
+    ],
+  },
+});
 
   const [
     cefrHistory,

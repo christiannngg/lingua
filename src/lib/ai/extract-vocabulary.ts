@@ -5,9 +5,7 @@ import { getLanguageDisplayName, type SupportedLanguage } from "@/lib/languages.
 
 const client = new Anthropic();
 
-// ---------------------------------------------------------------------------
 // Language-aware prompt helpers
-// ---------------------------------------------------------------------------
 
 /**
  * Returns skip rules for parts of speech that are never worth extracting,

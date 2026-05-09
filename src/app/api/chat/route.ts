@@ -41,7 +41,6 @@ export async function POST(req: NextRequest) {
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session) return new Response("Unauthorized", { status: 401 });
 
-    // Rate limiting 
     const { success, limit, remaining, reset } = await chatLimiter.limit(session.user.id);
     if (!success) {
       return new Response("Too many requests", {
@@ -66,36 +65,36 @@ export async function POST(req: NextRequest) {
     }
     const language: SupportedLanguage = rawLanguage;
 
+    // Ownership check 
     const userLanguage = await prisma.userLanguage.findUnique({
       where: { id: userLanguageId },
-      select: { cefrLevel: true, userId: true },
+      select: {
+        cefrLevel: true,
+        userId: true,
+        ...(conversationId && {
+          conversations: {
+            where: { id: conversationId },
+            select: { id: true },
+            take: 1,
+          },
+        }),
+      },
     });
+
     if (!userLanguage) return new Response("Language not found", { status: 404 });
 
     if (userLanguage.userId !== session.user.id) {
       return new Response("Unauthorized", { status: 403 });
     }
 
-    if (conversationId) {
-      const ownedConversation = await prisma.conversation.findFirst({
-        where: {
-          id: conversationId,
-          userLanguageId,
-        },
-        select: { id: true },
-      });
-
-      if (!ownedConversation) {
-        return new Response("Unauthorized", { status: 403 });
-      }
+    if (conversationId && userLanguage.conversations?.length === 0) {
+      return new Response("Unauthorized", { status: 403 });
     }
 
     const cefrLevel = (userLanguage.cefrLevel ?? "A1") as "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
     const isNewConversation = !conversationId;
     let convId = conversationId;
     let memorySnippets: string | null = null;
-
-    
 
     if (!convId) {
       const conversation = await prisma.conversation.create({
@@ -143,13 +142,14 @@ export async function POST(req: NextRequest) {
         content: extractText(m.parts as MessagePart[]),
       }))
       .filter((m) => m.content.length > 0);
-    
+
+    const greetingMessage = { role: "assistant" as const, content: buildGreeting(language) };
+
     const modelMessages: { role: "user" | "assistant"; content: string }[] = [
       ...(memorySnippets ? [buildMemoryMessage(memorySnippets)] : []),
-      ...(isNewConversation ? [{ role: "assistant" as const, content: buildGreeting(language) }] : []),
+      ...(isNewConversation ? [greetingMessage] : []),
       ...conversationMessages,
     ];
-
 
     const result = streamText({
       model: anthropic("claude-haiku-4-5-20251001"),

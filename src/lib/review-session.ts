@@ -146,15 +146,13 @@ export function resolveResumedSession<T extends { id: string }>(
   sessionTotal: number;
   resumeIndex: number;
 } {
-  // Build a lookup map from the server cards for O(1) access
   const serverCardMap = new Map<string, T>(
     serverCards.map((card) => [card.id, card]),
   );
 
-  // Walk the saved cardIds in order, starting from the saved index.
   const remainingCards: T[] = [];
-
   const savedCardIds = session.cardIds;
+
   for (let i = session.index; i < savedCardIds.length; i++) {
     const id = savedCardIds[i];
     if (id === undefined) continue;
@@ -162,6 +160,16 @@ export function resolveResumedSession<T extends { id: string }>(
     if (card !== undefined) {
       remainingCards.push(card);
     }
+  }
+
+  // Stale session guard 
+  if (remainingCards.length === 0 && serverCards.length > 0) {
+    clearSession(session.userLanguageId); //  clear the stale entry
+    return {
+      remainingCards: serverCards,
+      sessionTotal: serverCards.length,
+      resumeIndex: 0,
+    };
   }
 
   return {

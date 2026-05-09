@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // ── Rate limiting ────────────────────────────────────────────────────────
+  // Rate limiting
   const { success, limit, remaining, reset } = await extractLimiter.limit(session.user.id);
   if (!success) {
     return NextResponse.json(
@@ -37,7 +37,6 @@ export async function POST(req: NextRequest) {
       },
     );
   }
-  // ────────────────────────────────────────────────────────────────────────
 
   const body = await req.json();
   const parsed = RequestSchema.safeParse(body);
@@ -50,13 +49,23 @@ export async function POST(req: NextRequest) {
   // ── Ownership check ──────────────────────────────────────────────────────
   const userLanguage = await prisma.userLanguage.findUnique({
     where: { id: userLanguageId },
-    select: { userId: true },
+    select: {
+      userId: true,
+      conversations: {
+        where: { id: conversationId },
+        select: { id: true },
+        take: 1,
+      },
+    },
   });
 
   if (!userLanguage || userLanguage.userId !== session.user.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
-  // ────────────────────────────────────────────────────────────────────────
+
+  if (userLanguage.conversations.length === 0) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
 
   // Delegate entirely to the shared implementation in extract-vocabulary.ts.
   // All prompt logic, retry handling, and DB writes live there.

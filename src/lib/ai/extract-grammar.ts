@@ -146,7 +146,7 @@ export async function extractAndSaveGrammar({
     return;
   }
 
-  // ── Parallelise DB writes across all errors ──────────────────────────────
+  // Parallelise DB writes across all errors 
   // Each error's concept lookup, mastery upsert, and error insert are
   // independent of the others — no reason to pay for sequential round-trips.
   await Promise.all(

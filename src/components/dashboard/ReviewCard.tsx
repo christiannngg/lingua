@@ -74,7 +74,7 @@ export function ReviewCard({ dueCount, languages }: Props) {
               {` card${dueCount === 1 ? "" : "s"} ready for recall based on FSRS schedule.`}
             </>
           ) : (
-            "You're all caught up! No cards due right now."
+            "You're ! No cards due right now."
           )}
         </p>
       </div>

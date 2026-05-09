@@ -224,6 +224,7 @@ export function FlashCard({
                 border: "1.5px solid var(--color-brand-500)",
                 color: "var(--color-brand-500)",
                 backgroundColor: "transparent",
+                cursor: "pointer"
               }}
               onMouseEnter={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(202,125,249,0.08)";

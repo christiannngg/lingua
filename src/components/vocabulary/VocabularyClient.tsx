@@ -142,10 +142,8 @@ export function VocabularyClient({
     return (data.counts[key] as number) ?? 0;
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-
   return (
-    <AnimatedPage className="flex h-full flex-col">
+    <AnimatedPage className="flex h-full flex-col max-w-6xl mx-auto ">
       {/* ── Page header ───────────────────────────────────────────────────── */}
       <AnimatedSection>
         <div
@@ -153,7 +151,7 @@ export function VocabularyClient({
           style={{ borderColor: "var(--border)" }}
         >
           <div>
-            <h1 className="text-xl font-bold" style={{ color: "black" }}>
+            <h1 className="text-3xl font-bold" style={{ color: "black" }}>
               Vocabulary
             </h1>
             <p className="text-sm" style={{ color: "black" }}>

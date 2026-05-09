@@ -9,7 +9,8 @@
  *  - extractLimiter:    20 requests / 60 s    POST /api/vocabulary/extract (1:1 with chat)
  *  - assessmentLimiter: 10 requests / 3600 s  POST /api/assessment/message, GET /api/assessment/init
  *  - sentenceLimiter:   30 requests / 3600 s  POST /api/vocabulary/generate-sentence
- *  - reembedLimiter:     5 requests / 3600 s  POST /api/embeddings/re-embed
+ *  - reembedLimiter:    5 requests / 3600 s   POST /api/embeddings/re-embed
+ *  - reviewLimiter:     120 requests / 60 s   POST /api/vocabulary/review
  */
 
 import { Redis } from "@upstash/redis";
@@ -96,5 +97,20 @@ export const weeklySummaryLimiter = new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(3, "3600 s"),
   prefix: "lingua:rl:weekly-summary",
+  analytics: false,
+});
+
+/**
+ * Review limiter — 120 requests per 60 seconds per user.
+ * Applied to POST /api/vocabulary/review.
+ *
+ * This route has no AI call, but an unthrottled DB-write endpoint is still
+ * a vector for FSRS state manipulation and database exhaustion. 120/min
+ * comfortably covers any real review session pace while blocking automation.
+ */
+export const reviewLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(120, "60 s"),
+  prefix: "lingua:rl:review",
   analytics: false,
 });

@@ -7,6 +7,7 @@ import {
   getPersonaNameForLanguage,
   isSupportedLanguage,
 } from "@/lib/languages.config";
+import { ArrowUp } from "lucide-react";
 
 type Message = {
   role: "user" | "assistant";
@@ -175,7 +176,7 @@ export default function AssessmentPage() {
 
   // ── Chat screen ────────────────────────────────────────────────────────────
   return (
-    <main style={{ maxWidth: 600, margin: "0 auto", padding: "2rem" }}>
+    <main style={{ maxWidth: 600, margin: "0 auto", padding: "2rem", color: "black" }}>
       <h1>Level Assessment</h1>
       <p>
         {personaName} will ask you a few questions in {languageName} to find the
@@ -188,9 +189,6 @@ export default function AssessmentPage() {
       {/* Message thread */}
       <div
         style={{
-          border: "1px solid #ccc",
-          borderRadius: 8,
-          padding: "1rem",
           minHeight: 300,
           maxHeight: 500,
           overflowY: "auto",
@@ -199,18 +197,19 @@ export default function AssessmentPage() {
           flexDirection: "column",
           gap: "0.75rem",
         }}
+        className="shadow-md rounded-xl bg-white p-4"
       >
         {messages.map((msg, i) => (
           <div
             key={i}
             style={{
               alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
-              background: msg.role === "user" ? "#000" : "#f0f0f0",
+              background: msg.role === "user" ? "#000" : "white",
               color: msg.role === "user" ? "#fff" : "#000",
-              borderRadius: 8,
               padding: "0.5rem 0.75rem",
               maxWidth: "80%",
             }}
+            className="white-bg shadow-md border-xl"
           >
             {msg.content}
           </div>
@@ -234,7 +233,13 @@ export default function AssessmentPage() {
       </div>
 
       {/* Input */}
-      <div style={{ display: "flex", gap: "0.5rem" }}>
+      <div style={{
+        display: "flex",
+        alignItems: "flex-end",
+        gap: "0.5rem",
+        backgroundColor: "#FFFFFF",
+        padding: "0.875rem 1rem",
+      }}>
         <textarea
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
@@ -242,14 +247,41 @@ export default function AssessmentPage() {
           placeholder="Type your response… (Enter to send)"
           disabled={isLoading || !!result}
           rows={2}
-          style={{ flex: 1, resize: "none", padding: "0.5rem", borderRadius: 6 }}
+          style={{
+            flex: 1,
+            resize: "none",
+            maxHeight: "120px",
+            borderRadius: "0.75rem",
+            border: "1px solid #e2e8f0",
+            backgroundColor: "#F7F7FF",
+            color: "#020122",
+            fontSize: "0.9375rem",
+            padding: "0.625rem 1rem",
+            outline: "none",
+            opacity: isLoading ? 0.5 : 1,
+            fontFamily: "inherit",
+            lineHeight: "1.5",
+            transition: "border-color 0.15s",
+          }}
+          onFocus={(e) => { (e.target as HTMLTextAreaElement).style.borderColor = "#CA7DF9"; }}
+          onBlur={(e) => { (e.target as HTMLTextAreaElement).style.borderColor = "#e2e8f0"; }}
         />
         <button
           onClick={handleSubmit}
           disabled={isLoading || !userInput.trim() || !!result}
-          style={{ padding: "0.5rem 1rem", cursor: "pointer" }}
+          style={{width: "2.5rem",
+          height: "2.5rem",
+          borderRadius: "0.75rem",
+          backgroundColor: "#CA7DF9",
+          color: "white",
+          border: "none",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+          transition: "opacity 0.15s", }}
         >
-          Send
+            <ArrowUp size={18} />
         </button>
       </div>
     </main>

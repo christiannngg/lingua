@@ -55,7 +55,7 @@ export function SideNav({ languages }: SideNavProps) {
   useEffect(() => {
     if (!activeLanguage) return;
     getConversationsByLanguage(activeLanguage)
-      .then(setConversations)
+      .then(({ conversations }) => setConversations(conversations))
       .catch(() => setConversations([]));
   }, [activeLanguage]);
 

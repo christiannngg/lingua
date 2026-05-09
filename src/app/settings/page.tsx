@@ -26,14 +26,15 @@ export default async function SettingsPage() {
   const isOnly = userLanguages.length === 1;
 
   return (
-    <AnimatedPage className="max-w-2xl mx-auto px-6 py-10">
+    <AnimatedPage className="flex h-full flex-col max-w-6xl mx-auto">
       {/* ── Page header ── */}
+      {/* flex items-center justify-between border-b px-6 py-5 */}
       <AnimatedSection>
-        <div className="mb-8">
+        <div className="flex flex-col py-5">
           <h1 className="text-3xl font-bold" style={{ color: "#020122" }}>
             Settings
           </h1>
-          <p className="text-slate-500 mt-1">Manage your languages and conversation memory.</p>
+          <p className="text-black mt-1">Manage your languages and conversation memory.</p>
         </div>
       </AnimatedSection>
 

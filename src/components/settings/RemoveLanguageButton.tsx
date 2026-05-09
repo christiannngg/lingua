@@ -17,7 +17,7 @@ export function RemoveLanguageButton({ language, isOnly }: Props) {
 
   if (isOnly) {
     return (
-      <span className="text-xs text-slate-400 italic">Can&apos;t remove your only language</span>
+      <span className="text-xs text-slate-400">Add another language to remove!</span>
     );
   }
 

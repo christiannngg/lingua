@@ -21,8 +21,8 @@ export function MessageBubble({ message, personaName }: MessageBubbleProps) {
       {!isUser && (
         <div
           style={{
-            width: "1.875rem",
-            height: "1.875rem",
+            width: "2.25rem",
+            height: "2.25rem",
             borderRadius: "9999px",
             backgroundColor: "#F3E8FF",
             border: "1px solid #e9d5ff",

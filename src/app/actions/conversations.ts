@@ -6,15 +6,49 @@ import { headers } from "next/headers";
 
 export type ConversationActionResult = { success: true } | { success: false; error: string };
 
-// ── Read actions (called from Server Components — throwing is fine) ──────────
+// Default page size — enough for a full sidebar without over-fetching
+const CONVERSATIONS_PAGE_SIZE = 20;
 
-export async function getConversations(userLanguageId: string) {
+export type ConversationPage = {
+  conversations: {
+    id: string;
+    title: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+    messages: { content: string; role: string }[];
+  }[];
+  // Passed back to the next call as `cursor` to fetch the next page.
+  // null means there are no more pages.
+  nextCursor: string | null;
+};
+
+// Read actions (called from Server Components — throwing is fine)
+
+/**
+ * Fetches a page of conversations for the given userLanguage, ordered by
+ * updatedAt DESC. Pass the `nextCursor` from the previous page to advance.
+ */
+export async function getConversations(
+  userLanguageId: string,
+  cursor?: string,
+): Promise<ConversationPage> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Unauthenticated");
 
-  return prisma.conversation.findMany({
+  // Fetch one extra row to determine whether a next page exists without
+  // a separate COUNT query
+  const limit = CONVERSATIONS_PAGE_SIZE + 1;
+
+  const rows = await prisma.conversation.findMany({
     where: { userLanguageId, userLanguage: { userId: session.user.id } },
     orderBy: { updatedAt: "desc" },
+    ...(cursor
+      ? {
+          cursor: { id: cursor },
+          skip: 1, // skip the cursor row itself
+        }
+      : {}),
+    take: limit,
     select: {
       id: true,
       title: true,
@@ -27,13 +61,18 @@ export async function getConversations(userLanguageId: string) {
       },
     },
   });
+
+  const hasNextPage = rows.length === limit;
+  const conversations = hasNextPage ? rows.slice(0, CONVERSATIONS_PAGE_SIZE) : rows;
+  const nextCursor = hasNextPage ? (conversations[CONVERSATIONS_PAGE_SIZE - 1]?.id ?? null) : null;
+
+  return { conversations, nextCursor };
 }
 
 export async function getConversationMessages(conversationId: string) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Unauthenticated");
 
-  // Verify the conversation belongs to the session user before returning messages
   const conversation = await prisma.conversation.findFirst({
     where: {
       id: conversationId,
@@ -50,7 +89,7 @@ export async function getConversationMessages(conversationId: string) {
   });
 }
 
-// ── Mutating actions (called from client interactions — return result) ────────
+// Mutating actions (called from client interactions — return result)
 
 export async function deleteConversation(
   conversationId: string,
@@ -59,7 +98,6 @@ export async function deleteConversation(
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session) return { success: false, error: "Unauthenticated" };
 
-    // Verify the conversation belongs to this user before deleting
     const conversation = await prisma.conversation.findFirst({
       where: {
         id: conversationId,
@@ -78,7 +116,10 @@ export async function deleteConversation(
   }
 }
 
-export async function getConversationsByLanguage(language: string) {
+export async function getConversationsByLanguage(
+  language: string,
+  cursor?: string,
+): Promise<ConversationPage> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Unauthenticated");
 
@@ -87,7 +128,7 @@ export async function getConversationsByLanguage(language: string) {
     select: { id: true },
   });
 
-  if (!userLanguage) return [];
+  if (!userLanguage) return { conversations: [], nextCursor: null };
 
-  return getConversations(userLanguage.id);
+  return getConversations(userLanguage.id, cursor);
 }

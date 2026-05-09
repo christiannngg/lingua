@@ -17,7 +17,6 @@ import { getLanguageDisplayName } from "@/lib/languages.config";
 import { CheckCircleIcon } from "lucide-react";
 import { AnimatedPage, AnimatedSection } from "../layout/AnimatedPage";
 
-// ─────────────────────────────────────────────────────────────────────────────
 
 interface RatingSummary {
   [Rating.Again]: number;
@@ -41,9 +40,6 @@ interface ReviewClientProps {
   currentLang: string;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Session initialisation
-// ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * Derives the initial card list, starting index, and session total from the
@@ -78,9 +74,7 @@ function initSessionState(queue: ReviewQueue): {
   };
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Component
-// ─────────────────────────────────────────────────────────────────────────────
 
 export function ReviewClient({ queue, languages, currentLang }: ReviewClientProps) {
   const router = useRouter();
@@ -108,7 +102,7 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
   const [done, setDone] = useState(false);
   const [earliestNextReview, setEarliestNextReview] = useState<Date | null>(null);
 
-  // ── Sentence cache ───────────────────────────────────────────────────────
+  //  Sentence cache 
   const [cardSentences, setCardSentences] = useState<Record<string, string>>(() =>
     Object.fromEntries(
       cards_.
@@ -119,7 +113,7 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
 
   const [regeneratingIds, setRegeneratingIds] = useState<Set<string>>(new Set());
 
-  // ── Persist progress to sessionStorage ──────────────────────────────────
+  // Persist progress to sessionStorage 
   // Runs after every index change. Writes the frozen full cardIds list
   // (from the ref) plus the current index — so the next mount can
   // reconstruct both the session total and the remaining cards correctly.
@@ -131,7 +125,7 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
     );
   }, [currentIndex, queue.userLanguageId]);
 
-  // ── Derived ───────────────────────────────────────────────────────────────
+  // Derived 
   const isEmpty = cards_.length === 0;
   const currentCard = cards_[currentIndex];
   const isCurrentCardSubmitting = currentCard
@@ -144,7 +138,7 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
   // this mount. Adding currentIndex gives the absolute position.
   const cardNumber = sessionTotal - cards_.length + currentIndex + 1;
 
-  // ── Handlers ────────────────────────────────────────────────────────────
+  // Handlers 
 
   const handleReveal = useCallback(() => {
     setRevealed(true);
@@ -253,13 +247,13 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
     router.push(`/dashboard/review?lang=${currentLang}` as never);
   }, [router, currentLang, queue.userLanguageId]);
 
-  // ── Render ───────────────────────────────────────────────────────────────
+  // Render
 
   return (
-    <AnimatedPage className="flex h-full flex-col">
+    <AnimatedPage className="flex h-full flex-col max-w-6xl mx-auto">
       {/* Header */}
       <AnimatedSection>
-        <div className="flex items-center justify-between px-8 py-4">
+        <div className="flex items-center justify-between border-b px-6 py-5">
           <div>
             <h1 className="text-3xl font-bold" style={{ color: "black" }}>
               Review

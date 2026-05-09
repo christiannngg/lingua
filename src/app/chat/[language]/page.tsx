@@ -42,7 +42,7 @@ export default async function ChatPage({ params, searchParams }: ChatPageProps) 
   const greetingText = !conv ? buildGreeting(language as SupportedLanguage) : null;
 
   return (
-    <div style={{ display: "flex", height: "100%",}}>
+    <div className="max-w-5xl mx-auto  py-8 space-y-8" style={{ display: "flex", height: "100%"}}>
       <ChatInterfaceLoader
         key={conv ?? "new"}
         language={language as SupportedLanguage}

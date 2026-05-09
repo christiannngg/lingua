@@ -31,7 +31,6 @@ export function ChatInput({ onSubmit, isLoading, placeholder }: ChatInputProps) 
     <div
       style={{
         display: "flex",
-        alignItems: "flex-end",
         gap: "0.5rem",
         backgroundColor: "#FFFFFF",
         padding: "0.875rem 1rem",
@@ -48,12 +47,12 @@ export function ChatInput({ onSubmit, isLoading, placeholder }: ChatInputProps) 
           flex: 1,
           resize: "none",
           maxHeight: "120px",
-          borderRadius: "0.75rem",
+          borderRadius: "1.75rem",
           border: "1px solid #e2e8f0",
           backgroundColor: "#F7F7FF",
           color: "#020122",
-          fontSize: "0.9375rem",
-          padding: "0.625rem 1rem",
+          fontSize: "1rem",
+          padding: " 1rem",
           outline: "none",
           opacity: isLoading ? 0.5 : 1,
           fontFamily: "inherit",
@@ -68,9 +67,9 @@ export function ChatInput({ onSubmit, isLoading, placeholder }: ChatInputProps) 
         disabled={isLoading || !value.trim()}
         aria-label="Send message"
         style={{
-          width: "2.5rem",
-          height: "2.5rem",
-          borderRadius: "0.75rem",
+          width: "6%",
+          height: "100%",
+          borderRadius: "50%",
           backgroundColor: "#CA7DF9",
           color: "white",
           border: "none",

@@ -83,7 +83,7 @@ function computeDecayScore(errors: { createdAt: Date }[], now: Date): number {
   }, 0);
 }
 
-// ── All read actions — throwing is fine, called from Server Components ────────
+// All read actions — throwing is fine, called from Server Components
 
 export async function getCefrHistory(language: string): Promise<CefrDataPoint[]> {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -268,11 +268,6 @@ export async function getWeeklySummary(language: string, forceRefresh = false): 
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Unauthenticated");
 
-  if (forceRefresh) {
-    const { success } = await weeklySummaryLimiter.limit(session.user.id);
-    if (!success) throw new Error("Rate limit exceeded. Try again later.");
-  }
-
   const userLanguage = await prisma.userLanguage.findUnique({
     where: {
       userId_language: { userId: session.user.id, language },
@@ -295,6 +290,8 @@ export async function getWeeklySummary(language: string, forceRefresh = false): 
       generatedAt: cached.generatedAt.toISOString().slice(0, 10),
     };
   }
+  const { success } = await weeklySummaryLimiter.limit(session.user.id);
+  if (!success) throw new Error("Rate limit exceeded. Try again later.");
 
   // Gather this week's stats
   const [wordsLearned, conversationsHad, grammarErrors, levelChange] = await Promise.all([
@@ -510,29 +507,35 @@ export async function getMasteryProgress(language: string): Promise<MasteryProgr
 
   if (!userLanguage) return null;
 
-  const items = await prisma.vocabularyItem.findMany({
-    where: { userLanguageId: userLanguage.id },
-    select: { state: true, reps: true },
-  });
+  const [masteredCount, total, stateCounts] = await Promise.all([
+    prisma.vocabularyItem.count({
+      where: {
+        userLanguageId: userLanguage.id,
+        state: "REVIEW",
+        reps: { gte: MASTERED_REPS_THRESHOLD },
+      },
+    }),
+    prisma.vocabularyItem.count({
+      where: { userLanguageId: userLanguage.id },
+    }),
+    prisma.vocabularyItem.groupBy({
+      by: ["state"],
+      where: { userLanguageId: userLanguage.id },
+      _count: { state: true },
+    }),
+  ]);
 
-  let newCount = 0;
-  let learningCount = 0;
-  let reviewCount = 0;
-  let masteredCount = 0;
+  // groupBy returns one row per state value — build a lookup map
+  const countByState = new Map<string, number>(
+    stateCounts.map((row) => [row.state, row._count.state]),
+  );
 
-  for (const item of items) {
-    if (item.state === "REVIEW" && item.reps >= MASTERED_REPS_THRESHOLD) {
-      masteredCount++;
-    } else if (item.state === "NEW") {
-      newCount++;
-    } else if (item.state === "LEARNING" || item.state === "RELEARNING") {
-      learningCount++;
-    } else {
-      reviewCount++;
-    }
-  }
+  // REVIEW count from groupBy includes both mastered and non-mastered REVIEW cards.
+  const reviewCount = (countByState.get("REVIEW") ?? 0) - masteredCount;
 
-  // Next milestone = nearest multiple of 25 above current mastered count
+  const newCount      = countByState.get("NEW") ?? 0;
+  const learningCount = (countByState.get("LEARNING") ?? 0) + (countByState.get("RELEARNING") ?? 0);
+
   const nextMilestone = Math.max(25, Math.ceil((masteredCount + 1) / 25) * 25);
   const wordsUntilNextMilestone = nextMilestone - masteredCount;
 
@@ -541,7 +544,7 @@ export async function getMasteryProgress(language: string): Promise<MasteryProgr
     learningCount,
     reviewCount,
     masteredCount,
-    total: items.length,
+    total,
     wordsUntilNextMilestone,
     nextMilestone,
   };
@@ -556,7 +559,6 @@ export async function getGlobalStreak(): Promise<StreakData> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return { currentStreak: 0, longestStreak: 0 };
 
-  // Get all userLanguage IDs for this user
   const userLanguages = await prisma.userLanguage.findMany({
     where: { userId: session.user.id },
     select: { id: true },
@@ -566,7 +568,6 @@ export async function getGlobalStreak(): Promise<StreakData> {
 
   const userLanguageIds = userLanguages.map((ul) => ul.id);
 
-  // Fetch all conversation dates across all languages, past 365 days
   const since = new Date();
   since.setUTCDate(since.getUTCDate() - 365);
 
@@ -578,16 +579,27 @@ export async function getGlobalStreak(): Promise<StreakData> {
     select: { createdAt: true },
   });
 
-  // Build a Set of active date strings in UTC ("2026-05-04")
   const activeDates = new Set<string>();
   for (const c of conversations) {
     activeDates.add(c.createdAt.toISOString().slice(0, 10));
   }
 
-  // Walk backwards from today to compute currentStreak
+  // Current streak 
   const today = new Date();
+  const todayStr = new Date(
+    Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()),
+  ).toISOString().slice(0, 10);
+
+  const yesterdayDate = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+  yesterdayDate.setUTCDate(yesterdayDate.getUTCDate() - 1);
+  const yesterdayStr = yesterdayDate.toISOString().slice(0, 10);
+
+  // Grace period: if today has no activity yet, treat yesterday as the
+  // effective start of the backward walk so the streak doesn't reset at midnight.
+  const startStr = activeDates.has(todayStr) ? todayStr : yesterdayStr;
+
   let currentStreak = 0;
-  const cursor = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+  const cursor = new Date(startStr + "T00:00:00Z");
 
   while (true) {
     const dateStr = cursor.toISOString().slice(0, 10);
@@ -595,23 +607,11 @@ export async function getGlobalStreak(): Promise<StreakData> {
       currentStreak++;
       cursor.setUTCDate(cursor.getUTCDate() - 1);
     } else {
-      // Allow a 1-day grace: if today has no activity yet, check yesterday
-      // before breaking — so a streak doesn't reset at midnight
-      if (currentStreak === 0) {
-        cursor.setUTCDate(cursor.getUTCDate() - 1);
-        const yesterdayStr = cursor.toISOString().slice(0, 10);
-        if (activeDates.has(yesterdayStr)) {
-          // yesterday was active — streak is still alive, count from yesterday
-          currentStreak++;
-          cursor.setUTCDate(cursor.getUTCDate() - 1);
-          continue;
-        }
-      }
       break;
     }
   }
 
-  // Compute longestStreak by scanning all active dates in order
+  // Longest streak
   const sortedDates = [...activeDates].sort();
   let longestStreak = 0;
   let runLength = 0;

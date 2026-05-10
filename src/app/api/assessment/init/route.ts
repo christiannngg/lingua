@@ -3,7 +3,6 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db/prisma";
 import { headers } from "next/headers";
 import { isSupportedLanguage } from "@/lib/languages.config";
-import { assessmentLimiter } from "@/ratelimit";
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,24 +10,6 @@ export async function GET(req: NextRequest) {
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    // Rate limiting 
-    const { success, limit, remaining, reset } = await assessmentLimiter.limit(session.user.id);
-    if (!success) {
-      return NextResponse.json(
-        { error: "Too many requests" },
-        {
-          status: 429,
-          headers: {
-            "X-RateLimit-Limit": limit.toString(),
-            "X-RateLimit-Remaining": remaining.toString(),
-            "X-RateLimit-Reset": reset.toString(),
-            "Retry-After": Math.ceil((reset - Date.now()) / 1000).toString(),
-          },
-        },
-      );
-    }
-
 
     const language = req.nextUrl.searchParams.get("language");
     if (!language || !isSupportedLanguage(language)) {
@@ -48,9 +29,19 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    if (userLanguage.assessmentCompleted) {
+      return NextResponse.json({ assessmentCompleted: true });
+    }
+
+    // Create a fresh Conversation record for this assessment session.
+    const conversation = await prisma.conversation.create({
+      data: { userLanguageId: userLanguage.id },
+    });
+ 
     return NextResponse.json({
       userLanguageId: userLanguage.id,
-      assessmentCompleted: userLanguage.assessmentCompleted,
+      conversationId: conversation.id,
+      assessmentCompleted: false,
     });
   } catch (err) {
     console.error("[assessment/init] Unexpected error:", err);

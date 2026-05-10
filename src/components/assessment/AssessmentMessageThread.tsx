@@ -28,19 +28,19 @@ export function AssessmentMessageThread({ messages, isLoading, error, personaNam
         flexDirection: "column",
         gap: "0.75rem",
       }}
-      className="shadow-md rounded-xl bg-white p-4"
+      // className="shadow-md rounded-xl bg-white p-4"
     >
       {messages.map((msg, i) => (
         <div
           key={i}
           style={{
             alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
-            background: msg.role === "user" ? "#000" : "white",
+            background: msg.role === "user" ? "#CA7DF9" : "white",
             color: msg.role === "user" ? "#fff" : "#000",
             padding: "0.5rem 0.75rem",
             maxWidth: "80%",
           }}
-          className="white-bg shadow-md border-xl"
+          className="white-bg shadow-md rounded-xl"
         >
           {msg.content}
         </div>

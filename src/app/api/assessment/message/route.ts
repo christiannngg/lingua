@@ -15,17 +15,14 @@ import { assessmentLimiter } from "@/ratelimit";
 
 const client = new Anthropic();
 
+const MAX_TURNS = 8;
+
 const RequestSchema = z.object({
   language: z.string(),
   userLanguageId: z.string(),
-  messages: z.array(
-    z.object({
-      role: z.enum(["user", "assistant"]),
-      content: z.string(),
-    }),
-  ),
-  // Optional — present on every request but only meaningfully used to build
-  // the system prompt. Validated loosely here; the prompt builder handles it.
+  conversationId: z.string(),
+  // Null on the first turn — the AI speaks first
+  userMessage: z.string().nullable(),
   selfReportBand: z.enum(["A1", "A2", "B1", "C1"]).nullable().optional(),
 });
 
@@ -97,7 +94,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Rate limiting
     const { success, limit, remaining, reset } = await assessmentLimiter.limit(session.user.id);
     if (!success) {
       return NextResponse.json(
@@ -120,34 +116,66 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
-    const { language: rawLanguage, userLanguageId, messages, selfReportBand } = parsed.data;
+    const { language: rawLanguage, userLanguageId, conversationId, userMessage, selfReportBand } =
+      parsed.data;
 
     if (!isSupportedLanguage(rawLanguage)) {
       return NextResponse.json({ error: "Invalid language" }, { status: 400 });
     }
     const language = rawLanguage;
 
-    // Ownership check
+    // Ownership check — verify both the userLanguage and the conversation belong to this user
     const userLanguageOwner = await prisma.userLanguage.findUnique({
       where: { id: userLanguageId },
-      select: { userId: true },
+      select: {
+        userId: true,
+        conversations: {
+          where: { id: conversationId },
+          select: { id: true },
+          take: 1,
+        },
+      },
     });
 
     if (!userLanguageOwner || userLanguageOwner.userId !== session.user.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
+    if (userLanguageOwner.conversations.length === 0) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
+    // Persist the user message before the AI call so it's never lost on failure
+    if (userMessage) {
+      await prisma.message.create({
+        data: { conversationId, role: "user", content: userMessage },
+      });
+    }
+
+    // Load the full conversation history from the database.
+    const dbMessages = await prisma.message.findMany({
+      where: { conversationId },
+      orderBy: { createdAt: "asc" },
+      select: { role: true, content: true },
+    });
+
+    // Server-side turn counter: number of assistant messages already stored
+    const turnCount = dbMessages.filter((m) => m.role === "assistant").length;
+
     const messagesForApi =
-      messages.length === 0
+      dbMessages.length === 0
         ? [{ role: "user" as const, content: "Hello, I'm ready to begin." }]
-        : messages;
+        : dbMessages.map((m) => ({
+            role: m.role as "user" | "assistant",
+            content: m.content,
+          }));
 
     let response;
     try {
       response = await client.messages.create({
         model: "claude-haiku-4-5-20251001",
         max_tokens: 1024,
-        system: buildAssessmentSystemPrompt(language, selfReportBand),
+        system: buildAssessmentSystemPrompt(language, selfReportBand, turnCount),
         messages: messagesForApi,
       });
     } catch (err) {
@@ -160,11 +188,25 @@ export async function POST(req: NextRequest) {
         ? (response.content[0] as { type: "text"; text: string }).text
         : "";
 
-    const isComplete = replyText.toLowerCase().includes("[assessment_complete]");
+    const tokenFound = replyText.toLowerCase().includes("[assessment_complete]");
+    // Force-complete at MAX_TURNS even if the AI forgot the token
+    const isComplete = tokenFound || turnCount + 1 >= MAX_TURNS;
     const cleanReply = replyText.replace(/\[assessment_complete\]/i, "").trim();
 
+    // Persist the assistant message
+    await prisma.message.create({
+      data: { conversationId, role: "assistant", content: cleanReply },
+    });
+
     if (isComplete) {
-      const allMessages = [...messages, { role: "assistant" as const, content: cleanReply }];
+      // Use the full DB-sourced transcript for the judge — not client-assembled messages
+      const allMessages = [
+        ...dbMessages.map((m) => ({
+          role: m.role as "user" | "assistant",
+          content: m.content,
+        })),
+        { role: "assistant" as const, content: cleanReply },
+      ];
 
       const { cefrLevel, description } = await extractCefrResult(
         allMessages,

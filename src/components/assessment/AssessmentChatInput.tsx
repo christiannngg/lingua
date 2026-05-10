@@ -24,20 +24,20 @@ export function AssessmentChatInput({ value, onChange, onSubmit, disabled }: Pro
         alignItems: "flex-end",
         gap: "0.5rem",
         backgroundColor: "#FFFFFF",
-        padding: "0.875rem 1rem",
+        // padding: "0.875rem 1rem",
       }}
     >
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Type your response… (Enter to send)"
+        placeholder="Type your response…"
         disabled={disabled}
         rows={2}
         style={{
           flex: 1,
           resize: "none",
-          maxHeight: "120px",
+          maxHeight: "45px",
           borderRadius: "0.75rem",
           border: "1px solid #e2e8f0",
           backgroundColor: "#F7F7FF",
@@ -61,9 +61,9 @@ export function AssessmentChatInput({ value, onChange, onSubmit, disabled }: Pro
         onClick={onSubmit}
         disabled={disabled || !value.trim()}
         style={{
-          width: "2.5rem",
-          height: "2.5rem",
-          borderRadius: "0.75rem",
+          width: "9%",
+          height: "45px",
+          borderRadius: "50%",
           backgroundColor: "#CA7DF9",
           color: "white",
           border: "none",
@@ -72,6 +72,7 @@ export function AssessmentChatInput({ value, onChange, onSubmit, disabled }: Pro
           justifyContent: "center",
           flexShrink: 0,
           transition: "opacity 0.15s",
+          cursor: "pointer"
         }}
       >
         <ArrowUp size={18} />

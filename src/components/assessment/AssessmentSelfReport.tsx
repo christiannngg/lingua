@@ -112,7 +112,6 @@ export function AssessmentSelfReport({ languageName, personaName, onSelect }: Pr
                             style={{
                                display: "flex",
                                alignItems: "center",
-                               border: "1px solid red"
                             }}
                             className="rounded-xl border border-slate-100  shadow-md  px-3 py-2 text-left transition-colors hover:bg-white hover:text-black group cursor-pointer"
                         >
@@ -125,7 +124,7 @@ export function AssessmentSelfReport({ languageName, personaName, onSelect }: Pr
 
                             {/* Text */}
                             <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "row", gap: "10px", alignItems: "center" }}>
-                                <div
+                                {/* <div
                                     style={{
                                         fontSize: "1rem",
                                     
@@ -133,12 +132,12 @@ export function AssessmentSelfReport({ languageName, personaName, onSelect }: Pr
                                 >
                                     {opt.label}: 
 
-                                </div>
+                                </div> */}
                                 <div
                                     style={{
-                                        fontSize: "0.875rem",
-                                        color: "#6B7280",
-                                        marginTop: "0.125rem",
+                                        fontSize: "1rem",
+                                        color: "#000000",
+                                        // marginTop: "0.125rem",
                                     }}
                                 >
                                     

@@ -35,6 +35,7 @@ export default function AssessmentPage() {
   const [turnCount, setTurnCount] = useState(0);
   const [result, setResult] = useState<AssessmentResult | null>(null);
   const [userLanguageId, setUserLanguageId] = useState<string | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Only runs after the user has completed the self-report step
@@ -60,8 +61,9 @@ export default function AssessmentPage() {
         }
 
         setUserLanguageId(data.userLanguageId);
+        setConversationId(data.conversationId)
         // Pass selfReportBand here so the first AI turn is already seeded
-        await sendMessage([], data.userLanguageId, selfReportBand);
+        await sendMessage(null, data.userLanguageId, data.conversationId, selfReportBand);
       } catch {
         setError("Something went wrong starting your assessment. Please try again.");
       }
@@ -72,14 +74,15 @@ export default function AssessmentPage() {
   }, [selfReportBand]);
 
   async function sendMessage(
-    currentMessages: Message[],
+    userMessageText: string | null,
     ulid?: string,
+    convId?: string,
     band?: SelfReportBand | null,
   ) {
     const id = ulid ?? userLanguageId;
-    if (!id) return;
+    const cid = convId ?? conversationId;
+    if (!id || !cid) return;
 
-    // Use the passed band on the first call, fall back to state for subsequent turns
     const activeBand = band !== undefined ? band : selfReportBand;
 
     setIsLoading(true);
@@ -92,7 +95,8 @@ export default function AssessmentPage() {
         body: JSON.stringify({
           language,
           userLanguageId: id,
-          messages: currentMessages,
+          conversationId: cid,
+          userMessage: userMessageText,
           selfReportBand: activeBand,
         }),
       });
@@ -120,11 +124,9 @@ export default function AssessmentPage() {
     if (!trimmed || isLoading || result) return;
 
     const userMessage: Message = { role: "user", content: trimmed };
-    const updatedMessages = [...messages, userMessage];
-
-    setMessages(updatedMessages);
+    setMessages((prev) => [...prev, userMessage]);
     setUserInput("");
-    await sendMessage(updatedMessages);
+    await sendMessage(trimmed);
   }
 
   // Step 1 — Self-report screen (shown before anything else)

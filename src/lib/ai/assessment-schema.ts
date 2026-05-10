@@ -32,3 +32,36 @@ export const CEFR_DESCRIPTIONS: Record<CefrLevel, string> = {
   C1: "Advanced — you express yourself with ease and sophistication.",
   C2: "Mastery — you're operating at near-native fluency. Impressive!",
 };
+
+export const CEFR_LEVEL_ORDER: readonly CefrLevel[] = [
+  "A1",
+  "A2",
+  "B1",
+  "B2",
+  "C1",
+  "C2",
+] as const;
+
+/**
+ * Applies a deterministic confidence threshold to the judge's raw output.
+ */
+export function applyConfidenceThreshold(
+  cefrLevel: CefrLevel,
+  confidence: "low" | "medium" | "high",
+): CefrLevel {
+  if (confidence !== "low") return cefrLevel;
+
+  const index = CEFR_LEVEL_ORDER.indexOf(cefrLevel);
+  const adjustedIndex = Math.max(0, index - 1);
+  const adjusted = CEFR_LEVEL_ORDER[adjustedIndex];
+
+  if (adjusted === undefined) return "A1";
+
+  if (adjusted !== cefrLevel) {
+    console.info(
+      `[assessment] low confidence downgrade: ${cefrLevel} → ${adjusted}`,
+    );
+  }
+
+  return adjusted;
+}

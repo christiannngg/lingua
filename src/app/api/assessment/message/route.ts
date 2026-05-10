@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod/v4";
 import { buildAssessmentSystemPrompt, type SelfReportBand } from "@/lib/ai/assessment-prompt";
-import { AssessmentResultSchema, CEFR_DESCRIPTIONS } from "@/lib/ai/assessment-schema";
+import {
+  AssessmentResultSchema,
+  CEFR_DESCRIPTIONS,
+  applyConfidenceThreshold,
+} from "@/lib/ai/assessment-schema";
 import { prisma } from "@/lib/db/prisma";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -74,10 +78,11 @@ Respond ONLY with valid JSON matching this exact shape — no markdown, no expla
           ? (response.content[0] as { type: "text"; text: string }).text
           : "";
       const parsed = AssessmentResultSchema.parse(JSON.parse(raw));
+      const finalLevel = applyConfidenceThreshold(parsed.cefrLevel, parsed.confidence);
 
       return {
-        cefrLevel: parsed.cefrLevel,
-        description: CEFR_DESCRIPTIONS[parsed.cefrLevel as keyof typeof CEFR_DESCRIPTIONS],
+        cefrLevel: finalLevel,
+        description: CEFR_DESCRIPTIONS[finalLevel],
       };
     } catch {
       attempts++;

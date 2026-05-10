@@ -148,19 +148,129 @@ export default function AssessmentPage() {
   // Step 2 — Chat assessment
   return (
     <main style={{ maxWidth: 600, margin: "0 auto", padding: "2rem", color: "black" }}>
-      <h1>Level Assessment</h1>
-      <p>
-        {personaName} will ask you a few questions in {languageName} to find the right
-        starting point for you.
-      </p>
-      <p style={{ color: "#666", fontSize: "0.875rem" }}>Turn {turnCount} of 5–8</p>
+       <header
+        style={{
+          borderBottom: "1px solid #EDE9FE",
+          backgroundColor: "rgba(247,247,255,0.85)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
+          padding: "0 1.25rem",
+          borderRadius: "0.5rem"
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 680,
+            margin: "0 auto",
+            height: "4rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          {/* Left — title + subtitle */}
+          <div>
+            <p
+              style={{
+                fontSize: "0.6875rem",
+                fontWeight: 700,
+                letterSpacing: "0.09em",
+                textTransform: "uppercase",
+                color: "#CA7DF9",
+                margin: 0,
+                lineHeight: 1,
+              }}
+            >
+              Level Assessment
+            </p>
+            <p
+              style={{
+                fontSize: "0.8125rem",
+                color: "#6B7280",
+                margin: "0.2rem 0 0",
+                lineHeight: 1,
+              }}
+            >
+              {personaName} · {languageName}
+            </p>
+          </div>
+ 
+          {/* Right — turn badge */}
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.375rem",
+              backgroundColor: "#F3E8FF",
+              border: "1px solid #E9D5FF",
+              borderRadius: "9999px",
+              padding: "0.3rem 0.75rem",
+            }}
+          >
+            <span
+              style={{
+                width: "0.5rem",
+                height: "0.5rem",
+                borderRadius: "50%",
+                backgroundColor: "#CA7DF9",
+                display: "inline-block",
+                animation: "assessPulse 2s ease-in-out infinite",
+              }}
+            />
+            <span
+              style={{
+                fontSize: "0.75rem",
+                fontWeight: 600,
+                color: "#CA7DF9",
+              }}
+            >
+              Turn {turnCount} of 5–8
+            </span>
+          </div>
+        </div>
+ 
+        {/* Progress bar */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: "2px",
+            backgroundColor: "#EDE9FE",
+          }}
+        >
+          <div
+            style={{
+              height: "100%",
+              width: `${Math.min((turnCount / 8) * 100, 100)}%`,
+              backgroundColor: "#CA7DF9",
+              transition: "width 0.4s ease",
+            }}
+          />
+        </div>
+      </header>
 
-      <AssessmentMessageThread
-        messages={messages}
-        isLoading={isLoading}
-        error={error}
-        personaName={personaName}
-      />
+
+      <div
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          padding: "1.5rem 1.25rem",
+        }}
+      >
+        <div style={{ maxWidth: 680, margin: "0 auto" }}>
+          <AssessmentMessageThread
+            messages={messages}
+            isLoading={isLoading}
+            error={error}
+            personaName={personaName}
+          />
+        </div>
+      </div>
 
       <AssessmentChatInput
         value={userInput}

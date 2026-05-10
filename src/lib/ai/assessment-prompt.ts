@@ -1,12 +1,5 @@
 /**
  * assessment-prompt.ts
- *
- * Builds the system prompt for the adaptive CEFR assessment conversation.
- * Fully parameterised by language — no hardcoded Spanish examples or grammar signals.
- *
- * Usage:
- *   import { buildAssessmentSystemPrompt } from "@/lib/ai/assessment-prompt";
- *   const systemPrompt = buildAssessmentSystemPrompt("ja");
  */
 
 import {
@@ -16,13 +9,7 @@ import {
   type SupportedLanguage,
 } from "@/lib/languages.config";
 
-// ---------------------------------------------------------------------------
 // Language-specific CEFR probe signals
-// ---------------------------------------------------------------------------
-// Each entry describes what grammatical / lexical signals to listen for at
-// each CEFR band. These replace the hardcoded Spanish examples in the original
-// prompt and ensure the assessor is calibrated for the target language.
-// ---------------------------------------------------------------------------
 
 interface CefrProbeSignals {
   a1a2: string;
@@ -88,13 +75,6 @@ const CEFR_PROBE_SIGNALS: Record<SupportedLanguage, CefrProbeSignals> = {
   },
 };
 
-// ---------------------------------------------------------------------------
-// Script-level note for languages with non-Latin writing systems
-// ---------------------------------------------------------------------------
-// Injected at A1/A2 to prevent the assessor from writing full complex script
-// to a complete beginner, which produces no useful assessment signal.
-// ---------------------------------------------------------------------------
-
 const SCRIPT_NOTES: Partial<Record<SupportedLanguage, string>> = {
   ja: `## Script guidance for this assessment
 At A1–A2, write primarily in hiragana with katakana for loanwords. Introduce kanji 
@@ -116,11 +96,30 @@ to very high-frequency words and short sentences. Hangul is phonetically regular
 a true beginner may still be able to sound out words even if comprehension is limited.`,
 };
 
-// ---------------------------------------------------------------------------
-// Public API
-// ---------------------------------------------------------------------------
+// Maps the self-report band to a human-readable label used in the prompt
+const SELF_REPORT_LABELS: Record<string, string> = {
+  A1: "A1 (no prior knowledge)",
+  A2: "A2 (some basics)",
+  B1: "B1 (conversational)",
+  C1: "C1 (fluent)",
+};
 
-export function buildAssessmentSystemPrompt(language: string): string {
+// Maps the self-report band to a turn window override.
+const TURN_WINDOW: Record<string, string> = {
+  A1: "5-8",
+  A2: "5-8",
+  B1: "3-6",
+  C1: "3-5",
+};
+
+export type SelfReportBand = "A1" | "A2" | "B1" | "C1";
+
+// Public API
+
+export function buildAssessmentSystemPrompt(
+  language: string,
+  selfReportBand?: SelfReportBand | null,
+): string {
   if (!isSupportedLanguage(language)) {
     throw new Error(`[buildAssessmentSystemPrompt] Unsupported language: "${language}"`);
   }
@@ -129,12 +128,24 @@ export function buildAssessmentSystemPrompt(language: string): string {
   const personaName = getPersonaNameForLanguage(language);
   const probeSignals = CEFR_PROBE_SIGNALS[language];
   const scriptNote = SCRIPT_NOTES[language] ?? "";
+  const turnWindow = selfReportBand ? TURN_WINDOW[selfReportBand] : "5–8";
 
-  return `You are ${personaName}, a friendly and encouraging ${languageName} language assessor. Your job is to determine the user's ${languageName} proficiency level through natural conversation.
+  // Self-report section — only injected when a band was provided
+  const selfReportSection = selfReportBand
+    ? `
+## Prior knowledge (self-reported)
+The user has indicated their level is approximately ${SELF_REPORT_LABELS[selfReportBand]}. Use this as your starting hypothesis:
+- Begin probing at the ${selfReportBand} band — do not start from A1 unless their first response clearly contradicts the self-report.
+- If their first response is significantly stronger or weaker than ${selfReportBand}, immediately recalibrate up or down.
+- The self-report is a soft prior, not a guaranteed result — always let the conversation evidence override it.
+`
+    : "";
+
+  return `You are ${personaName}, a ${languageName} language assessor. You will determine the user's ${languageName} proficiency level through natural conversation.
 
 ## Your Goal
-Conduct an adaptive 5–8 turn conversation that reveals the user's CEFR level (A1 through C2). Keep it feeling like a warm, natural conversation — never make it feel like a test.
-${scriptNote ? `\n${scriptNote}\n` : ""}
+Conduct an adaptive ${turnWindow} turn conversation that reveals the user's CEFR level (A1 through C2). Keep the conversation as natural as possible and never make it feel like a test.
+${selfReportSection}${scriptNote ? `\n${scriptNote}\n` : ""}
 ## How to Probe Each Level
 Actively steer the conversation to elicit specific grammar and vocabulary signals:
 
@@ -144,14 +155,14 @@ Actively steer the conversation to elicit specific grammar and vocabulary signal
 - **C1/C2:** ${probeSignals.c1c2}
 
 ## Adapting
-- Strong response -> increase complexity on next turn
-- Weak response -> simplify and confirm the lower bound
+- If the user gives a strong response, increase complexity on the next turn
+- If the user gives a weak response, simplify and confirm the lower bound
 - After establishing a floor and ceiling, you have enough data
 
 ## Handling Difficult Inputs
-- If the user gives a very short or evasive answer: gently ask for more detail in ${languageName}, and count it as a weak signal
+- If the user gives a very short or evasive answer: ask for more detail in ${languageName}, and count it as a weak signal
 - If the user goes off-topic: steer back naturally with a follow-up question
-- If the user responds in English when you asked in ${languageName}: note it as a weak signal and continue in ${languageName}, gently
+- If the user responds in English when you asked in ${languageName}: note it as a weak signal and continue in ${languageName}
 - If the user is clearly A1: you may mix in English briefly to avoid frustration, but keep ${languageName} as the primary language
 
 ## CEFR Reference
@@ -165,11 +176,11 @@ Actively steer the conversation to elicit specific grammar and vocabulary signal
 ## Rules
 - Ask ONE question per turn — never multiple questions at once
 - Always respond in ${languageName} unless the user is clearly A1
-- Be warm and encouraging — never make them feel judged
-- Between turn 5 and turn 8, you MUST conclude the assessment
+- Between turn ${turnWindow?.split("–")[0]} and turn ${turnWindow?.split("–")[1]}, you MUST conclude the assessment
+- You will never exceed ${turnWindow?.split("–")[1]} turns
 
 ## Ending the Conversation
-When you have enough signal (between turn 5 and 8), write your closing message then end with this exact token on its own line:
+When you have enough signal (between turn ${turnWindow?.split("–")[0]} and ${turnWindow?.split("–")[1]}), write your closing message then end with this exact token on its own line:
 [ASSESSMENT_COMPLETE]
 
 Do not add anything after this token.`;

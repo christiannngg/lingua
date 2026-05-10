@@ -29,7 +29,7 @@ export default async function OnboardingPage() {
           <h1 className="text-3xl font-bold text-black mb-2">
             {isFirstLanguage ? "Choose a language to learn" : "Add a language"}
           </h1>
-          <p style={{ color: "black" }}>
+          <p className="text-slate-500">
             {isFirstLanguage
               ? "You'll take a short assessment to find your starting level."
               : "Pick a new language to start learning. You'll take a short assessment first."}
@@ -48,11 +48,9 @@ export default async function OnboardingPage() {
                 }
               }}
             >
-              {/* ounded-sm p-1 transition-all duration-200 cursor-pointer bg-white border border-slate-100 shadow-sm */}
               <button
                 type="submit"
                 className="w-full flex items-center gap-4 rounded-xl border border-slate-100  shadow-md  px-5 py-4 text-left transition-colors hover:bg-white hover:text-black group cursor-pointer"
-                // style={{ borderColor: "var(--border)" }}
               >
                 <LanguageFlag language={lang.code} className="w-8 h-6 rounded-sm shrink-0" />
                 <div className="flex-1">
@@ -74,11 +72,10 @@ export default async function OnboardingPage() {
         {!isFirstLanguage && (
           <div className="mt-6 text-center">
             <a
-              href="/dashboard"
-              className="text-sm border border-slate-100 bg-white cursor-pointer p-4 shadow-md rounded-xl font-bold"
-              style={{ color: "black" }}
+              href="/settings"
+              className="text-sm text-slate-500 border border-slate-100 bg-white cursor-pointer p-4 shadow-md rounded-xl"
             >
-              ← Back to dashboard
+              Back
             </a>
           </div>
         )}

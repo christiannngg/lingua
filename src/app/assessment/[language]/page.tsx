@@ -1,18 +1,17 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import {
   getLanguageDisplayName,
   getPersonaNameForLanguage,
   isSupportedLanguage,
 } from "@/lib/languages.config";
-import { ArrowUp } from "lucide-react";
-
-type Message = {
-  role: "user" | "assistant";
-  content: string;
-};
+import { AssessmentResultScreen } from "@/components/assessment/AssessmentResultScreen";
+import { AssessmentMessageThread } from "@/components/assessment/AssessmentMessageThread";
+import { AssessmentChatInput } from "@/components/assessment/AssessmentChatInput";
+import { AssessmentSelfReport } from "@/components/assessment/AssessmentSelfReport";
+import type { Message, AssessmentResult, SelfReportBand } from "@/components/assessment/types";
 
 export default function AssessmentPage() {
   const router = useRouter();
@@ -29,28 +28,25 @@ export default function AssessmentPage() {
   const languageName = getLanguageDisplayName(language);
   const personaName = getPersonaNameForLanguage(language);
 
+  const [selfReportBand, setSelfReportBand] = useState<SelfReportBand | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [turnCount, setTurnCount] = useState(0);
-  const [result, setResult] = useState<{
-    cefrLevel: string;
-    cefrDescription: string;
-  } | null>(null);
+  const [result, setResult] = useState<AssessmentResult | null>(null);
   const [userLanguageId, setUserLanguageId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Fetch the userLanguageId on mount, then kick off the opening question
+  // Only runs after the user has completed the self-report step
   useEffect(() => {
+    if (!selfReportBand) return;
+
     async function init() {
       try {
         const res = await fetch(`/api/assessment/init?language=${language}`);
         const data = await res.json();
 
         if (!res.ok) {
-          // User navigated here directly without adding the language first —
-          // send them to onboarding so they can add it properly.
           if (data?.code === "LANGUAGE_NOT_ADDED") {
             router.replace("/onboarding");
             return;
@@ -58,14 +54,14 @@ export default function AssessmentPage() {
           throw new Error(data?.error ?? "Failed to initialize assessment");
         }
 
-        // If already assessed, skip straight to dashboard
         if (data.assessmentCompleted) {
           router.replace("/dashboard");
           return;
         }
 
         setUserLanguageId(data.userLanguageId);
-        await sendMessage([], data.userLanguageId);
+        // Pass selfReportBand here so the first AI turn is already seeded
+        await sendMessage([], data.userLanguageId, selfReportBand);
       } catch {
         setError("Something went wrong starting your assessment. Please try again.");
       }
@@ -73,16 +69,18 @@ export default function AssessmentPage() {
 
     init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [selfReportBand]);
 
-  // Auto-scroll to bottom on new messages
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isLoading]);
-
-  async function sendMessage(currentMessages: Message[], ulid?: string) {
+  async function sendMessage(
+    currentMessages: Message[],
+    ulid?: string,
+    band?: SelfReportBand | null,
+  ) {
     const id = ulid ?? userLanguageId;
     if (!id) return;
+
+    // Use the passed band on the first call, fall back to state for subsequent turns
+    const activeBand = band !== undefined ? band : selfReportBand;
 
     setIsLoading(true);
     setError(null);
@@ -95,6 +93,7 @@ export default function AssessmentPage() {
           language,
           userLanguageId: id,
           messages: currentMessages,
+          selfReportBand: activeBand,
         }),
       });
 
@@ -102,19 +101,12 @@ export default function AssessmentPage() {
 
       const data = await res.json();
 
-      const assistantMessage: Message = {
-        role: "assistant",
-        content: data.reply,
-      };
-
+      const assistantMessage: Message = { role: "assistant", content: data.reply };
       setMessages((prev) => [...prev, assistantMessage]);
       setTurnCount((prev) => prev + 1);
 
       if (data.isComplete) {
-        setResult({
-          cefrLevel: data.cefrLevel,
-          cefrDescription: data.cefrDescription,
-        });
+        setResult({ cefrLevel: data.cefrLevel, cefrDescription: data.cefrDescription });
       }
     } catch {
       setError("Failed to get a response. Please try again.");
@@ -135,155 +127,45 @@ export default function AssessmentPage() {
     await sendMessage(updatedMessages);
   }
 
-  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit();
-    }
-  }
-
-  // ── Result screen ──────────────────────────────────────────────────────────
-  if (result) {
+  // Step 1 — Self-report screen (shown before anything else)
+  if (!selfReportBand) {
     return (
-      <main style={{ maxWidth: 600, margin: "0 auto", padding: "2rem" }}>
-        <h1>Assessment Complete</h1>
-        <p>Here&apos;s where you&apos;re starting with {languageName}:</p>
-
-        <div
-          style={{
-            border: "2px solid #000",
-            borderRadius: 8,
-            padding: "1.5rem",
-            margin: "1.5rem 0",
-            textAlign: "center",
-          }}
-        >
-          <div style={{ fontSize: "3rem", fontWeight: "bold" }}>
-            {result.cefrLevel}
-          </div>
-          <p style={{ marginTop: "0.5rem" }}>{result.cefrDescription}</p>
-        </div>
-
-        <button
-          onClick={() => router.push("/dashboard")}
-          style={{ padding: "0.75rem 1.5rem", cursor: "pointer" }}
-        >
-          Start Learning {"->"}
-        </button>
-      </main>
+      <AssessmentSelfReport
+        languageName={languageName}
+        personaName={personaName}
+        onSelect={(band) => setSelfReportBand(band)}
+      />
     );
   }
 
-  // ── Chat screen ────────────────────────────────────────────────────────────
+  // Step 3 — Result screen
+  if (result) {
+    return <AssessmentResultScreen result={result} languageName={languageName} />;
+  }
+
+  // Step 2 — Chat assessment
   return (
     <main style={{ maxWidth: 600, margin: "0 auto", padding: "2rem", color: "black" }}>
       <h1>Level Assessment</h1>
       <p>
-        {personaName} will ask you a few questions in {languageName} to find the
-        right starting point for you.
+        {personaName} will ask you a few questions in {languageName} to find the right
+        starting point for you.
       </p>
-      <p style={{ color: "#666", fontSize: "0.875rem" }}>
-        Turn {turnCount} of 5–8
-      </p>
+      <p style={{ color: "#666", fontSize: "0.875rem" }}>Turn {turnCount} of 5–8</p>
 
-      {/* Message thread */}
-      <div
-        style={{
-          minHeight: 300,
-          maxHeight: 500,
-          overflowY: "auto",
-          margin: "1rem 0",
-          display: "flex",
-          flexDirection: "column",
-          gap: "0.75rem",
-        }}
-        className="shadow-md rounded-xl bg-white p-4"
-      >
-        {messages.map((msg, i) => (
-          <div
-            key={i}
-            style={{
-              alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
-              background: msg.role === "user" ? "#000" : "white",
-              color: msg.role === "user" ? "#fff" : "#000",
-              padding: "0.5rem 0.75rem",
-              maxWidth: "80%",
-            }}
-            className="white-bg shadow-md border-xl"
-          >
-            {msg.content}
-          </div>
-        ))}
+      <AssessmentMessageThread
+        messages={messages}
+        isLoading={isLoading}
+        error={error}
+        personaName={personaName}
+      />
 
-        {isLoading && (
-          <div
-            style={{
-              alignSelf: "flex-start",
-              color: "#999",
-              fontStyle: "italic",
-            }}
-          >
-            {personaName} is typing…
-          </div>
-        )}
-
-        {error && <p style={{ color: "red" }}>{error}</p>}
-
-        <div ref={bottomRef} />
-      </div>
-
-      {/* Input */}
-      <div style={{
-        display: "flex",
-        alignItems: "flex-end",
-        gap: "0.5rem",
-        backgroundColor: "#FFFFFF",
-        padding: "0.875rem 1rem",
-      }}>
-        <textarea
-          value={userInput}
-          onChange={(e) => setUserInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Type your response… (Enter to send)"
-          disabled={isLoading || !!result}
-          rows={2}
-          style={{
-            flex: 1,
-            resize: "none",
-            maxHeight: "120px",
-            borderRadius: "0.75rem",
-            border: "1px solid #e2e8f0",
-            backgroundColor: "#F7F7FF",
-            color: "#020122",
-            fontSize: "0.9375rem",
-            padding: "0.625rem 1rem",
-            outline: "none",
-            opacity: isLoading ? 0.5 : 1,
-            fontFamily: "inherit",
-            lineHeight: "1.5",
-            transition: "border-color 0.15s",
-          }}
-          onFocus={(e) => { (e.target as HTMLTextAreaElement).style.borderColor = "#CA7DF9"; }}
-          onBlur={(e) => { (e.target as HTMLTextAreaElement).style.borderColor = "#e2e8f0"; }}
-        />
-        <button
-          onClick={handleSubmit}
-          disabled={isLoading || !userInput.trim() || !!result}
-          style={{width: "2.5rem",
-          height: "2.5rem",
-          borderRadius: "0.75rem",
-          backgroundColor: "#CA7DF9",
-          color: "white",
-          border: "none",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-          transition: "opacity 0.15s", }}
-        >
-            <ArrowUp size={18} />
-        </button>
-      </div>
+      <AssessmentChatInput
+        value={userInput}
+        onChange={setUserInput}
+        onSubmit={handleSubmit}
+        disabled={isLoading || !!result}
+      />
     </main>
   );
 }

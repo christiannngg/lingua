@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // ── Rate limiting ──────────────────────────────────────────────────────
+    // Rate limiting 
     const { success, limit, remaining, reset } = await assessmentLimiter.limit(session.user.id);
     if (!success) {
       return NextResponse.json(
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
         },
       );
     }
-    // ──────────────────────────────────────────────────────────────────────
+
 
     const language = req.nextUrl.searchParams.get("language");
     if (!language || !isSupportedLanguage(language)) {

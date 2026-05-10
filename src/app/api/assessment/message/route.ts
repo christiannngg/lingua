@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod/v4";
-import { buildAssessmentSystemPrompt } from "@/lib/ai/assessment-prompt";
+import { buildAssessmentSystemPrompt, type SelfReportBand } from "@/lib/ai/assessment-prompt";
 import { AssessmentResultSchema, CEFR_DESCRIPTIONS } from "@/lib/ai/assessment-schema";
 import { prisma } from "@/lib/db/prisma";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { isSupportedLanguage, getLanguageDisplayName, type SupportedLanguage } from "@/lib/languages.config";
+import {
+  isSupportedLanguage,
+  getLanguageDisplayName,
+  type SupportedLanguage,
+} from "@/lib/languages.config";
 import { assessmentLimiter } from "@/ratelimit";
 
 const client = new Anthropic();
@@ -20,14 +24,22 @@ const RequestSchema = z.object({
       content: z.string(),
     }),
   ),
+  // Optional — present on every request but only meaningfully used to build
+  // the system prompt. Validated loosely here; the prompt builder handles it.
+  selfReportBand: z.enum(["A1", "A2", "B1", "C1"]).nullable().optional(),
 });
 
 async function extractCefrResult(
   conversation: Array<{ role: "user" | "assistant"; content: string }>,
   language: SupportedLanguage,
+  selfReportBand?: SelfReportBand | null,
 ): Promise<{ cefrLevel: string; description: string }> {
   const languageName = getLanguageDisplayName(language);
   const transcript = conversation.map((m) => `${m.role.toUpperCase()}: ${m.content}`).join("\n");
+
+  const selfReportNote = selfReportBand
+    ? `\nNote: The user self-reported their level as approximately ${selfReportBand} before the conversation. Use this as a soft prior — weight your rating accordingly, but correct it if the conversation evidence clearly points elsewhere.\n`
+    : "";
 
   let attempts = 0;
 
@@ -37,7 +49,7 @@ async function extractCefrResult(
         model: "claude-haiku-4-5-20251001",
         max_tokens: 1024,
         system: `You are a ${languageName} proficiency evaluator. Given a conversation transcript from a language assessment, determine the user's CEFR level.
-
+${selfReportNote}
 You must handle these edge cases:
 - If the user gave very short or evasive answers: rate based on what little was shown, bias toward A1-A2
 - If the user replied mostly in English: treat English responses as failed ${languageName} attempts, bias toward A1
@@ -85,7 +97,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // ── Rate limiting ──────────────────────────────────────────────────────
+    // Rate limiting
     const { success, limit, remaining, reset } = await assessmentLimiter.limit(session.user.id);
     if (!success) {
       return NextResponse.json(
@@ -101,7 +113,6 @@ export async function POST(req: NextRequest) {
         },
       );
     }
-    // ──────────────────────────────────────────────────────────────────────
 
     const body = await req.json();
     const parsed = RequestSchema.safeParse(body);
@@ -109,7 +120,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
-    const { language: rawLanguage, userLanguageId, messages } = parsed.data;
+    const { language: rawLanguage, userLanguageId, messages, selfReportBand } = parsed.data;
 
     if (!isSupportedLanguage(rawLanguage)) {
       return NextResponse.json({ error: "Invalid language" }, { status: 400 });
@@ -136,7 +147,7 @@ export async function POST(req: NextRequest) {
       response = await client.messages.create({
         model: "claude-haiku-4-5-20251001",
         max_tokens: 1024,
-        system: buildAssessmentSystemPrompt(language),
+        system: buildAssessmentSystemPrompt(language, selfReportBand),
         messages: messagesForApi,
       });
     } catch (err) {
@@ -149,13 +160,17 @@ export async function POST(req: NextRequest) {
         ? (response.content[0] as { type: "text"; text: string }).text
         : "";
 
-    const isComplete = replyText.includes("[ASSESSMENT_COMPLETE]");
-    const cleanReply = replyText.replace("[ASSESSMENT_COMPLETE]", "").trim();
+    const isComplete = replyText.toLowerCase().includes("[assessment_complete]");
+    const cleanReply = replyText.replace(/\[assessment_complete\]/i, "").trim();
 
     if (isComplete) {
       const allMessages = [...messages, { role: "assistant" as const, content: cleanReply }];
 
-      const { cefrLevel, description } = await extractCefrResult(allMessages, language);
+      const { cefrLevel, description } = await extractCefrResult(
+        allMessages,
+        language,
+        selfReportBand,
+      );
 
       try {
         await prisma.$transaction([

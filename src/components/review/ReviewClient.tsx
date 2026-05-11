@@ -292,7 +292,7 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
                 </p>
               </div>
               <a
-                href="/dashboard/vocabulary"
+                href={`/dashboard/vocabulary?lang=${currentLang}`}
                 className="mt-1 rounded-xl px-7 py-2.5 text-sm font-semibold transition-all duration-150"
                 style={{
                   background: "#CA7DF9",

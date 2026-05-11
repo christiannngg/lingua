@@ -16,7 +16,7 @@ export async function getMemories() {
   const embeddings = await prisma.conversationEmbedding.findMany({
     where: {
       conversation: {
-        userLanguage: { userId: session.user.id },
+        userLanguage: { userId: session.user.id, },
       },
     },
     select: {

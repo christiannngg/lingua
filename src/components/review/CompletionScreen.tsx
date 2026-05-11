@@ -122,7 +122,7 @@ export function CompletionScreen({
       {/* Actions */}
       <div className="flex w-full flex-col gap-3">
         <a
-          href="/dashboard/vocabulary"
+           href={`/dashboard/vocabulary?lang=${language}`}
           className="block w-full rounded-xl py-3 text-center text-sm font-semibold transition-all duration-150"
           style={{
             background: " #CA7DF9",

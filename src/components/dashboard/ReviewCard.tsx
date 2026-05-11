@@ -88,7 +88,7 @@ export function ReviewCard({ dueCount, languages }: Props) {
 
       {/* CTA */}
       <button
-        onClick={() => router.push("/dashboard/review" as never)}
+        onClick={() => router.push(`/dashboard/review?lang=${activeLanguage}` as never)}
         disabled={dueCount === 0}
         className="w-full py-2.5 rounded-xl font-semibold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
         style={{

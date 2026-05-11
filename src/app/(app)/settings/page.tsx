@@ -11,11 +11,16 @@ import { getLanguageDisplayName } from "@/lib/languages.config";
 import Link from "next/link";
 import { AnimatedPage, AnimatedSection } from "@/components/layout/AnimatedPage";
 
-export default async function SettingsPage() {
+interface SettingsPageProps {
+  searchParams: Promise<{ lang?: string }>;
+}
+
+export default async function SettingsPage({ searchParams }: SettingsPageProps) {
+  const { lang } = await searchParams;
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) redirect("/sign-in" as never);
 
-  const [userLanguages, memories, availableLanguages] = await Promise.all([
+  const [userLanguages, allMemories, availableLanguages] = await Promise.all([
     getUserLanguages(),
     getMemories(),
     getAvailableLanguages(),
@@ -24,6 +29,12 @@ export default async function SettingsPage() {
   const addedCodes = new Set(userLanguages.map((ul) => ul.language));
   const hasUnadded = availableLanguages.some((lang) => !addedCodes.has(lang.code));
   const isOnly = userLanguages.length === 1;
+
+  const activeLang =
+    lang && addedCodes.has(lang) ? lang : (userLanguages[0]?.language ?? null);
+  const memories = activeLang
+    ? allMemories.filter((m) => m.language === activeLang)
+    : allMemories;
 
   return (
     <AnimatedPage className="flex h-full flex-col max-w-6xl mx-auto">
@@ -67,7 +78,7 @@ export default async function SettingsPage() {
                           {ul.cefrLevel}
                         </span>
                       ) : (
-                        <span className="text-slate-400 ml-1">Not assessed</span>
+                        <span className="text-slate-500 ml-1">Not assessed</span>
                       )}
                     </p>
                   </div>
@@ -109,8 +120,9 @@ export default async function SettingsPage() {
           {memories.length === 0 ? (
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-center">
               <p className="text-sm text-slate-400">
-                No memories yet. Finish a conversation and start a new one to generate your first
-                memory.
+                No memories yet for{" "}
+                {activeLang ? getLanguageDisplayName(activeLang) : "this language"}. Finish a
+                conversation and start a new one to generate your first memory.
               </p>
             </div>
           ) : (

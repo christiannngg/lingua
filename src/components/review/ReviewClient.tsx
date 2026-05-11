@@ -79,7 +79,7 @@ function initSessionState(queue: ReviewQueue): {
 export function ReviewClient({ queue, languages, currentLang }: ReviewClientProps) {
   const router = useRouter();
 
-  // ── Session initialisation ───────────────────────────────────────────────
+  //  Session initialisation
   const [{ cards, currentIndex: initIndex, sessionTotal: initTotal }] = useState(
     () => initSessionState(queue),
   );
@@ -115,8 +115,7 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
 
   // Persist progress to sessionStorage 
   // Runs after every index change. Writes the frozen full cardIds list
-  // (from the ref) plus the current index — so the next mount can
-  // reconstruct both the session total and the remaining cards correctly.
+  // (from the ref) plus the current index
   useEffect(() => {
     saveSession(
       queue.userLanguageId,
@@ -265,32 +264,6 @@ export function ReviewClient({ queue, languages, currentLang }: ReviewClientProp
               CEFR {queue.cefrLevel}
             </p>
           </div>
-
-          {/* Language switcher */}
-          {languages.length > 1 && (
-            <div className="flex gap-2">
-              {languages.map((lang) => {
-                const isActive = lang === currentLang;
-                return (
-                  <button
-                    key={lang}
-                    onClick={() => router.push(`/dashboard/review?lang=${lang}` as never)}
-                      className="flex items-center gap-2 rounded-sm p-1 transition-all duration-200 cursor-pointer bg-white border border-slate-100 shadow-sm"
-                    style={{
-                      borderColor: isActive ? "var(--color-brand-500)" : "rgba(202,125,249,0.2)",
-                      backgroundColor: isActive ? "rgba(202,125,249,0.1)" : "white",
-                      color: isActive ? "var(--color-brand-500)" : "black",
-                      boxShadow: isActive ? "0 0 0 1px var(--color-brand-500)" : "none",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <LanguageFlag language={lang} className="w-4 h-auto rounded-sm" />
-                    {getLanguageDisplayName(lang)}
-                  </button>
-                );
-              })}
-            </div>
-          )}
         </div>
       </AnimatedSection>
 

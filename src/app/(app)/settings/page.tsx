@@ -114,7 +114,7 @@ export default async function SettingsPage() {
               </p>
             </div>
           ) : (
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 mb-10">
               {memories.map((memory) => (
                 <MemoryCard key={memory.id} memory={memory} />
               ))}

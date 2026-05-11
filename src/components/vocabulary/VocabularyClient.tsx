@@ -13,13 +13,12 @@ import { getLanguageDisplayName } from "@/lib/languages.config";
 import { BadgeAlert, Languages, Search } from "lucide-react";
 import { AnimatedPage, AnimatedSection } from "../layout/AnimatedPage";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
 
 type TabValue = "All" | MasteryLabel;
 
 const TABS: TabValue[] = ["All", "New", "Learning", "Review", "Relearning", "Mastered"];
 
-// ─── Stat card ───────────────────────────────────────────────────────────────
+// Stat card 
 
 const MASTERY_COLORS: Record<MasteryLabel, string> = {
   New: "#6366f1",
@@ -52,7 +51,7 @@ function StatCard({ label, count }: { label: MasteryLabel; count: number }) {
   );
 }
 
-// ─── Empty state ─────────────────────────────────────────────────────────────
+// Empty state
 
 function EmptyState({ activeTab, search }: { activeTab: TabValue; search: string }) {
   if (search) {
@@ -96,8 +95,6 @@ function EmptyState({ activeTab, search }: { activeTab: TabValue; search: string
   );
 }
 
-// ─── Main component ──────────────────────────────────────────────────────────
-
 interface VocabularyClientProps {
   data: VocabularyDashboardData;
   languages: string[];
@@ -113,7 +110,7 @@ export function VocabularyClient({
   const [activeTab, setActiveTab] = useState<TabValue>("All");
   const [search, setSearch] = useState("");
 
-  // ── Filtering (client-side, no re-fetch) ───────────────────────────────
+  // Filtering (client-side, no re-fetch) 
 
   const filteredItems = useMemo<VocabularyItemWithMastery[]>(() => {
     let items = data.items;
@@ -134,7 +131,7 @@ export function VocabularyClient({
     return items;
   }, [data.items, activeTab, search]);
 
-  // ── Tab count label ─────────────────────────────────────────────────────
+  // Tab count label
 
   function tabCount(tab: TabValue): number {
     if (tab === "All") return data.counts.total;
@@ -144,7 +141,7 @@ export function VocabularyClient({
 
   return (
     <AnimatedPage className="flex h-full flex-col max-w-6xl mx-auto ">
-      {/* ── Page header ───────────────────────────────────────────────────── */}
+      {/*  Page header */}
       <AnimatedSection>
         <div
           className="flex items-center justify-between border-b px-6 py-5"
@@ -158,33 +155,10 @@ export function VocabularyClient({
               {data.counts.total} {data.counts.total === 1 ? "word" : "words"} · CEFR {data.cefrLevel}
             </p>
           </div>
-
-          {/* Language switcher — only shown when user has multiple languages */}
-          {languages.length > 1 && (
-            <div className="flex gap-2">
-              {languages.map((lang) => (
-                <button
-                  key={lang}
-                  onClick={() => router.push(`/dashboard/vocabulary?lang=${lang}` as never)}
-                  className="flex items-center gap-2 rounded-sm p-1 transition-all duration-200 cursor-pointer bg-white border border-slate-100 shadow-sm"
-                  style={{
-                    borderColor: lang === currentLang ? "var(--color-brand-500)" : "rgba(202,125,249,0.2)",
-                    backgroundColor: lang === currentLang ? "rgba(202,125,249,0.1)" : "white",
-                    color: lang === currentLang ? "var(--color-brand-500)" : "black",
-                    boxShadow: lang === currentLang ? "0 0 0 1px var(--color-brand-500)" : "none",
-                    cursor: "pointer",
-                  }}
-                >
-                  <LanguageFlag language={lang} className="w-4 h-auto rounded-sm" />
-                  {getLanguageDisplayName(lang)}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
       </AnimatedSection>
 
-      {/* ── Scrollable content area ───────────────────────────────────────── */}
+      {/* Scrollable content area */}
       <AnimatedSection>
         <div className="flex-1 overflow-y-auto px-6 py-6">
 

@@ -6,6 +6,7 @@ import { ChevronDown, Plus } from "lucide-react";
 import { LanguageFlag } from "@/components/ui/LanguageFlag";
 import { getLanguageDisplayName } from "@/lib/languages.config";
 import { useActiveLanguage } from "@/hooks/useActiveLanguage";
+import { useSidebar } from "@/components/layout/SidebarContext";
 
 interface Props {
   enrolledCodes: string[];
@@ -15,6 +16,7 @@ export function LanguageSwitcher({ enrolledCodes }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { setActiveLanguage } = useSidebar();
   const activeLanguage = useActiveLanguage(enrolledCodes);
 
   const [open, setOpen] = useState(false);
@@ -41,6 +43,8 @@ export function LanguageSwitcher({ enrolledCodes }: Props) {
   const switchLanguage = useCallback(
     (code: string) => {
       setOpen(false);
+      // Persist to context/localStorage so the selection survives navigation to pages that don't carry ?lang= in their URL.
+      setActiveLanguage(code);
       if (pathname.startsWith("/chat/")) {
         router.push(`/chat/${code}` as never);
         return;
@@ -49,7 +53,7 @@ export function LanguageSwitcher({ enrolledCodes }: Props) {
       params.set("lang", code);
       router.replace(`${pathname}?${params.toString()}` as never);
     },
-    [pathname, router, searchParams]
+    [pathname, router, searchParams, setActiveLanguage]
   );
 
   return (
@@ -68,7 +72,7 @@ export function LanguageSwitcher({ enrolledCodes }: Props) {
         aria-expanded={open}
         aria-label="Switch language"
       >
-        <LanguageFlag language={activeLanguage} className="w-5 h-auto rounded-sm" />
+        <LanguageFlag language={activeLanguage} className="w-5 h-auto" />
         <span>{getLanguageDisplayName(activeLanguage)}</span>
         <ChevronDown
           size={14}
@@ -119,7 +123,7 @@ export function LanguageSwitcher({ enrolledCodes }: Props) {
                       "transparent";
                 }}
               >
-                <LanguageFlag language={code} className="w-5 h-auto rounded-sm shrink-0" />
+                <LanguageFlag language={code} className="w-5 h-auto shrink-0" />
                 <span>{getLanguageDisplayName(code)}</span>
                 {isActive && (
                   <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[#CA7DF9]" />

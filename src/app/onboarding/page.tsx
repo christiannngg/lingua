@@ -52,7 +52,7 @@ export default async function OnboardingPage() {
                 type="submit"
                 className="w-full flex items-center gap-4 rounded-xl border border-slate-100  shadow-md  px-5 py-4 text-left transition-colors hover:bg-white hover:text-black group cursor-pointer"
               >
-                <LanguageFlag language={lang.code} className="w-8 h-6 rounded-sm shrink-0" />
+                <LanguageFlag language={lang.code} className="w-8 h-6 shrink-0" />
                 <div className="flex-1">
                   <p className="font-semibold text-black group-hover:text-black">
                     {lang.displayName}

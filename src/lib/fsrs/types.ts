@@ -1,8 +1,5 @@
-// ─────────────────────────────────────────────────────────────────────────────
 // FSRS Types
-// Pure TypeScript — no framework or DB dependencies.
-// These types mirror the fields that will be added to VocabularyItem in Prisma.
-// ─────────────────────────────────────────────────────────────────────────────
+
 
 /**
  * The four possible ratings a user can give when reviewing a card.
@@ -17,16 +14,6 @@ export enum Rating {
 
 /**
  * The state a card can be in within the FSRS state machine.
- *
- *   New ──► Learning ──► Review
- *                           │
- *                           ▼
- *                       Relearning ──► Review
- *
- * - New:        Never reviewed. No stability or difficulty yet.
- * - Learning:   Recently introduced. Short intervals, building initial stability.
- * - Review:     Graduated card. Longer intervals, full FSRS scheduling active.
- * - Relearning: Lapsed from Review after an Again rating. Rebuilding stability.
  */
 export enum CardState {
   New = "NEW",
@@ -37,16 +24,6 @@ export enum CardState {
 
 /**
  * The full FSRS state for a single card.
- * This is what gets persisted to VocabularyItem and passed into schedule().
- *
- * Field mapping to Prisma VocabularyItem (fields to be added via migration):
- *   state       -> state        String  @default("NEW")
- *   stability   -> stability    Float   @default(0)
- *   difficulty  -> difficulty   Float   @default(0)
- *   reps        -> reps         Int     @default(0)
- *   lapses      -> lapses       Int     @default(0)
- *   lastReview  -> lastReview   DateTime?
- *   nextReview  -> nextReview   DateTime?
  */
 export interface CardSchedule {
   state: CardState;

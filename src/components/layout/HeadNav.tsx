@@ -13,7 +13,7 @@ interface HeadNavProps {
   userFirstName?: string;
 }
 
-export function HeadNav({ enrolledCodes, streakCount = 0, userFirstName = "" }: HeadNavProps) {
+export function HeadNav({ enrolledCodes, streakCount = 0}: HeadNavProps) {
   const { toggle } = useSidebar();
    const { avatarLetter } = useUser();
 
@@ -44,7 +44,7 @@ export function HeadNav({ enrolledCodes, streakCount = 0, userFirstName = "" }: 
           }}
           onMouseEnter={(e) => {
             (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#faf5ff";
-            (e.currentTarget as HTMLButtonElement).style.color = "#7c3aed";
+            (e.currentTarget as HTMLButtonElement).style.color = "#CA7DF9";
           }}
           onMouseLeave={(e) => {
             (e.currentTarget as HTMLButtonElement).style.backgroundColor = "white";
@@ -78,16 +78,6 @@ export function HeadNav({ enrolledCodes, streakCount = 0, userFirstName = "" }: 
           <span>{streakCount}</span>
         </button>
 
-        {/* Notification bell */}
-        {/* <button
-          className="rounded-md p-1.5 transition-colors"
-          style={{ color: "var(--foreground)" }}
-          aria-label="Notifications"
-        >
-          <Bell size={24} color="black" />
-        </button> */}
-
-        {/* Avatar */}
         <button
           className="flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold"
           style={{ backgroundColor: "#CA7DF9", color: "#FFFFFF" }}

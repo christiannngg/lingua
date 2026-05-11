@@ -82,7 +82,7 @@ export function ReviewCard({ dueCount, languages }: Props) {
       {/* Language flags */}
       {languages.length > 0 && (
         <div className="flex items-center gap-1">
-           <LanguageFlag language={activeLanguage} className="w-5 h-auto rounded-sm" />
+           <LanguageFlag language={activeLanguage} className="w-5 h-auto " />
         </div>
       )}
 

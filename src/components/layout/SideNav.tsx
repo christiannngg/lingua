@@ -60,6 +60,11 @@ function SideNavInner({ languages }: SideNavProps) {
 
   const chatHref = `/chat/${activeLanguage}`;
 
+  function buildHref(base: string): string {
+    if (base.startsWith("/chat/")) return base;
+    return `${base}?lang=${activeLanguage}`;
+  }
+
   const allNavItems = [
     ...STATIC_NAV_ITEMS,
     { href: chatHref, label: "Chat", icon: MessagesSquare } as const,
@@ -76,10 +81,11 @@ function SideNavInner({ languages }: SideNavProps) {
                 ? (pathname === chatHref || pathname.startsWith(chatHref + "/")) && !activeConvId
                 : pathname === item.href || pathname.startsWith(item.href + "/");
 
+          const resolvedHref = buildHref(item.href);
           return (
             <li key={item.label}>
               <Link
-                href={item.href as never}
+                href={resolvedHref as never}
                 title={!isExpanded ? item.label : undefined}
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
                 style={{
@@ -116,7 +122,7 @@ function SideNavInner({ languages }: SideNavProps) {
       {/* Conversations section — expanded only */}
       {isExpanded && conversations.length > 0 && (
         <div className="mx-2 mt-2">
-          <p className="px-3 text-xs text-slate-500">Recents</p>
+          <p className="px-3 text-sm text-slate-500 underline">Recents</p>
           <ul className="flex flex-col gap-0.5">
             {conversations.slice(0, 8).map((conv) => (
               <li key={conv.id}>
@@ -141,7 +147,7 @@ function SideNavInner({ languages }: SideNavProps) {
           </p>
           {languages.map((lang) => (
             <div key={lang} className="flex items-center gap-2 py-0.5">
-              <LanguageFlag language={lang} className="w-5 h-auto rounded-sm" />
+              <LanguageFlag language={lang} className="w-5 h-auto" />
               <span className="text-xs text-slate-500">{getLanguageDisplayName(lang)}</span>
             </div>
           ))}
@@ -152,7 +158,7 @@ function SideNavInner({ languages }: SideNavProps) {
       {!isExpanded && languages.length > 0 && (
         <div className="mt-auto flex flex-col items-center gap-1.5 pb-2 px-2">
           {languages.map((lang) => (
-            <LanguageFlag key={lang} language={lang} className="w-5 h-auto rounded-sm" />
+            <LanguageFlag key={lang} language={lang} className="w-5 h-auto" />
           ))}
         </div>
       )}

@@ -2,21 +2,19 @@
 
 import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
+import { useSidebar } from "@/components/layout/SidebarContext";
 
 /**
- * Reads ?lang= from the URL and validates it against the user's enrolled
- * language codes. Falls back to the first enrolled language if the param is
- * absent or invalid.
- *
- * @param enrolledCodes - array of language code strings the user is enrolled in
- * @returns the active language code string
+ * Resolves the active language using a two-tier priority chain:
  */
 export function useActiveLanguage(enrolledCodes: string[]): string {
   const searchParams = useSearchParams();
-  const langParam = searchParams.get("lang");
+  const { activeLanguage: contextLang } = useSidebar();
 
   return useMemo(() => {
+    if (contextLang && enrolledCodes.includes(contextLang)) return contextLang;
+    const langParam = searchParams.get("lang");
     if (langParam && enrolledCodes.includes(langParam)) return langParam;
     return enrolledCodes[0] ?? "es";
-  }, [langParam, enrolledCodes]);
+  }, [contextLang, searchParams, enrolledCodes]);
 }

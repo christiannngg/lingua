@@ -27,7 +27,6 @@
     "isolatedModules": true,
     /* Path Aliases */
     "baseUrl": ".",
-    "ignoreDeprecations": "6.0",
    "paths": {
       "@/*": ["./src/*"]
     },
